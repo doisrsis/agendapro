@@ -151,6 +151,15 @@
                                 </div>
                             </li>
                             
+                            <li class="nav-item <?= $menu_ativo == 'extras' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/extras') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-plus-circle"></i>
+                                    </span>
+                                    <span class="nav-link-title">Extras</span>
+                                </a>
+                            </li>
+                            
                             <li class="nav-item <?= $menu_ativo == 'precos' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('admin/precos') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">

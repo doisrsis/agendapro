@@ -129,6 +129,47 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [1.1.0] - 2024-11-13
+
+### ✨ Adicionado
+
+**CRUD de Extras:**
+- Model `Extra_model` completo com métodos CRUD
+- Controller `admin/Extras` com todas as operações
+- Listagem de extras com filtros (busca, tipo, status)
+- Formulário criar/editar extras
+- 3 tipos de preço: fixo, percentual, por m²
+- Seleção de produtos aplicáveis (JSON)
+- Toggle status via AJAX
+- Reordenação drag & drop
+- Deletar com confirmação SweetAlert2
+- Validações frontend e backend
+
+**CRUD de Preços:**
+- Model `Preco_model` com cálculo automático
+- Controller `admin/Precos` completo
+- Listagem de preços com filtros
+- Formulário criar/editar preços
+- Faixas de dimensões (largura x altura)
+- 3 tipos de preço: por m², por ml, fixo
+- Método de cálculo automático de preços
+- Deletar com confirmação
+- Validações completas
+
+**Melhorias Gerais:**
+- Menu atualizado com links de Extras e Preços
+- Documentação atualizada (PROGRESSO.md)
+- Código otimizado e comentado
+
+### 📊 Estatísticas
+
+- **Models:** 9 (+ Extra_model, Preco_model)
+- **Controllers:** 8 (+ Extras, Precos)
+- **Views:** 19+ (+ 4 views de Extras e Preços)
+- **Progresso Geral:** ~80%
+
+---
+
 ## [Unreleased]
 
 ### 🚀 Próximas Funcionalidades

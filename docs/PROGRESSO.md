@@ -1,8 +1,8 @@
 # 📊 Progresso do Desenvolvimento - Sistema de Orçamento Le Cortine
 
 **Autor:** Rafael Dias - [doisr.com.br](https://doisr.com.br)  
-**Última Atualização:** 13/11/2024 19:00  
-**Versão Atual:** v1.0.0  
+**Última Atualização:** 13/11/2024 19:40  
+**Versão Atual:** v1.1.0  
 **Repositório:** https://github.com/doisrsis/orcamento_lecortine
 
 ---
@@ -49,11 +49,12 @@
 
 ### Controllers Administrativos
 - [x] **Admin/Dashboard** - Painel principal com estatísticas
-- [ ] **Admin/Categorias** - CRUD de categorias (próximo)
-- [ ] **Admin/Produtos** - CRUD de produtos
-- [ ] **Admin/Colecoes** - CRUD de coleções
-- [ ] **Admin/Tecidos** - CRUD de tecidos e cores
-- [ ] **Admin/Precos** - Gerenciamento de preços
+- [x] **Admin/Categorias** - CRUD de categorias
+- [x] **Admin/Produtos** - CRUD de produtos
+- [x] **Admin/Colecoes** - CRUD de coleções
+- [x] **Admin/Tecidos** - CRUD de tecidos e cores
+- [x] **Admin/Extras** - Gerenciamento de extras ✨ NOVO
+- [x] **Admin/Precos** - Gerenciamento de preços ✨ NOVO
 - [ ] **Admin/Orcamentos** - Gerenciamento de orçamentos
 - [ ] **Admin/Configuracoes** - Configurações do sistema
 - [ ] **Admin/Usuarios** - Gerenciamento de usuários
@@ -72,7 +73,7 @@
 
 ---
 
-## ⏳ Fase 3: Área Pública (PENDENTE)
+## Fase 3: Área Pública (PENDENTE)
 
 ### Layout Público
 - [ ] Header responsivo
