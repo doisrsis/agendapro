@@ -148,14 +148,17 @@ class Orcamento extends CI_Controller {
             redirect('orcamento/etapa1');
         }
         
-        $data['titulo'] = 'Escolha o Tecido e Cor - Le Cortine';
+        $data['titulo'] = 'Escolha o Tecido e Cor';
         $data['etapa_atual'] = 4;
         $data['total_etapas'] = 8;
         $data['dados'] = $dados_sessao;
         $data['produto'] = $this->Produto_model->get($dados_sessao['produto_id']);
         
-        // Buscar tecidos conforme produto
-        $data['tecidos'] = $this->Tecido_model->get_all(['status' => 'ativo']);
+        // Buscar tecidos filtrados por produto
+        $data['tecidos'] = $this->Tecido_model->get_all([
+            'status' => 'ativo',
+            'produto_id' => $dados_sessao['produto_id']
+        ]);
         
         if ($this->input->method() === 'post') {
             $tecido_id = $this->input->post('tecido_id');
@@ -304,21 +307,42 @@ class Orcamento extends CI_Controller {
         $data['dados'] = $dados_sessao;
         
         if ($this->input->method() === 'post') {
-            $this->form_validation->set_rules('cep', 'CEP', 'required');
-            $this->form_validation->set_rules('cidade', 'Cidade', 'required');
-            $this->form_validation->set_rules('estado', 'Estado', 'required');
+            $tipo_entrega = $this->input->post('tipo_entrega');
+            $dados_sessao['tipo_entrega'] = $tipo_entrega;
             
-            if ($this->form_validation->run()) {
-                $dados_sessao['cep'] = $this->input->post('cep');
-                $dados_sessao['endereco'] = $this->input->post('endereco');
-                $dados_sessao['numero'] = $this->input->post('numero');
-                $dados_sessao['complemento'] = $this->input->post('complemento');
-                $dados_sessao['bairro'] = $this->input->post('bairro');
-                $dados_sessao['cidade'] = $this->input->post('cidade');
-                $dados_sessao['estado'] = $this->input->post('estado');
+            // Se for retirada, não precisa validar endereço
+            if ($tipo_entrega === 'retirada') {
+                $dados_sessao['cep'] = null;
+                $dados_sessao['endereco'] = null;
+                $dados_sessao['numero'] = null;
+                $dados_sessao['complemento'] = null;
+                $dados_sessao['bairro'] = null;
+                $dados_sessao['cidade'] = null;
+                $dados_sessao['estado'] = null;
                 
                 $this->session->set_userdata('orcamento_dados', $dados_sessao);
                 redirect('orcamento/resumo');
+            } else {
+                // Validar campos de endereço
+                $this->form_validation->set_rules('cep', 'CEP', 'required');
+                $this->form_validation->set_rules('endereco', 'Endereço', 'required');
+                $this->form_validation->set_rules('numero', 'Número', 'required');
+                $this->form_validation->set_rules('bairro', 'Bairro', 'required');
+                $this->form_validation->set_rules('cidade', 'Cidade', 'required');
+                $this->form_validation->set_rules('estado', 'Estado', 'required');
+                
+                if ($this->form_validation->run()) {
+                    $dados_sessao['cep'] = $this->input->post('cep');
+                    $dados_sessao['endereco'] = $this->input->post('endereco');
+                    $dados_sessao['numero'] = $this->input->post('numero');
+                    $dados_sessao['complemento'] = $this->input->post('complemento');
+                    $dados_sessao['bairro'] = $this->input->post('bairro');
+                    $dados_sessao['cidade'] = $this->input->post('cidade');
+                    $dados_sessao['estado'] = $this->input->post('estado');
+                    
+                    $this->session->set_userdata('orcamento_dados', $dados_sessao);
+                    redirect('orcamento/resumo');
+                }
             }
         }
         
@@ -483,6 +507,19 @@ class Orcamento extends CI_Controller {
         
         $this->load->view('public/layout/header', $data);
         $this->load->view('public/orcamento/consultoria', $data);
+        $this->load->view('public/layout/footer', $data);
+    }
+
+    /**
+     * Página de Agradecimento (Pós-Consultoria)
+     */
+    public function agradecimento() {
+        $data['titulo'] = 'Obrigado! - Le Cortine';
+        $data['dados'] = $this->session->userdata('orcamento_dados');
+        $data['numero'] = 'CONS-' . date('YmdHis');
+        
+        $this->load->view('public/layout/header', $data);
+        $this->load->view('public/orcamento/agradecimento', $data);
         $this->load->view('public/layout/footer', $data);
     }
 

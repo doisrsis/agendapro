@@ -60,7 +60,10 @@ INSERT INTO `produtos` (`categoria_id`, `nome`, `slug`, `descricao_curta`, `desc
 
 -- Produtos que direcionam para consultoria
 (2, 'Toldos', 'toldos', 'Toldos sob medida', 'Toldos personalizados para área externa. Solicite consultoria personalizada.', 0.00, 'unidade', 'ativo', 0, 4, NOW()),
-(3, 'Cortinas Motorizadas', 'cortinas-motorizadas', 'Automação de cortinas', 'Sistema completo de automação para cortinas. Solicite consultoria personalizada.', 0.00, 'unidade', 'ativo', 0, 5, NOW());
+(3, 'Cortinas Motorizadas', 'cortinas-motorizadas', 'Automação de cortinas', 'Sistema completo de automação para cortinas. Solicite consultoria personalizada.', 0.00, 'unidade', 'ativo', 0, 5, NOW()),
+
+-- Produto de Consultoria (para venda direta)
+(2, 'Consultoria Online', 'consultoria-online', 'Consultoria personalizada com especialista', 'Atendimento especializado para projetos complexos, dimensões especiais ou soluções personalizadas. Inclui análise completa, recomendações e orçamento detalhado.', 150.00, 'unidade', 'ativo', 0, 6, NOW());
 
 -- ============================================================================
 -- COLEÇÕES

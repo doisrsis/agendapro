@@ -12,14 +12,54 @@
     </div>
 
     <div class="card-form">
-        <h2><i class="ti ti-map-pin"></i> Endereço para Frete</h2>
-        <p class="text-muted mb-4">Informe seu endereço para calcularmos o frete</p>
+        <h2><i class="ti ti-truck-delivery"></i> Forma de Entrega</h2>
+        <p class="text-muted mb-4">Escolha como deseja receber seu pedido</p>
 
         <?php if(validation_errors()): ?>
             <div class="alert alert-danger"><?= validation_errors() ?></div>
         <?php endif; ?>
 
-        <form method="post">
+        <form method="post" id="formEndereco">
+            
+            <!-- Opção de Entrega -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Tipo de Entrega</label>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-selectgroup-item">
+                            <input type="radio" name="tipo_entrega" value="entrega" class="form-selectgroup-input" 
+                                <?= !isset($dados['tipo_entrega']) || $dados['tipo_entrega'] == 'entrega' ? 'checked' : '' ?>>
+                            <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                <span class="me-3">
+                                    <i class="ti ti-truck-delivery" style="font-size: 32px; color: var(--primary-color);"></i>
+                                </span>
+                                <span class="form-selectgroup-label-content">
+                                    <span class="form-selectgroup-title strong mb-1">Entrega no Endereço</span>
+                                    <span class="d-block text-muted">Calcularemos o frete</span>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-selectgroup-item">
+                            <input type="radio" name="tipo_entrega" value="retirada" class="form-selectgroup-input"
+                                <?= isset($dados['tipo_entrega']) && $dados['tipo_entrega'] == 'retirada' ? 'checked' : '' ?>>
+                            <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                <span class="me-3">
+                                    <i class="ti ti-building-store" style="font-size: 32px; color: var(--primary-color);"></i>
+                                </span>
+                                <span class="form-selectgroup-label-content">
+                                    <span class="form-selectgroup-title strong mb-1">Retirar no Local</span>
+                                    <span class="d-block text-muted">Sem custo de frete</span>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endereço para Entrega (condicional) -->
+            <div id="camposEndereco">
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">CEP *</label>
@@ -78,7 +118,20 @@
                 </div>
             </div>
 
-            <div class="alert alert-info">
+            </div><!-- fim camposEndereco -->
+
+            <!-- Informação de Retirada Local -->
+            <div id="infoRetirada" style="display: none;">
+                <div class="alert alert-success">
+                    <h5 class="alert-heading"><i class="ti ti-building-store me-2"></i>Retirada no Local</h5>
+                    <p class="mb-2">Você optou por retirar seu pedido em nossa loja. Sem custo de frete!</p>
+                    <hr>
+                    <p class="mb-1"><strong>Endereço para retirada:</strong></p>
+                    <p class="mb-0">Será informado pela nossa equipe via WhatsApp após confirmação do pedido.</p>
+                </div>
+            </div>
+
+            <div class="alert alert-info" id="alertFrete">
                 <i class="ti ti-info-circle"></i>
                 <strong>Importante:</strong> O valor do frete será calculado e informado por nossa equipe via WhatsApp.
             </div>
@@ -96,30 +149,82 @@
 </div>
 
 <script>
-$(document).ready(function() {
-    // Máscara CEP
-    $('.mask-cep').mask('00000-000');
+document.addEventListener('DOMContentLoaded', function() {
+    const camposEndereco = document.getElementById('camposEndereco');
+    const infoRetirada = document.getElementById('infoRetirada');
+    const alertFrete = document.getElementById('alertFrete');
+    const radios = document.querySelectorAll('input[name="tipo_entrega"]');
     
-    // Buscar CEP
-    $('#cep').on('blur', function() {
-        const cep = $(this).val().replace(/\D/g, '');
+    // Função para alternar entre entrega e retirada
+    function toggleTipoEntrega() {
+        const tipoSelecionado = document.querySelector('input[name="tipo_entrega"]:checked').value;
         
-        if (cep.length === 8) {
-            $.ajax({
-                url: `https://viacep.com.br/ws/${cep}/json/`,
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (!data.erro) {
-                        $('#endereco').val(data.logradouro);
-                        $('#bairro').val(data.bairro);
-                        $('#cidade').val(data.localidade);
-                        $('#estado').val(data.uf);
-                        $('#numero').focus();
-                    }
-                }
+        if (tipoSelecionado === 'retirada') {
+            // Retirada no local
+            camposEndereco.style.display = 'none';
+            infoRetirada.style.display = 'block';
+            alertFrete.style.display = 'none';
+            
+            // Remover required dos campos de endereço
+            document.querySelectorAll('#camposEndereco input[required], #camposEndereco select[required]').forEach(input => {
+                input.removeAttribute('required');
             });
+        } else {
+            // Entrega no endereço
+            camposEndereco.style.display = 'block';
+            infoRetirada.style.display = 'none';
+            alertFrete.style.display = 'block';
+            
+            // Adicionar required nos campos obrigatórios
+            document.getElementById('cep').setAttribute('required', 'required');
+            document.getElementById('endereco').setAttribute('required', 'required');
+            document.querySelector('input[name="numero"]').setAttribute('required', 'required');
+            document.getElementById('bairro').setAttribute('required', 'required');
+            document.getElementById('cidade').setAttribute('required', 'required');
+            document.getElementById('estado').setAttribute('required', 'required');
         }
+    }
+    
+    // Event listeners para os radios
+    radios.forEach(radio => {
+        radio.addEventListener('change', toggleTipoEntrega);
     });
+    
+    // Executar ao carregar
+    toggleTipoEntrega();
+    
+    // Máscara CEP
+    const cepInput = document.getElementById('cep');
+    if (cepInput) {
+        cepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 5) {
+                value = value.substring(0, 5) + '-' + value.substring(5, 8);
+            }
+            e.target.value = value;
+        });
+        
+        // Buscar CEP
+        cepInput.addEventListener('blur', function() {
+            const cep = this.value.replace(/\D/g, '');
+            
+            if (cep.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            document.getElementById('endereco').value = data.logradouro || '';
+                            document.getElementById('bairro').value = data.bairro || '';
+                            document.getElementById('cidade').value = data.localidade || '';
+                            document.getElementById('estado').value = data.uf || '';
+                            document.querySelector('input[name="numero"]').focus();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar CEP:', error);
+                    });
+            }
+        });
+    }
 });
 </script>

@@ -27,6 +27,10 @@ class Tecido_model extends CI_Model {
             $this->db->where('tecidos.colecao_id', $filtros['colecao_id']);
         }
         
+        if (isset($filtros['produto_id'])) {
+            $this->db->where('tecidos.produto_id', $filtros['produto_id']);
+        }
+        
         if (isset($filtros['status'])) {
             $this->db->where('tecidos.status', $filtros['status']);
         }

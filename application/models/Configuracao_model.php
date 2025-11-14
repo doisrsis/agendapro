@@ -155,4 +155,54 @@ class Configuracao_model extends CI_Model {
     public function get_email() {
         return $this->get_all_as_array('email');
     }
+
+    /**
+     * Buscar configuração por chave (objeto completo)
+     */
+    public function get_by_chave($chave) {
+        return $this->db->get_where($this->table, ['chave' => $chave])->row();
+    }
+
+    /**
+     * Atualizar configuração por chave
+     */
+    public function update_by_chave($chave, $valor) {
+        $data = [
+            'valor' => $valor,
+            'atualizado_em' => date('Y-m-d H:i:s')
+        ];
+        
+        $this->db->where('chave', $chave);
+        return $this->db->update($this->table, $data);
+    }
+
+    /**
+     * Inserir nova configuração
+     */
+    public function insert($dados) {
+        $dados['criado_em'] = date('Y-m-d H:i:s');
+        $this->db->insert($this->table, $dados);
+        return $this->db->insert_id();
+    }
+
+    /**
+     * Obter configurações dos Correios
+     */
+    public function get_correios() {
+        return $this->get_all_as_array('correios');
+    }
+
+    /**
+     * Obter configurações do Mercado Pago
+     */
+    public function get_mercadopago() {
+        return $this->get_all_as_array('mercadopago');
+    }
+
+    /**
+     * Obter configurações de notificações
+     */
+    public function get_notificacoes() {
+        return $this->get_all_as_array('notificacoes');
+    }
 }
