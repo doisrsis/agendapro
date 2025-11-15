@@ -356,7 +356,7 @@ class Orcamento extends CI_Controller {
      */
     public function resumo() {
         $dados_sessao = $this->session->userdata('orcamento_dados');
-        if (!$dados_sessao || !isset($dados_sessao['cidade'])) {
+        if (!$dados_sessao || !isset($dados_sessao['tipo_entrega'])) {
             redirect('orcamento/etapa1');
         }
         
@@ -370,6 +370,26 @@ class Orcamento extends CI_Controller {
         
         // Calcular preço
         $data['valor_calculado'] = $this->calcular_valor_final($dados_sessao);
+        
+        // Verificar se já enviou notificação nesta sessão
+        $notificacao_enviada = $this->session->userdata('notificacao_enviada');
+        
+        if (!$notificacao_enviada) {
+            // Salvar orçamento temporário no banco
+            $orcamento_id = $this->salvar_orcamento_temporario($dados_sessao, $data['valor_calculado']);
+            
+            // Enviar notificações (e-mail para empresa e cliente)
+            $this->enviar_notificacoes($orcamento_id, $dados_sessao, $data);
+            
+            // Marcar que já enviou notificação
+            $this->session->set_userdata('notificacao_enviada', true);
+            $this->session->set_userdata('orcamento_id', $orcamento_id);
+        } else {
+            // Pegar ID do orçamento já salvo
+            $orcamento_id = $this->session->userdata('orcamento_id');
+        }
+        
+        $data['orcamento_id'] = $orcamento_id;
         
         if ($this->input->method() === 'post') {
             $this->finalizar_orcamento($dados_sessao, $data['valor_calculado']);
@@ -496,6 +516,288 @@ class Orcamento extends CI_Controller {
         $url = "https://api.whatsapp.com/send?phone={$whatsapp_numero}&text=" . urlencode($mensagem);
         
         redirect($url);
+    }
+
+    /**
+     * Salvar orçamento temporário no banco
+     */
+    private function salvar_orcamento_temporario($dados, $valor) {
+        // Verificar se cliente já existe
+        $cliente = $this->Cliente_model->get_by_email($dados['email']);
+        
+        if (!$cliente) {
+            // Criar novo cliente
+            $cliente_id = $this->Cliente_model->insert([
+                'nome' => $dados['nome'],
+                'email' => $dados['email'],
+                'telefone' => $dados['telefone'],
+                'whatsapp' => $dados['whatsapp'],
+                'cep' => $dados['cep'] ?? null,
+                'endereco' => $dados['endereco'] ?? null,
+                'numero' => $dados['numero'] ?? null,
+                'complemento' => $dados['complemento'] ?? null,
+                'bairro' => $dados['bairro'] ?? null,
+                'cidade' => $dados['cidade'] ?? null,
+                'estado' => $dados['estado'] ?? null
+            ]);
+        } else {
+            $cliente_id = $cliente->id;
+        }
+        
+        // Criar orçamento
+        $orcamento_id = $this->Orcamento_model->insert([
+            'cliente_id' => $cliente_id,
+            'status' => 'pendente',
+            'tipo_atendimento' => 'online',
+            'valor_total' => $valor,
+            'valor_final' => $valor
+        ]);
+        
+        return $orcamento_id;
+    }
+    
+    /**
+     * Enviar notificações por e-mail
+     */
+    private function enviar_notificacoes($orcamento_id, $dados, $data_completa) {
+        // Carregar library de e-mail
+        $this->load->library('email');
+        
+        // Configurações SMTP
+        $config = array(
+            'protocol' => 'smtp',
+            'smtp_host' => 'mail.lecortine.com.br',
+            'smtp_port' => 465,
+            'smtp_user' => 'nao-responder@lecortine.com.br',
+            'smtp_pass' => 'a5)?O5qF+5!H@JaT2025',
+            'smtp_crypto' => 'ssl',
+            'smtp_timeout' => 30,
+            'mailtype' => 'html',
+            'charset' => 'utf-8',
+            'newline' => "\r\n",
+            'crlf' => "\r\n",
+            'wordwrap' => TRUE,
+            'validate' => TRUE
+        );
+        
+        $this->email->initialize($config);
+        
+        // Preparar dados para o e-mail
+        $dados_email = array(
+            'nome' => $dados['nome'],
+            'email' => $dados['email'],
+            'telefone' => $dados['telefone'],
+            'whatsapp' => $dados['whatsapp'] ?? '',
+            'produto' => $data_completa['produto']->nome,
+            'tecido' => $data_completa['tecido']->nome,
+            'largura' => number_format($dados['largura'], 2, ',', '.') . 'm',
+            'altura' => number_format($dados['altura'], 2, ',', '.') . 'm',
+            'tipo_entrega' => $dados['tipo_entrega'] ?? 'entrega'
+        );
+        
+        // Adicionar endereço se for entrega
+        if ($dados_email['tipo_entrega'] == 'entrega') {
+            $dados_email['cidade'] = $dados['cidade'];
+            $dados_email['estado'] = $dados['estado'];
+            $dados_email['endereco_completo'] = $dados['endereco'] . ', ' . $dados['numero'] . 
+                ($dados['complemento'] ? ' - ' . $dados['complemento'] : '') . '<br>' .
+                $dados['bairro'] . ' - ' . $dados['cidade'] . '/' . $dados['estado'] . '<br>' .
+                'CEP: ' . $dados['cep'];
+        }
+        
+        // 1. E-mail para a EMPRESA
+        try {
+            // Buscar e-mail de notificações
+            $this->load->model('Configuracao_model');
+            $email_notificacao = $this->Configuracao_model->get_by_chave('email_destinatario');
+            $email_destino = $email_notificacao ? $email_notificacao->valor : 'contato@lecortine.com.br';
+            
+            $this->email->clear();
+            $this->email->from('nao-responder@lecortine.com.br', 'Le Cortine - Sistema');
+            $this->email->to($email_destino);
+            $this->email->subject('🎉 Novo Orçamento #' . $orcamento_id . ' - Le Cortine');
+            $this->email->message($this->template_email_empresa($orcamento_id, $dados_email, $data_completa['valor_calculado']));
+            $this->email->send();
+        } catch (Exception $e) {
+            log_message('error', 'Erro ao enviar e-mail para empresa: ' . $e->getMessage());
+        }
+        
+        // 2. E-mail para o CLIENTE
+        try {
+            $this->email->clear();
+            $this->email->from('nao-responder@lecortine.com.br', 'Le Cortine');
+            $this->email->to($dados['email']);
+            $this->email->subject('✅ Seu Orçamento foi Recebido - Le Cortine');
+            $this->email->message($this->template_email_cliente($orcamento_id, $dados_email));
+            $this->email->send();
+        } catch (Exception $e) {
+            log_message('error', 'Erro ao enviar e-mail para cliente: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Template de e-mail para a EMPRESA
+     */
+    private function template_email_empresa($orcamento_id, $dados, $valor) {
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                .info-box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #667eea; }
+                .info-row { margin: 10px 0; }
+                .label { font-weight: bold; color: #667eea; }
+                .valor { font-size: 24px; color: #28a745; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Novo Orçamento!</h1>
+                    <p style="margin: 0; font-size: 18px;">Orçamento #' . $orcamento_id . '</p>
+                </div>
+                <div class="content">
+                    <p><strong>Um novo cliente solicitou orçamento!</strong></p>
+                    
+                    <div class="info-box">
+                        <h3 style="margin-top: 0; color: #667eea;">👤 Dados do Cliente</h3>
+                        <div class="info-row"><span class="label">Nome:</span> ' . $dados['nome'] . '</div>
+                        <div class="info-row"><span class="label">E-mail:</span> ' . $dados['email'] . '</div>
+                        <div class="info-row"><span class="label">Telefone:</span> ' . $dados['telefone'] . '</div>
+                        ' . (!empty($dados['whatsapp']) ? '
+                        <div class="info-row"><span class="label">WhatsApp:</span> ' . $dados['whatsapp'] . '</div>
+                        <div style="margin-top: 15px; text-align: center;">
+                            <a href="https://api.whatsapp.com/send?phone=' . preg_replace('/[^0-9]/', '', $dados['whatsapp']) . '&text=Olá ' . urlencode($dados['nome']) . ', tudo bem? Aqui é da Le Cortine! Vi que você solicitou um orçamento. Vamos conversar?" 
+                               style="display: inline-block; background: #25D366; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                📱 Chamar no WhatsApp
+                            </a>
+                        </div>' : '') . '
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3 style="margin-top: 0; color: #667eea;">🛍️ Detalhes do Pedido</h3>
+                        <div class="info-row"><span class="label">Produto:</span> ' . $dados['produto'] . '</div>
+                        <div class="info-row"><span class="label">Tecido:</span> ' . $dados['tecido'] . '</div>
+                        <div class="info-row"><span class="label">Dimensões:</span> ' . $dados['largura'] . ' x ' . $dados['altura'] . '</div>
+                        ' . ($dados['tipo_entrega'] == 'retirada' ? 
+                            '<div class="info-row"><span class="label">Entrega:</span> 🏪 Retirada no Local</div>' : 
+                            '<div class="info-row"><span class="label">Entrega:</span> 🚚 ' . $dados['endereco_completo'] . '</div>') . '
+                    </div>
+                    
+                    <div class="info-box" style="text-align: center;">
+                        <h3 style="margin-top: 0; color: #667eea;">💰 Valor Estimado</h3>
+                        <div class="valor">R$ ' . number_format($valor, 2, ',', '.') . '</div>
+                        <small style="color: #666;">*Frete não incluso</small>
+                    </div>
+                    
+                    <p style="margin-top: 30px; color: #666;">
+                        <strong>Próximos passos:</strong><br>
+                        1. Acesse o painel admin para ver detalhes<br>
+                        2. Entre em contato com o cliente via WhatsApp<br>
+                        3. Calcule o frete e envie o orçamento final
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>';
+        
+        return $html;
+    }
+    
+    /**
+     * Template de e-mail para o CLIENTE
+     */
+    private function template_email_cliente($orcamento_id, $dados) {
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                .info-box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; }
+                .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .btn-whatsapp { display: inline-block; background: #25D366; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+                .contatos { background: #fff3cd; border: 1px solid #ffc107; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Obrigado!</h1>
+                    <p style="margin: 0; font-size: 18px;">Seu orçamento foi recebido com sucesso</p>
+                </div>
+                <div class="content">
+                    <p>Olá <strong>' . $dados['nome'] . '</strong>,</p>
+                    
+                    <p style="font-size: 16px; line-height: 1.8;">
+                        Muito obrigado por escolher a <strong>Le Cortine</strong> para transformar seu ambiente! 
+                        Ficamos muito felizes em saber do seu interesse em nossos produtos.
+                    </p>
+                    
+                    <div class="success">
+                        <strong>✅ Seu orçamento foi recebido!</strong><br>
+                        Número do orçamento: <strong>#' . $orcamento_id . '</strong>
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3 style="margin-top: 0; color: #667eea;">📋 Resumo do seu Pedido</h3>
+                        <p><strong>Produto:</strong> ' . $dados['produto'] . '</p>
+                        <p><strong>Tecido:</strong> ' . $dados['tecido'] . '</p>
+                        <p><strong>Dimensões:</strong> ' . $dados['largura'] . ' x ' . $dados['altura'] . '</p>
+                    </div>
+                    
+                    <h3 style="color: #667eea;">📝 Próximos Passos</h3>
+                    <ol style="line-height: 2;">
+                        <li>Nossa equipe está analisando seu pedido com todo carinho</li>
+                        <li>Entraremos em contato via WhatsApp em breve</li>
+                        <li>Enviaremos o valor do frete e prazo de entrega</li>
+                        <li>Após sua confirmação, iniciaremos a produção</li>
+                    </ol>
+                    
+                    <div class="contatos">
+                        <h3 style="margin-top: 0; color: #856404;">💬 Ficou com alguma dúvida?</h3>
+                        <p style="margin-bottom: 15px;">
+                            Não se preocupe! Nossa equipe está pronta para te atender e esclarecer qualquer questão sobre seu orçamento.
+                        </p>
+                        
+                        <div style="text-align: center; margin: 20px 0;">
+                            <a href="https://api.whatsapp.com/send?phone=5575988890006&text=Olá! Fiz um orçamento (#' . $orcamento_id . ') e gostaria de tirar algumas dúvidas." 
+                               class="btn-whatsapp">
+                                📱 Falar no WhatsApp
+                            </a>
+                        </div>
+                        
+                        <p style="text-align: center; margin-top: 20px; color: #666;">
+                            <strong>Outros canais de atendimento:</strong><br>
+                            📞 Telefone: (75) 98889-0006<br>
+                            📧 E-mail: contato@lecortine.com.br<br>
+                            🕐 Horário: Segunda a Sexta, 8h às 18h
+                        </p>
+                    </div>
+                    
+                    <p style="margin-top: 30px; text-align: center; color: #666; font-size: 14px;">
+                        <em>Agradecemos pela sua preferência e confiança!<br>
+                        Estamos ansiosos para tornar seu projeto realidade.</em>
+                    </p>
+                    
+                    <p style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
+                        Le Cortine - Transformando ambientes com elegância e qualidade
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>';
+        
+        return $html;
     }
 
     /**

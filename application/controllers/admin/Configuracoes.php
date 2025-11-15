@@ -26,13 +26,19 @@ class Configuracoes extends Admin_Controller {
      * Configurações Gerais
      */
     public function geral() {
+        // Evitar cache
+        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
+        $this->output->set_header('Pragma: no-cache');
+        
         $data['titulo'] = 'Configurações Gerais';
         $data['menu_ativo'] = 'configuracoes';
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('geral');
         
         if ($this->input->method() === 'post') {
             $this->salvar_configuracoes('geral');
+            return; // Importante: return após redirect
         }
+        
+        $data['configs'] = $this->Configuracao_model->get_by_grupo('geral');
         
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/configuracoes/geral', $data);
@@ -43,13 +49,18 @@ class Configuracoes extends Admin_Controller {
      * Configurações dos Correios
      */
     public function correios() {
+        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
+        $this->output->set_header('Pragma: no-cache');
+        
         $data['titulo'] = 'Configurações dos Correios';
         $data['menu_ativo'] = 'configuracoes';
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('correios');
         
         if ($this->input->method() === 'post') {
             $this->salvar_configuracoes('correios');
+            return;
         }
+        
+        $data['configs'] = $this->Configuracao_model->get_by_grupo('correios');
         
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/configuracoes/correios', $data);
@@ -60,13 +71,18 @@ class Configuracoes extends Admin_Controller {
      * Configurações do Mercado Pago
      */
     public function mercadopago() {
+        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
+        $this->output->set_header('Pragma: no-cache');
+        
         $data['titulo'] = 'Configurações do Mercado Pago';
         $data['menu_ativo'] = 'configuracoes';
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('mercadopago');
         
         if ($this->input->method() === 'post') {
             $this->salvar_configuracoes('mercadopago');
+            return;
         }
+        
+        $data['configs'] = $this->Configuracao_model->get_by_grupo('mercadopago');
         
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/configuracoes/mercadopago', $data);
@@ -77,13 +93,18 @@ class Configuracoes extends Admin_Controller {
      * Configurações de Notificações
      */
     public function notificacoes() {
+        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
+        $this->output->set_header('Pragma: no-cache');
+        
         $data['titulo'] = 'Configurações de Notificações';
         $data['menu_ativo'] = 'configuracoes';
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('notificacoes');
         
         if ($this->input->method() === 'post') {
             $this->salvar_configuracoes('notificacoes');
+            return;
         }
+        
+        $data['configs'] = $this->Configuracao_model->get_by_grupo('notificacoes');
         
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/configuracoes/notificacoes', $data);

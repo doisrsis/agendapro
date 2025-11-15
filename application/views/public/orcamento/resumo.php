@@ -109,18 +109,32 @@
         </div>
         <?php endif; ?>
 
-        <!-- Endereço -->
+        <!-- Endereço / Retirada -->
         <div class="card mb-3" style="border: 2px solid #e0e0e0; border-radius: 10px;">
             <div class="card-header" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
-                <h5 class="mb-0"><i class="ti ti-map-pin"></i> Endereço de Entrega</h5>
+                <h5 class="mb-0">
+                    <?php if(isset($dados['tipo_entrega']) && $dados['tipo_entrega'] == 'retirada'): ?>
+                        <i class="ti ti-building-store"></i> Retirada no Local
+                    <?php else: ?>
+                        <i class="ti ti-map-pin"></i> Endereço de Entrega
+                    <?php endif; ?>
+                </h5>
             </div>
             <div class="card-body">
-                <p>
-                    <?= $dados['endereco'] ?>, <?= $dados['numero'] ?>
-                    <?= isset($dados['complemento']) && $dados['complemento'] ? ' - ' . $dados['complemento'] : '' ?><br>
-                    <?= $dados['bairro'] ?> - <?= $dados['cidade'] ?>/<?= $dados['estado'] ?><br>
-                    CEP: <?= $dados['cep'] ?>
-                </p>
+                <?php if(isset($dados['tipo_entrega']) && $dados['tipo_entrega'] == 'retirada'): ?>
+                    <div class="alert alert-success mb-0">
+                        <i class="ti ti-check-circle me-2"></i>
+                        <strong>Você optou por retirar no local</strong><br>
+                        <small class="text-muted">O endereço para retirada será informado pela nossa equipe via WhatsApp.</small>
+                    </div>
+                <?php else: ?>
+                    <p>
+                        <?= $dados['endereco'] ?>, <?= $dados['numero'] ?>
+                        <?= isset($dados['complemento']) && $dados['complemento'] ? ' - ' . $dados['complemento'] : '' ?><br>
+                        <?= $dados['bairro'] ?> - <?= $dados['cidade'] ?>/<?= $dados['estado'] ?><br>
+                        CEP: <?= $dados['cep'] ?>
+                    </p>
+                <?php endif; ?>
             </div>
         </div>
 
