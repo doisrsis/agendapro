@@ -377,6 +377,28 @@ class Orcamento extends CI_Controller {
         
         // Calcular preço
         $data['valor_calculado'] = $this->calcular_valor_final($dados_sessao);
+
+        // Preparar extras para exibição no resumo
+        $extras_ids = [];
+        if (!empty($dados_sessao['extras']) && is_array($dados_sessao['extras'])) {
+            $extras_ids = array_unique(array_filter($dados_sessao['extras']));
+        }
+        if (isset($dados_sessao['blackout_extra_id'])) {
+            $extras_ids[] = (int) $dados_sessao['blackout_extra_id'];
+            $extras_ids = array_unique($extras_ids);
+        }
+
+        $extras_detalhes = [];
+        if (!empty($extras_ids)) {
+            foreach ($extras_ids as $extra_id) {
+                $extra = $this->Extra_model->get($extra_id);
+                if ($extra) {
+                    $extras_detalhes[] = $extra;
+                }
+            }
+        }
+
+        $data['extras'] = $extras_detalhes;
         
         // Verificar se já enviou notificação nesta sessão
         $notificacao_enviada = $this->session->userdata('notificacao_enviada');
@@ -493,11 +515,35 @@ class Orcamento extends CI_Controller {
             $cliente_id = $cliente->id;
         }
         
+        // Garantir tipo de atendimento válido
+        $tipo_atendimento = $dados['tipo_atendimento'] ?? 'orcamento';
+        if (!in_array($tipo_atendimento, ['orcamento', 'consultoria'], true)) {
+            $tipo_atendimento = 'orcamento';
+        }
+
+        $extras_ids = [];
+        if (!empty($dados['extras']) && is_array($dados['extras'])) {
+            $extras_ids = array_unique(array_filter($dados['extras']));
+        }
+        if (isset($dados['blackout_extra_id'])) {
+            $extras_ids[] = (int) $dados['blackout_extra_id'];
+            $extras_ids = array_unique($extras_ids);
+        }
+
+        $extras_ids = [];
+        if (!empty($dados['extras']) && is_array($dados['extras'])) {
+            $extras_ids = array_unique(array_filter($dados['extras']));
+        }
+        if (isset($dados['blackout_extra_id'])) {
+            $extras_ids[] = (int) $dados['blackout_extra_id'];
+            $extras_ids = array_unique($extras_ids);
+        }
+
         // Criar orçamento
         $orcamento_id = $this->Orcamento_model->insert([
             'cliente_id' => $cliente_id,
             'status' => 'pendente',
-            'tipo_atendimento' => 'online',
+            'tipo_atendimento' => $tipo_atendimento,
             'valor_total' => $valor,
             'valor_final' => $valor
         ]);
@@ -554,19 +600,30 @@ class Orcamento extends CI_Controller {
         $cliente = $this->Cliente_model->get_by_email($dados['email']);
         
         if (!$cliente) {
-            // Criar novo cliente
+            // Montar endereço completo com boas práticas de consistência
+            $endereco = $dados['endereco'] ?? null;
+            if (!empty($dados['numero'])) {
+                $endereco = trim(($endereco ?? '') . ', ' . $dados['numero']);
+            }
+            if (!empty($dados['complemento'])) {
+                $endereco = trim(($endereco ?? '') . ' - ' . $dados['complemento']);
+            }
+            if (!empty($dados['bairro'])) {
+                $endereco = trim(($endereco ?? '') . ' - Bairro ' . $dados['bairro']);
+            }
+
+            // Criar novo cliente respeitando a estrutura atual da tabela
             $cliente_id = $this->Cliente_model->insert([
                 'nome' => $dados['nome'],
                 'email' => $dados['email'],
                 'telefone' => $dados['telefone'],
                 'whatsapp' => $dados['whatsapp'] ?? $dados['telefone'],
                 'cep' => $dados['cep'] ?? null,
-                'endereco' => $dados['endereco'] ?? null,
-                'numero' => $dados['numero'] ?? null,
-                'complemento' => $dados['complemento'] ?? null,
-                'bairro' => $dados['bairro'] ?? null,
+                'endereco' => $endereco,
                 'cidade' => $dados['cidade'] ?? null,
-                'estado' => $dados['estado'] ?? null
+                'estado' => $dados['estado'] ?? null,
+                'observacoes' => $dados['observacoes'] ?? null,
+                'origem' => 'site'
             ]);
             log_message('debug', 'Cliente criado com ID: ' . $cliente_id);
         } else {
@@ -579,11 +636,27 @@ class Orcamento extends CI_Controller {
             return false;
         }
         
+        // Garantir tipo de atendimento válido
+        $tipo_atendimento = $dados['tipo_atendimento'] ?? 'orcamento';
+        if (!in_array($tipo_atendimento, ['orcamento', 'consultoria'], true)) {
+            $tipo_atendimento = 'orcamento';
+        }
+
+        // Preparar lista de extras selecionados na sessão
+        $extras_ids = [];
+        if (!empty($dados['extras']) && is_array($dados['extras'])) {
+            $extras_ids = array_unique(array_filter($dados['extras']));
+        }
+        if (isset($dados['blackout_extra_id'])) {
+            $extras_ids[] = (int) $dados['blackout_extra_id'];
+            $extras_ids = array_unique($extras_ids);
+        }
+
         // Criar orçamento
         $orcamento_id = $this->Orcamento_model->insert([
             'cliente_id' => $cliente_id,
             'status' => 'pendente',
-            'tipo_atendimento' => 'online',
+            'tipo_atendimento' => $tipo_atendimento,
             'valor_total' => $valor,
             'valor_final' => $valor,
             'observacoes_cliente' => $dados['observacoes'] ?? null,
@@ -621,10 +694,13 @@ class Orcamento extends CI_Controller {
         }
         
         // Adicionar extras se houver
-        if (!empty($dados['extras']) && is_array($dados['extras'])) {
-            log_message('debug', 'Adicionando extras: ' . json_encode($dados['extras']));
-            foreach ($dados['extras'] as $extra_id) {
-                $this->Orcamento_model->add_item_extra($item_id, $extra_id);
+        if (!empty($extras_ids)) {
+            log_message('debug', 'Adicionando extras: ' . json_encode($extras_ids));
+            foreach ($extras_ids as $extra_id) {
+                $extra = $this->Extra_model->get($extra_id);
+                if ($extra) {
+                    $this->Orcamento_model->add_item_extra($item_id, $extra_id, (float) $extra->valor);
+                }
             }
         }
         

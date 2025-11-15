@@ -98,13 +98,30 @@
         </div>
 
         <!-- Extras -->
-        <?php if(isset($dados['blackout_extra_id'])): ?>
-        <div class="card mb-3" style="border: 2px solid #e0e0e0; border-radius: 10px;">
-            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
-                <h5 class="mb-0"><i class="ti ti-plus"></i> Extras</h5>
+        <?php if(!empty($extras)): ?>
+        <div class="card mb-3 extras-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="ti ti-plus"></i> Extras Selecionados</h5>
             </div>
             <div class="card-body">
-                <p><i class="ti ti-moon"></i> <strong>Blackout Adicional</strong></p>
+                <div class="row g-3">
+                    <?php foreach($extras as $extra): ?>
+                        <div class="col-12 col-md-6">
+                            <div class="extra-item">
+                                <h6 class="mb-1"><?= $extra->nome ?></h6>
+                                <?php if(!empty($extra->descricao)): ?>
+                                    <p class="small text-muted mb-2"><?= $extra->descricao ?></p>
+                                <?php endif; ?>
+                                <span class="badge bg-brown-soft">
+                                    <?= $extra->tipo_preco === 'fixo' ? 'Valor fixo' : 'Valor por m²' ?>
+                                </span>
+                                <?php if(isset($extra->valor)): ?>
+                                    <div class="extra-price">+ R$ <?= number_format((float)$extra->valor, 2, ',', '.') ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
         <?php endif; ?>
