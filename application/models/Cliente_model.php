@@ -41,27 +41,64 @@ class Cliente_model extends CI_Model {
     /**
      * Listar todos os clientes
      */
-    public function get_all($filters = [], $limit = null, $offset = 0) {
-        if (isset($filters['search'])) {
+    public function get_all($limit = null, $offset = 0, $busca = null, $status = null, $ordem = 'recente') {
+        // Busca
+        if ($busca) {
             $this->db->group_start();
-            $this->db->like('nome', $filters['search']);
-            $this->db->or_like('email', $filters['search']);
-            $this->db->or_like('telefone', $filters['search']);
-            $this->db->or_like('whatsapp', $filters['search']);
+            $this->db->like('nome', $busca);
+            $this->db->or_like('email', $busca);
+            $this->db->or_like('telefone', $busca);
+            $this->db->or_like('whatsapp', $busca);
+            $this->db->or_like('cidade', $busca);
             $this->db->group_end();
         }
         
-        if (isset($filters['origem'])) {
-            $this->db->where('origem', $filters['origem']);
+        // Filtro de status (se houver campo status no futuro)
+        if ($status) {
+            $this->db->where('status', $status);
         }
         
-        $this->db->order_by('criado_em', 'DESC');
+        // Ordenação
+        switch ($ordem) {
+            case 'nome':
+                $this->db->order_by('nome', 'ASC');
+                break;
+            case 'antigo':
+                $this->db->order_by('criado_em', 'ASC');
+                break;
+            default: // recente
+                $this->db->order_by('criado_em', 'DESC');
+                break;
+        }
         
         if ($limit) {
             $this->db->limit($limit, $offset);
         }
         
         return $this->db->get($this->table)->result();
+    }
+
+    /**
+     * Contar todos os clientes (com filtros)
+     */
+    public function count_all($busca = null, $status = null) {
+        // Busca
+        if ($busca) {
+            $this->db->group_start();
+            $this->db->like('nome', $busca);
+            $this->db->or_like('email', $busca);
+            $this->db->or_like('telefone', $busca);
+            $this->db->or_like('whatsapp', $busca);
+            $this->db->or_like('cidade', $busca);
+            $this->db->group_end();
+        }
+        
+        // Filtro de status
+        if ($status) {
+            $this->db->where('status', $status);
+        }
+        
+        return $this->db->count_all_results($this->table);
     }
 
     /**

@@ -19,7 +19,7 @@
             font-feature-settings: "cv03", "cv04", "cv11";
         }
         .page {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #fff 0%, #a77843ff 100%);
         }
     </style>
 </head>
@@ -29,7 +29,7 @@
         <div class="container container-tight py-4">
             <div class="text-center mb-4">
                 <a href="<?= base_url() ?>" class="navbar-brand navbar-brand-autodark">
-                    <img src="<?= base_url('assets/img/logo.png') ?>" height="36" alt="Le Cortine">
+                    <img src="<?= base_url('assets/img/logo.png') ?>" height="56" alt="Le Cortine">
                 </a>
             </div>
 

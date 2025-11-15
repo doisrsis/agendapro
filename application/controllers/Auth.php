@@ -117,10 +117,15 @@ class Auth extends CI_Controller {
 
                 if ($token) {
                     // Enviar e-mail com link de recuperação
-                    $this->enviar_email_recuperacao($email, $token);
+                    $enviado = $this->enviar_email_recuperacao($email, $token);
                     
-                    $this->session->set_flashdata('sucesso', 'Instruções de recuperação enviadas para seu e-mail.');
-                    redirect('login');
+                    if ($enviado) {
+                        $this->session->set_flashdata('sucesso', 'Instruções de recuperação enviadas para seu e-mail. Verifique também a pasta de spam.');
+                        redirect('login');
+                    } else {
+                        log_message('error', 'Erro ao enviar e-mail de recuperação para: ' . $email);
+                        $this->session->set_flashdata('erro', 'Erro ao enviar e-mail. Tente novamente ou contate o administrador.');
+                    }
                 } else {
                     $this->session->set_flashdata('erro', 'E-mail não encontrado.');
                 }
@@ -178,26 +183,79 @@ class Auth extends CI_Controller {
      */
     private function enviar_email_recuperacao($email, $token) {
         $this->load->library('email');
-
-        $link = base_url("auth/resetar-senha/{$token}");
         
-        $mensagem = "
-            <h2>Recuperação de Senha - Le Cortine</h2>
-            <p>Você solicitou a recuperação de senha.</p>
-            <p>Clique no link abaixo para criar uma nova senha:</p>
-            <p><a href='{$link}' style='padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Resetar Senha</a></p>
-            <p>Ou copie e cole este link no navegador:</p>
-            <p>{$link}</p>
-            <p>Este link expira em 1 hora.</p>
-            <p>Se você não solicitou esta recuperação, ignore este e-mail.</p>
-        ";
+        // Configurações SMTP
+        $config = array(
+            'protocol' => 'smtp',
+            'smtp_host' => 'mail.lecortine.com.br',
+            'smtp_port' => 465,
+            'smtp_user' => 'nao-responder@lecortine.com.br',
+            'smtp_pass' => 'a5)?O5qF+5!H@JaT2025',
+            'smtp_crypto' => 'ssl',
+            'smtp_timeout' => 30,
+            'mailtype' => 'html',
+            'charset' => 'utf-8',
+            'newline' => "\r\n",
+            'crlf' => "\r\n",
+            'wordwrap' => TRUE,
+            'validate' => TRUE
+        );
+        
+        $this->email->initialize($config);
 
-        $this->email->from('noreply@lecortine.com.br', 'Le Cortine');
+        $link = base_url("auth/resetar_senha/{$token}");
+        
+        $mensagem = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔐 Recuperação de Senha</h1>
+                    <p style="margin: 0;">Le Cortine - Sistema de Orçamentos</p>
+                </div>
+                <div class="content">
+                    <p>Olá,</p>
+                    <p>Você solicitou a recuperação de senha para sua conta no sistema Le Cortine.</p>
+                    <p>Clique no botão abaixo para criar uma nova senha:</p>
+                    <p style="text-align: center;">
+                        <a href="' . $link . '" class="button">Criar Nova Senha</a>
+                    </p>
+                    <p>Ou copie e cole este link no navegador:</p>
+                    <p style="word-break: break-all; background: #fff; padding: 10px; border-radius: 5px;">' . $link . '</p>
+                    <div class="warning">
+                        <strong>⏰ Atenção:</strong> Este link expira em 1 hora por questões de segurança.
+                    </div>
+                    <p><strong>Não solicitou esta recuperação?</strong><br>
+                    Se você não solicitou a recuperação de senha, ignore este e-mail. Sua senha permanecerá inalterada.</p>
+                </div>
+            </div>
+        </body>
+        </html>';
+
+        $this->email->from('nao-responder@lecortine.com.br', 'Le Cortine - Sistema');
         $this->email->to($email);
-        $this->email->subject('Recuperação de Senha - Le Cortine');
+        $this->email->subject('🔐 Recuperação de Senha - Le Cortine');
         $this->email->message($mensagem);
 
-        return $this->email->send();
+        $enviado = $this->email->send();
+        
+        if (!$enviado) {
+            log_message('error', 'Erro SMTP ao enviar email de recuperação: ' . $this->email->print_debugger());
+        }
+        
+        return $enviado;
     }
 
     /**

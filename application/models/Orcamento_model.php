@@ -403,4 +403,16 @@ class Orcamento_model extends CI_Model {
         $result = $this->db->get($this->table)->row();
         return $result->valor_final ?? 0;
     }
+
+    /**
+     * Buscar orçamentos por cliente
+     */
+    public function get_by_cliente($cliente_id) {
+        $this->db->select('orcamentos.*');
+        $this->db->from($this->table);
+        $this->db->where('cliente_id', $cliente_id);
+        $this->db->order_by('criado_em', 'DESC');
+        
+        return $this->db->get()->result();
+    }
 }

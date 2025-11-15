@@ -34,13 +34,22 @@ class Usuario_model extends CI_Model {
     /**
      * Listar todos os usuários
      */
-    public function get_all($filters = []) {
-        if (isset($filters['status'])) {
-            $this->db->where('status', $filters['status']);
+    public function get_all($busca = null, $nivel = null, $status = null) {
+        // Busca
+        if ($busca) {
+            $this->db->group_start();
+            $this->db->like('nome', $busca);
+            $this->db->or_like('email', $busca);
+            $this->db->group_end();
         }
         
-        if (isset($filters['nivel'])) {
-            $this->db->where('nivel', $filters['nivel']);
+        // Filtros
+        if ($nivel) {
+            $this->db->where('nivel', $nivel);
+        }
+        
+        if ($status) {
+            $this->db->where('status', $status);
         }
         
         $this->db->order_by('nome', 'ASC');
@@ -174,4 +183,61 @@ class Usuario_model extends CI_Model {
         
         return $this->db->count_all_results($this->table);
     }
+
+    /**
+     * Buscar permissões do usuário
+     */
+    public function get_permissoes($usuario_id) {
+        $result = $this->db->get_where('usuario_permissoes', ['usuario_id' => $usuario_id])->result();
+        
+        $permissoes = [];
+        foreach ($result as $row) {
+            $permissoes[$row->modulo] = json_decode($row->permissoes, true);
+        }
+        
+        return $permissoes;
+    }
+
+    /**
+     * Inserir permissão
+     */
+    public function insert_permissao($usuario_id, $modulo, $permissoes_json) {
+        return $this->db->insert('usuario_permissoes', [
+            'usuario_id' => $usuario_id,
+            'modulo' => $modulo,
+            'permissoes' => $permissoes_json
+        ]);
+    }
+
+    /**
+     * Deletar todas as permissões do usuário
+     */
+    public function delete_permissoes($usuario_id) {
+        $this->db->where('usuario_id', $usuario_id);
+        return $this->db->delete('usuario_permissoes');
+    }
+
+    /**
+     * Verificar se usuário tem permissão
+     */
+    public function tem_permissao($usuario_id, $modulo, $acao) {
+        // Admin tem todas as permissões
+        $usuario = $this->get($usuario_id);
+        if ($usuario && $usuario->nivel == 'admin') {
+            return true;
+        }
+        
+        // Buscar permissão específica
+        $this->db->where('usuario_id', $usuario_id);
+        $this->db->where('modulo', $modulo);
+        $permissao = $this->db->get('usuario_permissoes')->row();
+        
+        if (!$permissao) {
+            return false;
+        }
+        
+        $permissoes = json_decode($permissao->permissoes, true);
+        return isset($permissoes[$acao]) && $permissoes[$acao] === true;
+    }
 }
+
