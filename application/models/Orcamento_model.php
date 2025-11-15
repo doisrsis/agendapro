@@ -216,9 +216,16 @@ class Orcamento_model extends CI_Model {
     }
 
     /**
+     * Alias para get_extras_item (compatibilidade)
+     */
+    public function get_item_extras($item_id) {
+        return $this->get_extras_item($item_id);
+    }
+
+    /**
      * Adicionar extra ao item
      */
-    public function add_extra($item_id, $extra_id, $valor) {
+    public function add_extra($item_id, $extra_id, $valor = 0) {
         $data = [
             'orcamento_item_id' => $item_id,
             'extra_id' => $extra_id,
@@ -235,6 +242,13 @@ class Orcamento_model extends CI_Model {
         }
         
         return $this->db->insert_id();
+    }
+
+    /**
+     * Alias para add_extra (compatibilidade)
+     */
+    public function add_item_extra($item_id, $extra_id, $valor = 0) {
+        return $this->add_extra($item_id, $extra_id, $valor);
     }
 
     /**

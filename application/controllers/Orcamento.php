@@ -36,6 +36,10 @@ class Orcamento extends CI_Controller {
      * Etapa 1: Dados do Cliente
      */
     public function etapa1() {
+        // Limpar flags de notificação ao iniciar novo orçamento
+        $this->session->unset_userdata('notificacao_enviada');
+        $this->session->unset_userdata('orcamento_id');
+        
         $data['titulo'] = 'Solicite seu Orçamento - Le Cortine';
         $data['etapa_atual'] = 1;
         $data['total_etapas'] = 8;
@@ -363,6 +367,9 @@ class Orcamento extends CI_Controller {
         $data['titulo'] = 'Resumo do Orçamento - Le Cortine';
         $data['dados'] = $dados_sessao;
         
+        // DEBUG: Mostrar erros do banco
+        $this->db->db_debug = TRUE;
+        
         // Buscar informações completas
         $data['produto'] = $this->Produto_model->get($dados_sessao['produto_id']);
         $data['tecido'] = $this->Tecido_model->get($dados_sessao['tecido_id']);
@@ -374,16 +381,29 @@ class Orcamento extends CI_Controller {
         // Verificar se já enviou notificação nesta sessão
         $notificacao_enviada = $this->session->userdata('notificacao_enviada');
         
+        // DEBUG: Verificar status da notificação
+        log_message('debug', 'Notificação enviada? ' . ($notificacao_enviada ? 'SIM' : 'NÃO'));
+        
         if (!$notificacao_enviada) {
-            // Salvar orçamento temporário no banco
-            $orcamento_id = $this->salvar_orcamento_temporario($dados_sessao, $data['valor_calculado']);
-            
-            // Enviar notificações (e-mail para empresa e cliente)
-            $this->enviar_notificacoes($orcamento_id, $dados_sessao, $data);
-            
-            // Marcar que já enviou notificação
-            $this->session->set_userdata('notificacao_enviada', true);
-            $this->session->set_userdata('orcamento_id', $orcamento_id);
+            try {
+                // Salvar orçamento temporário no banco
+                $orcamento_id = $this->salvar_orcamento_temporario($dados_sessao, $data['valor_calculado']);
+                
+                if ($orcamento_id) {
+                    // Enviar notificações (e-mail para empresa e cliente)
+                    $this->enviar_notificacoes($orcamento_id, $dados_sessao, $data);
+                    
+                    // Marcar que já enviou notificação
+                    $this->session->set_userdata('notificacao_enviada', true);
+                    $this->session->set_userdata('orcamento_id', $orcamento_id);
+                } else {
+                    log_message('error', 'Erro ao salvar orçamento temporário');
+                    $orcamento_id = null;
+                }
+            } catch (Exception $e) {
+                log_message('error', 'Exceção ao salvar orçamento: ' . $e->getMessage());
+                $orcamento_id = null;
+            }
         } else {
             // Pegar ID do orçamento já salvo
             $orcamento_id = $this->session->userdata('orcamento_id');
@@ -522,6 +542,14 @@ class Orcamento extends CI_Controller {
      * Salvar orçamento temporário no banco
      */
     private function salvar_orcamento_temporario($dados, $valor) {
+        // DEBUG: Verificar se método está sendo chamado
+        error_log('=== INICIANDO SALVAMENTO DE ORÇAMENTO ===');
+        error_log('Dados: ' . print_r($dados, true));
+        error_log('Valor: ' . $valor);
+        
+        log_message('debug', 'Iniciando salvamento de orçamento temporário');
+        log_message('debug', 'Dados recebidos: ' . json_encode($dados));
+        
         // Verificar se cliente já existe
         $cliente = $this->Cliente_model->get_by_email($dados['email']);
         
@@ -531,7 +559,7 @@ class Orcamento extends CI_Controller {
                 'nome' => $dados['nome'],
                 'email' => $dados['email'],
                 'telefone' => $dados['telefone'],
-                'whatsapp' => $dados['whatsapp'],
+                'whatsapp' => $dados['whatsapp'] ?? $dados['telefone'],
                 'cep' => $dados['cep'] ?? null,
                 'endereco' => $dados['endereco'] ?? null,
                 'numero' => $dados['numero'] ?? null,
@@ -540,8 +568,15 @@ class Orcamento extends CI_Controller {
                 'cidade' => $dados['cidade'] ?? null,
                 'estado' => $dados['estado'] ?? null
             ]);
+            log_message('debug', 'Cliente criado com ID: ' . $cliente_id);
         } else {
             $cliente_id = $cliente->id;
+            log_message('debug', 'Cliente existente ID: ' . $cliente_id);
+        }
+        
+        if (!$cliente_id) {
+            log_message('error', 'Falha ao criar/obter cliente');
+            return false;
         }
         
         // Criar orçamento
@@ -550,9 +585,50 @@ class Orcamento extends CI_Controller {
             'status' => 'pendente',
             'tipo_atendimento' => 'online',
             'valor_total' => $valor,
-            'valor_final' => $valor
+            'valor_final' => $valor,
+            'observacoes_cliente' => $dados['observacoes'] ?? null,
+            'ip_cliente' => $this->input->ip_address()
         ]);
         
+        log_message('debug', 'Orçamento criado com ID: ' . $orcamento_id);
+        
+        if (!$orcamento_id) {
+            log_message('error', 'Falha ao criar orçamento');
+            return false;
+        }
+        
+        // Criar item do orçamento
+        $item_data = [
+            'produto_id' => $dados['produto_id'],
+            'tecido_id' => $dados['tecido_id'] ?? null,
+            'cor_id' => $dados['cor_id'] ?? null,
+            'largura' => $dados['largura'],
+            'altura' => $dados['altura'],
+            'quantidade' => $dados['quantidade'] ?? 1,
+            'valor_unitario' => $valor,
+            'preco_total' => $valor
+        ];
+        
+        log_message('debug', 'Dados do item: ' . json_encode($item_data));
+        
+        $item_id = $this->Orcamento_model->add_item($orcamento_id, $item_data);
+        
+        log_message('debug', 'Item criado com ID: ' . $item_id);
+        
+        if (!$item_id) {
+            log_message('error', 'Falha ao criar item do orçamento');
+            return false;
+        }
+        
+        // Adicionar extras se houver
+        if (!empty($dados['extras']) && is_array($dados['extras'])) {
+            log_message('debug', 'Adicionando extras: ' . json_encode($dados['extras']));
+            foreach ($dados['extras'] as $extra_id) {
+                $this->Orcamento_model->add_item_extra($item_id, $extra_id);
+            }
+        }
+        
+        log_message('debug', 'Orçamento salvo com sucesso! ID: ' . $orcamento_id);
         return $orcamento_id;
     }
     

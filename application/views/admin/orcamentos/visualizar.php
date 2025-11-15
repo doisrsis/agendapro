@@ -124,37 +124,48 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach($itens as $item): ?>
+                                <?php if(empty($itens)): ?>
                                     <tr>
-                                        <td>
-                                            <strong><?= $item->produto->nome ?></strong>
-                                        </td>
-                                        <td>
-                                            <?php if(isset($item->tecido)): ?>
-                                                <div><small class="text-muted">Tecido:</small> <?= $item->tecido->nome ?></div>
-                                            <?php endif; ?>
-                                            <?php if(isset($item->cor)): ?>
-                                                <div><small class="text-muted">Cor:</small> <?= $item->cor->nome ?></div>
-                                            <?php endif; ?>
-                                            <?php if(!empty($item->extras)): ?>
-                                                <div><small class="text-muted">Extras:</small>
-                                                    <?php foreach($item->extras as $extra): ?>
-                                                        <span class="badge bg-secondary"><?= $extra->extra_nome ?></span>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <?= $item->largura ?>m × <?= $item->altura ?>m
-                                            <?php if($item->quantidade > 1): ?>
-                                                <br><small class="text-muted">Qtd: <?= $item->quantidade ?></small>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-end">
-                                            <strong>R$ <?= number_format($item->valor_total, 2, ',', '.') ?></strong>
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            <i class="ti ti-inbox fs-1 mb-2 d-block"></i>
+                                            <strong>Nenhum item encontrado neste orçamento</strong>
+                                            <br>
+                                            <small>Os itens podem não ter sido salvos corretamente no banco de dados.</small>
                                         </td>
                                     </tr>
-                                <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php foreach($itens as $item): ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?= $item->produto->nome ?></strong>
+                                            </td>
+                                            <td>
+                                                <?php if(isset($item->tecido)): ?>
+                                                    <div><small class="text-muted">Tecido:</small> <?= $item->tecido->nome ?></div>
+                                                <?php endif; ?>
+                                                <?php if(isset($item->cor)): ?>
+                                                    <div><small class="text-muted">Cor:</small> <?= $item->cor->nome ?></div>
+                                                <?php endif; ?>
+                                                <?php if(!empty($item->extras)): ?>
+                                                    <div><small class="text-muted">Extras:</small>
+                                                        <?php foreach($item->extras as $extra): ?>
+                                                            <span class="badge bg-secondary"><?= $extra->extra_nome ?></span>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?= $item->largura ?>m × <?= $item->altura ?>m
+                                                <?php if($item->quantidade > 1): ?>
+                                                    <br><small class="text-muted">Qtd: <?= $item->quantidade ?></small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>R$ <?= number_format($item->preco_total, 2, ',', '.') ?></strong>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                             <tfoot>
                                 <tr>

@@ -132,6 +132,11 @@ class Orcamentos extends Admin_Controller {
             redirect('admin/orcamentos');
         }
         
+        // Buscar orçamento e cliente
+        $orcamento = $this->Orcamento_model->get($id);
+        $cliente = $this->Cliente_model->get($orcamento->cliente_id);
+        
+        $status_antigo = $orcamento->status;
         $status = $this->input->post('status');
         $observacoes = $this->input->post('observacoes_internas');
         
@@ -142,7 +147,12 @@ class Orcamentos extends Admin_Controller {
         }
         
         if ($this->Orcamento_model->update($id, $dados)) {
-            $this->session->set_flashdata('sucesso', 'Status alterado com sucesso!');
+            // Enviar e-mail para o cliente notificando a mudança de status
+            if ($status_antigo != $status) {
+                $this->enviar_email_mudanca_status($orcamento, $cliente, $status);
+            }
+            
+            $this->session->set_flashdata('sucesso', 'Status alterado com sucesso! E-mail enviado ao cliente.');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao alterar status.');
         }
@@ -253,5 +263,133 @@ class Orcamentos extends Admin_Controller {
         }
         
         $this->load->view('admin/orcamentos/imprimir', $data);
+    }
+
+    /**
+     * Enviar e-mail de mudança de status
+     */
+    private function enviar_email_mudanca_status($orcamento, $cliente, $novo_status) {
+        // Carregar library de e-mail
+        $this->load->library('email');
+        
+        // Configurações SMTP
+        $config = array(
+            'protocol' => 'smtp',
+            'smtp_host' => 'mail.lecortine.com.br',
+            'smtp_port' => 465,
+            'smtp_user' => 'nao-responder@lecortine.com.br',
+            'smtp_pass' => 'a5)?O5qF+5!H@JaT2025',
+            'smtp_crypto' => 'ssl',
+            'smtp_timeout' => 30,
+            'mailtype' => 'html',
+            'charset' => 'utf-8',
+            'newline' => "\r\n",
+            'crlf' => "\r\n",
+            'wordwrap' => TRUE
+        );
+        
+        $this->email->initialize($config);
+        
+        // Definir mensagens por status
+        $mensagens = [
+            'pendente' => [
+                'titulo' => 'Orçamento Recebido',
+                'mensagem' => 'Recebemos seu orçamento e estamos analisando. Em breve entraremos em contato!',
+                'cor' => '#ffc107'
+            ],
+            'em_analise' => [
+                'titulo' => 'Orçamento em Análise',
+                'mensagem' => 'Seu orçamento está sendo analisado por nossa equipe. Aguarde nosso retorno!',
+                'cor' => '#17a2b8'
+            ],
+            'aprovado' => [
+                'titulo' => 'Orçamento Aprovado! 🎉',
+                'mensagem' => 'Ótimas notícias! Seu orçamento foi aprovado. Em breve entraremos em contato para finalizar os detalhes.',
+                'cor' => '#28a745'
+            ],
+            'recusado' => [
+                'titulo' => 'Orçamento Não Aprovado',
+                'mensagem' => 'Infelizmente não conseguimos aprovar seu orçamento no momento. Entre em contato conosco para mais informações.',
+                'cor' => '#dc3545'
+            ],
+            'cancelado' => [
+                'titulo' => 'Orçamento Cancelado',
+                'mensagem' => 'Seu orçamento foi cancelado. Se tiver dúvidas, entre em contato conosco.',
+                'cor' => '#6c757d'
+            ]
+        ];
+        
+        $status_info = $mensagens[$novo_status] ?? $mensagens['pendente'];
+        
+        // Montar e-mail HTML
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+                .status-badge { display: inline-block; padding: 10px 20px; background: ' . $status_info['cor'] . '; color: white; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+                .info-box { background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #667eea; }
+                .footer { text-align: center; margin-top: 30px; color: #6c757d; font-size: 12px; }
+                .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Le Cortine</h1>
+                    <p>Atualização do seu Orçamento</p>
+                </div>
+                <div class="content">
+                    <h2>' . $status_info['titulo'] . '</h2>
+                    
+                    <div class="status-badge">
+                        Status: ' . ucfirst(str_replace('_', ' ', $novo_status)) . '
+                    </div>
+                    
+                    <p>Olá, <strong>' . $cliente->nome . '</strong>!</p>
+                    
+                    <p>' . $status_info['mensagem'] . '</p>
+                    
+                    <div class="info-box">
+                        <strong>Detalhes do Orçamento:</strong><br>
+                        <strong>Número:</strong> #' . $orcamento->numero . '<br>
+                        <strong>Data:</strong> ' . date('d/m/Y H:i', strtotime($orcamento->criado_em)) . '<br>
+                        <strong>Valor:</strong> R$ ' . number_format($orcamento->valor_final, 2, ',', '.') . '
+                    </div>
+                    
+                    <p>Se tiver alguma dúvida, entre em contato conosco:</p>
+                    <p>
+                        📧 E-mail: contato@lecortine.com.br<br>
+                        📱 WhatsApp: (11) 99999-9999
+                    </p>
+                    
+                    <div class="footer">
+                        <p>Este é um e-mail automático, por favor não responda.</p>
+                        <p>&copy; ' . date('Y') . ' Le Cortine - Todos os direitos reservados</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>';
+        
+        // Configurar e enviar e-mail
+        $this->email->from('nao-responder@lecortine.com.br', 'Le Cortine');
+        $this->email->to($cliente->email);
+        $this->email->subject('Atualização do Orçamento #' . $orcamento->numero . ' - Le Cortine');
+        $this->email->message($html);
+        
+        // Tentar enviar
+        if ($this->email->send()) {
+            log_message('info', 'E-mail de mudança de status enviado para: ' . $cliente->email);
+            return true;
+        } else {
+            log_message('error', 'Erro ao enviar e-mail de mudança de status: ' . $this->email->print_debugger());
+            return false;
+        }
     }
 }
