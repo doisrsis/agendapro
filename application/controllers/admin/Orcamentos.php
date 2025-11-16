@@ -16,6 +16,7 @@ class Orcamentos extends Admin_Controller {
         $this->load->model('Cliente_model');
         $this->load->model('Produto_model');
         $this->load->model('Tecido_model');
+        $this->load->model('Orcamento_email_log_model');
         $this->load->library('pagination');
     }
 
@@ -106,6 +107,7 @@ class Orcamentos extends Admin_Controller {
         $data['orcamento'] = $orcamento;
         $data['cliente'] = $this->Cliente_model->get($orcamento->cliente_id);
         $data['itens'] = $this->Orcamento_model->get_itens($id);
+        $data['email_logs'] = $this->Orcamento_email_log_model->listar_por_orcamento($id);
         
         // Buscar detalhes dos itens
         foreach ($data['itens'] as &$item) {
@@ -316,6 +318,16 @@ class Orcamentos extends Admin_Controller {
                 'titulo' => 'Orçamento Cancelado',
                 'mensagem' => 'Seu orçamento foi cancelado. Se tiver dúvidas, entre em contato conosco.',
                 'cor' => '#6c757d'
+            ],
+            'em_preparacao' => [
+                'titulo' => 'Seu Pedido Está em Preparação',
+                'mensagem' => 'Estamos preparando seu pedido com todo o cuidado. Assim que estiver pronto para envio, avisaremos você!',
+                'cor' => '#17a2b8'
+            ],
+            'pedido_postado' => [
+                'titulo' => 'Pedido Postado 🚚',
+                'mensagem' => 'Ótimas notícias! Seu pedido já foi postado. Em breve você receberá o código de rastreio para acompanhar a entrega.',
+                'cor' => '#6f42c1'
             ]
         ];
         
@@ -382,14 +394,74 @@ class Orcamentos extends Admin_Controller {
         $this->email->to($cliente->email);
         $this->email->subject('Atualização do Orçamento #' . $orcamento->numero . ' - Le Cortine');
         $this->email->message($html);
-        
-        // Tentar enviar
+
+        $assunto = 'Atualização do Orçamento #' . $orcamento->numero . ' - Le Cortine';
         if ($this->email->send()) {
             log_message('info', 'E-mail de mudança de status enviado para: ' . $cliente->email);
+            $this->registrar_email_log(
+                $orcamento->id,
+                'status_' . $novo_status,
+                $cliente->email,
+                $assunto,
+                'sucesso',
+                $html
+            );
             return true;
-        } else {
-            log_message('error', 'Erro ao enviar e-mail de mudança de status: ' . $this->email->print_debugger());
-            return false;
         }
+
+        $erro_envio = $this->limitar_texto_debug($this->email->print_debugger(['headers']));
+        log_message('error', 'Erro ao enviar e-mail de mudança de status: ' . $erro_envio);
+        $this->registrar_email_log(
+            $orcamento->id,
+            'status_' . $novo_status,
+            $cliente->email,
+            $assunto,
+            'erro',
+            $html,
+            $erro_envio
+        );
+        return false;
+    }
+
+    /**
+     * Registrar log de e-mail reutilizando helper do controller público
+     */
+    private function registrar_email_log($orcamento_id, $tipo, $destinatario, $assunto, $status = 'sucesso', $corpo = null, $erro = null) {
+        if (!$orcamento_id) {
+            return;
+        }
+
+        $preview = $corpo ? $this->limitar_texto_debug(strip_tags($corpo), 500) : null;
+        $this->Orcamento_email_log_model->registrar([
+            'orcamento_id' => $orcamento_id,
+            'tipo' => $tipo,
+            'destinatario' => $destinatario,
+            'assunto' => $assunto,
+            'status' => $status,
+            'preview' => $preview,
+            'corpo' => $corpo,
+            'erro' => $erro
+        ]);
+    }
+
+    /**
+     * Limitar texto (duplicado do controller público para manter coesão)
+     */
+    private function limitar_texto_debug($texto, $limite = 2000) {
+        if ($texto === null) {
+            return null;
+        }
+
+        $texto = trim(is_string($texto) ? $texto : (string) $texto);
+
+        if ($texto === '') {
+            return null;
+        }
+
+        if (function_exists('mb_substr')) {
+            return mb_substr($texto, 0, $limite);
+        }
+
+        return substr($texto, 0, $limite);
     }
 }

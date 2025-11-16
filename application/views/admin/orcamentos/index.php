@@ -79,6 +79,8 @@
                             <option value="aprovado" <?= (isset($filtros['status']) && $filtros['status'] == 'aprovado') ? 'selected' : '' ?>>Aprovado</option>
                             <option value="recusado" <?= (isset($filtros['status']) && $filtros['status'] == 'recusado') ? 'selected' : '' ?>>Recusado</option>
                             <option value="cancelado" <?= (isset($filtros['status']) && $filtros['status'] == 'cancelado') ? 'selected' : '' ?>>Cancelado</option>
+                            <option value="em_preparacao" <?= (isset($filtros['status']) && $filtros['status'] == 'em_preparacao') ? 'selected' : '' ?>>Em Preparação</option>
+                            <option value="pedido_postado" <?= (isset($filtros['status']) && $filtros['status'] == 'pedido_postado') ? 'selected' : '' ?>>Pedido Postado</option>
                         </select>
                     </div>
                     

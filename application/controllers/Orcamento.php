@@ -20,6 +20,7 @@ class Orcamento extends CI_Controller {
         $this->load->model('Tecido_model');
         $this->load->model('Extra_model');
         $this->load->model('Preco_model');
+        $this->load->model('Orcamento_email_log_model');
         $this->load->library('session');
     }
 
@@ -767,11 +768,44 @@ class Orcamento extends CI_Controller {
             $this->email->clear();
             $this->email->from('nao-responder@lecortine.com.br', 'Le Cortine - Sistema');
             $this->email->to($email_destino);
-            $this->email->subject('🎉 Novo Orçamento #' . $orcamento_id . ' - Le Cortine');
-            $this->email->message($this->template_email_empresa($orcamento_id, $dados_email, $data_completa['valor_calculado']));
-            $this->email->send();
+            $assunto_empresa = '🎉 Novo Orçamento #' . $orcamento_id . ' - Le Cortine';
+            $mensagem_empresa = $this->template_email_empresa($orcamento_id, $dados_email, $data_completa['valor_calculado']);
+            $this->email->subject($assunto_empresa);
+            $this->email->message($mensagem_empresa);
+
+            if ($this->email->send()) {
+                $this->registrar_email_log(
+                    $orcamento_id,
+                    'novo_orcamento_empresa',
+                    $email_destino,
+                    $assunto_empresa,
+                    'sucesso',
+                    $mensagem_empresa
+                );
+            } else {
+                $erro_envio = $this->limitar_texto_debug($this->email->print_debugger(['headers']));
+                $this->registrar_email_log(
+                    $orcamento_id,
+                    'novo_orcamento_empresa',
+                    $email_destino,
+                    $assunto_empresa,
+                    'erro',
+                    $mensagem_empresa,
+                    $erro_envio
+                );
+                log_message('error', 'Falha ao enviar e-mail para empresa: ' . $erro_envio);
+            }
         } catch (Exception $e) {
             log_message('error', 'Erro ao enviar e-mail para empresa: ' . $e->getMessage());
+            $this->registrar_email_log(
+                $orcamento_id,
+                'novo_orcamento_empresa',
+                $email_destino ?? 'destinatário_indefinido',
+                $assunto_empresa ?? 'Novo orçamento',
+                'erro',
+                $mensagem_empresa ?? null,
+                $e->getMessage()
+            );
         }
         
         // 2. E-mail para o CLIENTE
@@ -779,12 +813,87 @@ class Orcamento extends CI_Controller {
             $this->email->clear();
             $this->email->from('nao-responder@lecortine.com.br', 'Le Cortine');
             $this->email->to($dados['email']);
-            $this->email->subject('✅ Seu Orçamento foi Recebido - Le Cortine');
-            $this->email->message($this->template_email_cliente($orcamento_id, $dados_email));
-            $this->email->send();
+            $assunto_cliente = '✅ Seu Orçamento foi Recebido - Le Cortine';
+            $mensagem_cliente = $this->template_email_cliente($orcamento_id, $dados_email);
+            $this->email->subject($assunto_cliente);
+            $this->email->message($mensagem_cliente);
+
+            if ($this->email->send()) {
+                $this->registrar_email_log(
+                    $orcamento_id,
+                    'novo_orcamento_cliente',
+                    $dados['email'],
+                    $assunto_cliente,
+                    'sucesso',
+                    $mensagem_cliente
+                );
+            } else {
+                $erro_envio = $this->limitar_texto_debug($this->email->print_debugger(['headers']));
+                $this->registrar_email_log(
+                    $orcamento_id,
+                    'novo_orcamento_cliente',
+                    $dados['email'],
+                    $assunto_cliente,
+                    'erro',
+                    $mensagem_cliente,
+                    $erro_envio
+                );
+                log_message('error', 'Falha ao enviar e-mail para cliente: ' . $erro_envio);
+            }
         } catch (Exception $e) {
             log_message('error', 'Erro ao enviar e-mail para cliente: ' . $e->getMessage());
+            $this->registrar_email_log(
+                $orcamento_id,
+                'novo_orcamento_cliente',
+                $dados['email'],
+                $assunto_cliente ?? 'Seu orçamento foi recebido',
+                'erro',
+                $mensagem_cliente ?? null,
+                $e->getMessage()
+            );
         }
+    }
+
+    /**
+     * Registrar log de e-mail do orçamento
+     */
+    private function registrar_email_log($orcamento_id, $tipo, $destinatario, $assunto, $status = 'sucesso', $corpo = null, $erro = null) {
+        if (!$orcamento_id) {
+            return;
+        }
+
+        $preview = $corpo ? $this->limitar_texto_debug(strip_tags($corpo), 500) : null;
+        $this->Orcamento_email_log_model->registrar([
+            'orcamento_id' => $orcamento_id,
+            'tipo' => $tipo,
+            'destinatario' => $destinatario,
+            'assunto' => $assunto,
+            'status' => $status,
+            'preview' => $preview,
+            'corpo' => $corpo,
+            'erro' => $erro
+        ]);
+    }
+
+    /**
+     * Limitar texto para logs de e-mail
+     */
+    private function limitar_texto_debug($texto, $limite = 2000) {
+        if ($texto === null) {
+            return null;
+        }
+
+        $texto = trim(is_string($texto) ? $texto : (string) $texto);
+
+        if ($texto === '') {
+            return null;
+        }
+
+        if (function_exists('mb_substr')) {
+            return mb_substr($texto, 0, $limite);
+        }
+
+        return substr($texto, 0, $limite);
     }
     
     /**
