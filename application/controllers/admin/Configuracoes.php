@@ -3,11 +3,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Controller de Configurações do Sistema
- * 
+ *
  * @author Rafael Dias - doisr.com.br
  * @date 14/11/2024
  */
 class Configuracoes extends Admin_Controller {
+
+    protected $modulo_atual = 'configuracoes';
 
     public function __construct() {
         parent::__construct();
@@ -16,115 +18,69 @@ class Configuracoes extends Admin_Controller {
     }
 
     /**
-     * Página principal de configurações
+     * Página principal de configurações (com abas)
      */
     public function index() {
-        redirect('admin/configuracoes/geral');
-    }
-
-    /**
-     * Configurações Gerais
-     */
-    public function geral() {
         // Evitar cache
         $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
         $this->output->set_header('Pragma: no-cache');
-        
-        $data['titulo'] = 'Configurações Gerais';
+
+        $data['titulo'] = 'Configurações';
         $data['menu_ativo'] = 'configuracoes';
-        
+        $data['aba_ativa'] = $this->input->get('aba') ?? 'geral';
+
         if ($this->input->method() === 'post') {
-            $this->salvar_configuracoes('geral');
-            return; // Importante: return após redirect
+            $grupo = $this->input->post('grupo') ?? 'geral';
+            $this->salvar_configuracoes($grupo);
+            redirect('admin/configuracoes?aba=' . $grupo);
+            return;
         }
-        
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('geral');
-        
+
+        // Buscar configurações de todos os grupos necessários
+        $data['configs_geral'] = $this->Configuracao_model->get_by_grupo('geral');
+        $data['configs_smtp'] = $this->Configuracao_model->get_by_grupo('smtp');
+
         $this->load->view('admin/layout/header', $data);
-        $this->load->view('admin/configuracoes/geral', $data);
+        $this->load->view('admin/configuracoes/index', $data);
         $this->load->view('admin/layout/footer');
     }
 
     /**
-     * Configurações dos Correios
+     * Redirecionar para aba SMTP (compatibilidade)
      */
-    public function correios() {
-        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
-        $this->output->set_header('Pragma: no-cache');
-        
-        $data['titulo'] = 'Configurações dos Correios';
-        $data['menu_ativo'] = 'configuracoes';
-        
-        if ($this->input->method() === 'post') {
-            $this->salvar_configuracoes('correios');
-            return;
-        }
-        
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('correios');
-        
-        $this->load->view('admin/layout/header', $data);
-        $this->load->view('admin/configuracoes/correios', $data);
-        $this->load->view('admin/layout/footer');
+    public function smtp() {
+        redirect('admin/configuracoes?aba=smtp');
     }
 
     /**
-     * Configurações do Mercado Pago
+     * Redirecionar para aba Geral (compatibilidade)
      */
-    public function mercadopago() {
-        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
-        $this->output->set_header('Pragma: no-cache');
-        
-        $data['titulo'] = 'Configurações do Mercado Pago';
-        $data['menu_ativo'] = 'configuracoes';
-        
-        if ($this->input->method() === 'post') {
-            $this->salvar_configuracoes('mercadopago');
-            return;
-        }
-        
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('mercadopago');
-        
-        $this->load->view('admin/layout/header', $data);
-        $this->load->view('admin/configuracoes/mercadopago', $data);
-        $this->load->view('admin/layout/footer');
+    public function geral() {
+        redirect('admin/configuracoes?aba=geral');
     }
 
     /**
-     * Configurações de Notificações
-     */
-    public function notificacoes() {
-        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate');
-        $this->output->set_header('Pragma: no-cache');
-        
-        $data['titulo'] = 'Configurações de Notificações';
-        $data['menu_ativo'] = 'configuracoes';
-        
-        if ($this->input->method() === 'post') {
-            $this->salvar_configuracoes('notificacoes');
-            return;
-        }
-        
-        $data['configs'] = $this->Configuracao_model->get_by_grupo('notificacoes');
-        
-        $this->load->view('admin/layout/header', $data);
-        $this->load->view('admin/configuracoes/notificacoes', $data);
-        $this->load->view('admin/layout/footer');
-    }
-    
-    /**
-     * Testar envio de e-mail
+     * Testar envio de e-mail com configurações dinâmicas
      */
     public function testar_email() {
-        
         try {
-            // Configurações SMTP
+            // Buscar configurações SMTP do banco
+            $smtp_ativo = $this->Configuracao_model->get_by_chave('smtp_ativo');
+
+            if (!$smtp_ativo || $smtp_ativo->valor != '1') {
+                $this->session->set_flashdata('aviso', 'SMTP está desativado. Ative nas configurações antes de testar.');
+                redirect('admin/configuracoes?aba=smtp');
+                return;
+            }
+
+            // Montar configurações SMTP do banco
             $config = array(
                 'protocol' => 'smtp',
-                'smtp_host' => 'mail.lecortine.com.br',
-                'smtp_port' => 465,
-                'smtp_user' => 'nao-responder@lecortine.com.br',
-                'smtp_pass' => 'a5)?O5qF+5!H@JaT2025',
-                'smtp_crypto' => 'ssl',
+                'smtp_host' => $this->Configuracao_model->get_valor('smtp_host'),
+                'smtp_port' => $this->Configuracao_model->get_valor('smtp_porta'),
+                'smtp_user' => $this->Configuracao_model->get_valor('smtp_usuario'),
+                'smtp_pass' => $this->Configuracao_model->get_valor('smtp_senha'),
+                'smtp_crypto' => $this->Configuracao_model->get_valor('smtp_seguranca'),
                 'smtp_timeout' => 30,
                 'mailtype' => 'html',
                 'charset' => 'utf-8',
@@ -134,21 +90,30 @@ class Configuracoes extends Admin_Controller {
                 'validate' => TRUE,
                 'smtp_debug' => 2
             );
-            
-            // Carregar library de e-mail com configurações
+
+            // Carregar library de e-mail
             $this->load->library('email', $config);
-            
+
             // Configurar remetente
-            $this->email->from('nao-responder@lecortine.com.br', 'Le Cortine - Sistema de Orçamentos');
-            
-            // Destinatário
-            $destinatario = $this->Configuracao_model->get_by_chave('email_destinatario');
-            $email_destino = $destinatario ? $destinatario->valor : 'contato@lecortine.com.br';
-            
+            $remetente_email = $this->Configuracao_model->get_valor('smtp_remetente_email');
+            $remetente_nome = $this->Configuracao_model->get_valor('smtp_remetente_nome');
+            $this->email->from($remetente_email, $remetente_nome);
+
+            // Destinatário - sempre usar o e-mail do usuário logado
+            $email_destino = $this->session->userdata('usuario_email');
+
+            // Validar e-mail
+            if (!$email_destino || !filter_var($email_destino, FILTER_VALIDATE_EMAIL)) {
+                $this->session->set_flashdata('erro', 'E-mail do usuário logado é inválido. Atualize seu perfil com um e-mail válido.');
+                redirect('admin/configuracoes?aba=smtp');
+                return;
+            }
+
             $this->email->to($email_destino);
-            $this->email->subject('🧪 Teste de E-mail - Le Cortine');
-            
+            $this->email->subject('🧪 Teste de E-mail - Dashboard Administrativo');
+
             // Mensagem HTML
+            $sistema_nome = $this->Configuracao_model->get_valor('sistema_nome');
             $mensagem = '
             <!DOCTYPE html>
             <html>
@@ -166,51 +131,58 @@ class Configuracoes extends Admin_Controller {
                 <div class="container">
                     <div class="header">
                         <h1>🧪 Teste de E-mail</h1>
-                        <p style="margin: 0;">Sistema de Orçamentos Le Cortine</p>
+                        <p style="margin: 0;">' . $sistema_nome . '</p>
                     </div>
                     <div class="content">
                         <div class="success">
                             <h3 style="margin-top: 0;">✅ Configuração SMTP Funcionando!</h3>
                             <p>Se você está lendo este e-mail, significa que as configurações SMTP estão corretas e o sistema está pronto para enviar notificações.</p>
                         </div>
-                        
+
                         <h3>📋 Informações do Teste:</h3>
                         <ul>
                             <li><strong>Data/Hora:</strong> ' . date('d/m/Y H:i:s') . '</li>
-                            <li><strong>Servidor SMTP:</strong> mail.lecortine.com.br</li>
-                            <li><strong>Porta:</strong> 465 (SSL)</li>
-                            <li><strong>Remetente:</strong> nao-responder@lecortine.com.br</li>
+                            <li><strong>Servidor SMTP:</strong> ' . $config['smtp_host'] . '</li>
+                            <li><strong>Porta:</strong> ' . $config['smtp_port'] . ' (' . strtoupper($config['smtp_crypto']) . ')</li>
+                            <li><strong>Remetente:</strong> ' . $remetente_email . '</li>
                             <li><strong>Destinatário:</strong> ' . $email_destino . '</li>
                         </ul>
-                        
+
                         <p style="margin-top: 30px; color: #666;">
-                            <strong>Próximos passos:</strong><br>
-                            ✅ Configure quais eventos deseja receber notificações<br>
-                            ✅ Ative as notificações na página de configurações<br>
-                            ✅ Teste fazendo um orçamento no sistema
+                            <strong>Sistema configurado e pronto para uso!</strong>
                         </p>
                     </div>
                 </div>
             </body>
             </html>';
-            
+
             $this->email->message($mensagem);
-            
+
             // Tentar enviar
             if ($this->email->send()) {
-                $this->session->set_flashdata('sucesso', '✅ E-mail de teste enviado com sucesso para: ' . $email_destino . '. Verifique sua caixa de entrada (e spam também)!');
+                $this->session->set_flashdata('sucesso', '✅ E-mail de teste enviado com sucesso para: ' . $email_destino . '. Verifique sua caixa de entrada (e spam)!');
             } else {
                 $erro = $this->email->print_debugger();
                 log_message('error', 'Erro ao enviar e-mail de teste: ' . $erro);
-                $this->session->set_flashdata('erro', 'Erro ao enviar e-mail. Verifique: <br>1. Credenciais SMTP<br>2. Porta 465 aberta<br>3. Firewall/Antivírus<br><br><small>' . nl2br(htmlspecialchars($erro)) . '</small>');
+
+                // Mensagem de erro mais detalhada
+                $msg_erro = '<strong>Erro ao enviar e-mail.</strong><br><br>';
+                $msg_erro .= '<strong>Verifique:</strong><br>';
+                $msg_erro .= '1. Host e Porta estão corretos<br>';
+                $msg_erro .= '2. Usuário e Senha estão corretos<br>';
+                $msg_erro .= '3. Tipo de segurança (TLS/SSL) está correto<br>';
+                $msg_erro .= '4. Seu provedor permite envio via SMTP<br><br>';
+                $msg_erro .= '<details><summary>Detalhes técnicos (clique para expandir)</summary><pre style="font-size: 11px; max-height: 200px; overflow: auto;">' . htmlspecialchars($erro) . '</pre></details>';
+
+                $this->session->set_flashdata('erro', $msg_erro);
             }
-            
+
         } catch (Exception $e) {
             log_message('error', 'Exceção ao enviar e-mail: ' . $e->getMessage());
-            $this->session->set_flashdata('erro', 'Exceção: ' . $e->getMessage());
+            $this->session->set_flashdata('erro', '<strong>Exceção:</strong> ' . $e->getMessage());
         }
-        
-        redirect('admin/configuracoes/notificacoes');
+
+        redirect('admin/configuracoes?aba=smtp');
     }
 
     /**
@@ -218,19 +190,19 @@ class Configuracoes extends Admin_Controller {
      */
     private function salvar_configuracoes($grupo) {
         $configs = $this->input->post('config');
-        
+
         if (!$configs) {
             $this->session->set_flashdata('erro', 'Nenhuma configuração foi enviada.');
             redirect('admin/configuracoes/' . $grupo);
             return;
         }
-        
+
         $sucesso = true;
-        
+
         foreach ($configs as $chave => $valor) {
             // Verificar se configuração existe
             $config = $this->Configuracao_model->get_by_chave($chave);
-            
+
             if ($config) {
                 // Atualizar
                 if (!$this->Configuracao_model->update_by_chave($chave, $valor)) {
@@ -244,45 +216,19 @@ class Configuracoes extends Admin_Controller {
                     'grupo' => $grupo,
                     'tipo' => 'texto'
                 ];
-                
+
                 if (!$this->Configuracao_model->insert($dados)) {
                     $sucesso = false;
                 }
             }
         }
-        
+
         if ($sucesso) {
             $this->session->set_flashdata('sucesso', 'Configurações salvas com sucesso!');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao salvar algumas configurações.');
         }
-        
+
         redirect('admin/configuracoes/' . $grupo);
-    }
-
-    /**
-     * Testar conexão com Correios
-     */
-    public function testar_correios() {
-        $this->load->library('Correios_lib');
-        
-        $resultado = $this->correios_lib->testar_conexao();
-        
-        $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode($resultado));
-    }
-
-    /**
-     * Testar conexão com Mercado Pago
-     */
-    public function testar_mercadopago() {
-        $this->load->library('Mercadopago_lib');
-        
-        $resultado = $this->mercadopago_lib->testar_conexao();
-        
-        $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode($resultado));
     }
 }

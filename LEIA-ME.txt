@@ -1,0 +1,73 @@
+================================================================================
+  PROJETO BASE - DASHBOARD ADMINISTRATIVO
+================================================================================
+
+  Autor: Rafael Dias - doisr.com.br
+  Data: 16/11/2024
+  Versão: 1.0.0
+
+================================================================================
+  INSTALAÇÃO RÁPIDA
+================================================================================
+
+1. BANCO DE DADOS
+   - Crie um banco chamado: projeto_base
+   - Importe: docs/projeto_base_database.sql
+
+2. CONFIGURAÇÃO
+   - Edite: application/config/database.php
+   - Edite: application/config/config.php (base_url e encryption_key)
+
+3. ACESSO
+   - URL: http://localhost/projeto_base/
+   - Email: admin@sistema.com.br
+   - Senha: admin123
+
+================================================================================
+  DOCUMENTAÇÃO COMPLETA
+================================================================================
+
+Consulte os arquivos na pasta docs/:
+
+- README_PROJETO_BASE.md     -> Documentação completa
+- INSTALACAO.md               -> Guia de instalação detalhado
+- CHANGELOG_PROJETO_BASE.md   -> Registro de alterações
+
+================================================================================
+  FUNCIONALIDADES INCLUÍDAS
+================================================================================
+
+✓ Sistema de autenticação completo
+✓ Recuperação de senha por e-mail
+✓ Gerenciamento de usuários
+✓ Sistema de notificações
+✓ Configurações SMTP dinâmicas
+✓ Sistema de logs
+✓ Interface Tabler Dashboard
+✓ Responsivo (PC/Tablet/Mobile)
+
+================================================================================
+  IMPORTANTE
+================================================================================
+
+⚠ Altere a senha padrão do admin após o primeiro acesso!
+⚠ Altere a encryption_key no config.php!
+⚠ Configure o SMTP para envio de e-mails!
+
+================================================================================
+  SUPORTE
+================================================================================
+
+Website: doisr.com.br
+Email: contato@doisr.com.br
+
+================================================================================
+  PRONTO PARA USAR!
+================================================================================
+
+Este projeto base está pronto para ser usado como ponto de partida para seus
+novos sistemas web. Economize tempo e foque no que realmente importa!
+
+Bom desenvolvimento! 🚀
+
+================================================================================

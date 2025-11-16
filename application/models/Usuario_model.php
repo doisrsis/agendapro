@@ -3,9 +3,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Model de Usuários
- * 
+ *
  * Gerencia operações relacionadas aos usuários do sistema
- * 
+ *
  * @author Rafael Dias - doisr.com.br
  * @date 13/11/2024
  */
@@ -33,8 +33,17 @@ class Usuario_model extends CI_Model {
 
     /**
      * Listar todos os usuários
+     * Aceita tanto array de filtros quanto parâmetros individuais
      */
     public function get_all($busca = null, $nivel = null, $status = null) {
+        // Se o primeiro parâmetro for um array, usar como filtros
+        if (is_array($busca)) {
+            $filtros = $busca;
+            $busca = isset($filtros['busca']) ? $filtros['busca'] : null;
+            $nivel = isset($filtros['nivel']) ? $filtros['nivel'] : null;
+            $status = isset($filtros['status']) ? $filtros['status'] : null;
+        }
+
         // Busca
         if ($busca) {
             $this->db->group_start();
@@ -42,16 +51,16 @@ class Usuario_model extends CI_Model {
             $this->db->or_like('email', $busca);
             $this->db->group_end();
         }
-        
+
         // Filtros
         if ($nivel) {
             $this->db->where('nivel', $nivel);
         }
-        
+
         if ($status) {
             $this->db->where('status', $status);
         }
-        
+
         $this->db->order_by('nome', 'ASC');
         return $this->db->get($this->table)->result();
     }
@@ -64,9 +73,9 @@ class Usuario_model extends CI_Model {
         if (isset($data['senha'])) {
             $data['senha'] = password_hash($data['senha'], PASSWORD_DEFAULT);
         }
-        
+
         $data['criado_em'] = date('Y-m-d H:i:s');
-        
+
         $this->db->insert($this->table, $data);
         return $this->db->insert_id();
     }
@@ -81,9 +90,9 @@ class Usuario_model extends CI_Model {
         } else {
             unset($data['senha']);
         }
-        
+
         $data['atualizado_em'] = date('Y-m-d H:i:s');
-        
+
         $this->db->where('id', $id);
         return $this->db->update($this->table, $data);
     }
@@ -101,23 +110,23 @@ class Usuario_model extends CI_Model {
      */
     public function verificar_login($email, $senha) {
         $usuario = $this->get_by_email($email);
-        
+
         if (!$usuario) {
             return false;
         }
-        
+
         if ($usuario->status !== 'ativo') {
             return false;
         }
-        
+
         if (password_verify($senha, $usuario->senha)) {
             // Atualizar último acesso
             $this->db->where('id', $usuario->id);
             $this->db->update($this->table, ['ultimo_acesso' => date('Y-m-d H:i:s')]);
-            
+
             return $usuario;
         }
-        
+
         return false;
     }
 
@@ -126,20 +135,20 @@ class Usuario_model extends CI_Model {
      */
     public function gerar_token_recuperacao($email) {
         $usuario = $this->get_by_email($email);
-        
+
         if (!$usuario) {
             return false;
         }
-        
+
         $token = bin2hex(random_bytes(32));
         $expiracao = date('Y-m-d H:i:s', strtotime('+1 hour'));
-        
+
         $this->db->where('id', $usuario->id);
         $this->db->update($this->table, [
             'token_recuperacao' => $token,
             'token_expiracao' => $expiracao
         ]);
-        
+
         return $token;
     }
 
@@ -150,7 +159,7 @@ class Usuario_model extends CI_Model {
         $this->db->where('token_recuperacao', $token);
         $this->db->where('token_expiracao >', date('Y-m-d H:i:s'));
         $usuario = $this->db->get($this->table)->row();
-        
+
         return $usuario ? $usuario : false;
     }
 
@@ -159,11 +168,11 @@ class Usuario_model extends CI_Model {
      */
     public function resetar_senha($token, $nova_senha) {
         $usuario = $this->verificar_token($token);
-        
+
         if (!$usuario) {
             return false;
         }
-        
+
         $this->db->where('id', $usuario->id);
         return $this->db->update($this->table, [
             'senha' => password_hash($nova_senha, PASSWORD_DEFAULT),
@@ -180,7 +189,7 @@ class Usuario_model extends CI_Model {
         if (isset($filters['status'])) {
             $this->db->where('status', $filters['status']);
         }
-        
+
         return $this->db->count_all_results($this->table);
     }
 
@@ -188,25 +197,44 @@ class Usuario_model extends CI_Model {
      * Buscar permissões do usuário
      */
     public function get_permissoes($usuario_id) {
-        $result = $this->db->get_where('usuario_permissoes', ['usuario_id' => $usuario_id])->result();
-        
+        $this->db->where('usuario_id', $usuario_id);
+        $result = $this->db->get('usuario_permissoes')->result();
+
         $permissoes = [];
         foreach ($result as $row) {
-            $permissoes[$row->modulo] = json_decode($row->permissoes, true);
+            $permissoes[$row->modulo] = [
+                'visualizar' => (bool)$row->pode_visualizar,
+                'criar' => (bool)$row->pode_criar,
+                'editar' => (bool)$row->pode_editar,
+                'excluir' => (bool)$row->pode_excluir
+            ];
         }
-        
+
         return $permissoes;
     }
 
     /**
-     * Inserir permissão
+     * Salvar permissões do usuário
      */
-    public function insert_permissao($usuario_id, $modulo, $permissoes_json) {
-        return $this->db->insert('usuario_permissoes', [
-            'usuario_id' => $usuario_id,
-            'modulo' => $modulo,
-            'permissoes' => $permissoes_json
-        ]);
+    public function salvar_permissoes($usuario_id, $permissoes) {
+        // Deletar permissões antigas
+        $this->delete_permissoes($usuario_id);
+
+        // Inserir novas permissões
+        foreach ($permissoes as $modulo => $acoes) {
+            $data = [
+                'usuario_id' => $usuario_id,
+                'modulo' => $modulo,
+                'pode_visualizar' => isset($acoes['visualizar']) ? 1 : 0,
+                'pode_criar' => isset($acoes['criar']) ? 1 : 0,
+                'pode_editar' => isset($acoes['editar']) ? 1 : 0,
+                'pode_excluir' => isset($acoes['excluir']) ? 1 : 0
+            ];
+
+            $this->db->insert('usuario_permissoes', $data);
+        }
+
+        return true;
     }
 
     /**
@@ -220,24 +248,35 @@ class Usuario_model extends CI_Model {
     /**
      * Verificar se usuário tem permissão
      */
-    public function tem_permissao($usuario_id, $modulo, $acao) {
-        // Admin tem todas as permissões
+    public function tem_permissao($usuario_id, $modulo, $acao = 'visualizar') {
         $usuario = $this->get($usuario_id);
+
+        // Admin tem todas as permissões
         if ($usuario && $usuario->nivel == 'admin') {
             return true;
         }
-        
+
         // Buscar permissão específica
         $this->db->where('usuario_id', $usuario_id);
         $this->db->where('modulo', $modulo);
         $permissao = $this->db->get('usuario_permissoes')->row();
-        
+
         if (!$permissao) {
             return false;
         }
-        
-        $permissoes = json_decode($permissao->permissoes, true);
-        return isset($permissoes[$acao]) && $permissoes[$acao] === true;
+
+        // Verificar ação específica
+        switch ($acao) {
+            case 'visualizar':
+                return (bool)$permissao->pode_visualizar;
+            case 'criar':
+                return (bool)$permissao->pode_criar;
+            case 'editar':
+                return (bool)$permissao->pode_editar;
+            case 'excluir':
+                return (bool)$permissao->pode_excluir;
+            default:
+                return false;
+        }
     }
 }
-

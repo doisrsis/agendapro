@@ -49,38 +49,25 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Examples:	my-controller/index	-> my_controller/index
 |		my-controller/my-method	-> my_controller/my_method
 */
-$route['default_controller'] = 'home';
+// Rota padrão - Redireciona para login
+$route['default_controller'] = 'auth/login';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = TRUE;
-
-// Rotas públicas - Formulário de Orçamento
-$route['orcamento'] = 'orcamento/index';
-$route['orcamento/etapa1'] = 'orcamento/etapa1';
-$route['orcamento/etapa2'] = 'orcamento/etapa2';
-$route['orcamento/etapa3'] = 'orcamento/etapa3';
-$route['orcamento/etapa4'] = 'orcamento/etapa4';
-$route['orcamento/etapa5'] = 'orcamento/etapa5';
-$route['orcamento/etapa6'] = 'orcamento/etapa6';
-$route['orcamento/etapa7'] = 'orcamento/etapa7';
-$route['orcamento/etapa8'] = 'orcamento/etapa8';
-$route['orcamento/resumo'] = 'orcamento/resumo';
-$route['orcamento/consultoria'] = 'orcamento/consultoria';
-$route['orcamento/sucesso'] = 'orcamento/sucesso';
-$route['orcamento/ajax_cores/(:num)'] = 'orcamento/ajax_cores/$1';
 
 // Rotas de autenticação
 $route['login'] = 'auth/login';
 $route['logout'] = 'auth/logout';
 $route['recuperar-senha'] = 'auth/recuperar_senha';
+$route['resetar-senha/(:any)'] = 'auth/resetar_senha/$1';
 
 // Rotas administrativas
 $route['admin'] = 'admin/dashboard';
 $route['admin/dashboard'] = 'admin/dashboard';
-$route['admin/categorias'] = 'admin/categorias';
-$route['admin/produtos'] = 'admin/produtos';
-$route['admin/colecoes'] = 'admin/colecoes';
-$route['admin/tecidos'] = 'admin/tecidos';
-$route['admin/extras'] = 'admin/extras';
-$route['admin/precos'] = 'admin/precos';
-$route['admin/orcamentos'] = 'admin/orcamentos';
-$route['admin/configuracoes'] = 'admin/configuracoes';
+$route['admin/usuarios'] = 'admin/usuarios';
+$route['admin/usuarios/(:any)'] = 'admin/usuarios/$1';
+$route['admin/configuracoes/testar_email'] = 'admin/configuracoes/testar_email';
+$route['admin/configuracoes/smtp'] = 'admin/configuracoes/smtp';
+$route['admin/configuracoes/geral'] = 'admin/configuracoes/geral';
+$route['admin/configuracoes'] = 'admin/configuracoes/index';
+$route['admin/perfil'] = 'admin/perfil';
+$route['admin/logs'] = 'admin/logs';

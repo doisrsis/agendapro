@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <title><?= $titulo ?? 'Admin - Le Cortine' ?></title>
+    <title><?= $titulo ?? 'Dashboard Administrativo' ?></title>
 
     <!-- CSS files -->
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet"/>
@@ -54,8 +54,9 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-                    <a href="<?= base_url('admin') ?>">
-                        <img src="<?= base_url('assets/img/logo.png') ?>" width="110" height="32" alt="Le Cortine" class="navbar-brand-image">
+                    <a href="<?= base_url('admin') ?>" class="d-flex align-items-center">
+                        <i class="ti ti-layout-dashboard me-2" style="font-size: 24px;"></i>
+                        <span>Dashboard</span>
                     </a>
                 </h1>
                 <div class="navbar-nav flex-row order-md-last">
@@ -128,84 +129,32 @@
                                 </a>
                             </li>
 
-                            <li class="nav-item dropdown <?= in_array($menu_ativo, ['categorias', 'produtos', 'colecoes', 'tecidos']) ? 'active' : '' ?>">
-                                <a class="nav-link dropdown-toggle" href="#navbar-produtos" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <i class="ti ti-package"></i>
-                                    </span>
-                                    <span class="nav-link-title">Produtos</span>
-                                </a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="<?= base_url('admin/categorias') ?>">
-                                        <i class="ti ti-category me-2"></i> Categorias
-                                    </a>
-                                    <a class="dropdown-item" href="<?= base_url('admin/produtos') ?>">
-                                        <i class="ti ti-package me-2"></i> Produtos
-                                    </a>
-                                    <a class="dropdown-item" href="<?= base_url('admin/colecoes') ?>">
-                                        <i class="ti ti-palette me-2"></i> Coleções
-                                    </a>
-                                    <a class="dropdown-item" href="<?= base_url('admin/tecidos') ?>">
-                                        <i class="ti ti-texture me-2"></i> Tecidos
-                                    </a>
-                                </div>
-                            </li>
-
-                            <li class="nav-item <?= $menu_ativo == 'extras' ? 'active' : '' ?>">
-                                <a class="nav-link" href="<?= base_url('admin/extras') ?>">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <i class="ti ti-plus-circle"></i>
-                                    </span>
-                                    <span class="nav-link-title">Extras</span>
-                                </a>
-                            </li>
-
-                            <li class="nav-item <?= $menu_ativo == 'precos' ? 'active' : '' ?>">
-                                <a class="nav-link" href="<?= base_url('admin/precos') ?>">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <i class="ti ti-currency-dollar"></i>
-                                    </span>
-                                    <span class="nav-link-title">Preços</span>
-                                </a>
-                            </li>
-
-                            <li class="nav-item <?= $menu_ativo == 'orcamentos' ? 'active' : '' ?>">
-                                <a class="nav-link" href="<?= base_url('admin/orcamentos') ?>">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <i class="ti ti-file-invoice"></i>
-                                    </span>
-                                    <span class="nav-link-title">Orçamentos</span>
-                                </a>
-                            </li>
-
-                            <li class="nav-item <?= $menu_ativo == 'clientes' ? 'active' : '' ?>">
-                                <a class="nav-link" href="<?= base_url('admin/clientes') ?>">
+                            <?php if ($usuario_logado->nivel == 'admin'): ?>
+                            <li class="nav-item <?= $menu_ativo == 'usuarios' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/usuarios') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-users"></i>
                                     </span>
-                                    <span class="nav-link-title">Clientes</span>
+                                    <span class="nav-link-title">Usuários</span>
                                 </a>
                             </li>
 
-                            <?php if ($usuario_logado->nivel == 'admin'): ?>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#navbar-sistema" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                            <li class="nav-item <?= $menu_ativo == 'configuracoes' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/configuracoes') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-settings"></i>
                                     </span>
-                                    <span class="nav-link-title">Sistema</span>
+                                    <span class="nav-link-title">Configurações</span>
                                 </a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="<?= base_url('admin/usuarios') ?>">
-                                        <i class="ti ti-user-shield me-2"></i> Usuários
-                                    </a>
-                                    <a class="dropdown-item" href="<?= base_url('admin/configuracoes') ?>">
-                                        <i class="ti ti-settings me-2"></i> Configurações
-                                    </a>
-                                    <a class="dropdown-item" href="<?= base_url('admin/logs') ?>">
-                                        <i class="ti ti-history me-2"></i> Logs
-                                    </a>
-                                </div>
+                            </li>
+
+                            <li class="nav-item <?= $menu_ativo == 'logs' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/logs') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-history"></i>
+                                    </span>
+                                    <span class="nav-link-title">Logs</span>
+                                </a>
                             </li>
                             <?php endif; ?>
                         </ul>

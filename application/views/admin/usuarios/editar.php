@@ -62,7 +62,7 @@
                         </div>
                     </div>
 
-                    <div class="card mb-3" id="permissoesCard" style="display:<?= $usuario->nivel == 'atendente' ? 'block' : 'none' ?>;">
+                    <div class="card mb-3" id="permissoesCard" style="display:<?= $usuario->nivel == 'usuario' ? 'block' : 'none' ?>;">
                         <div class="card-header"><h3 class="card-title">Permissões por Módulo</h3></div>
                         <div class="card-body">
                             <?php foreach ($modulos as $modulo_key => $modulo): ?>
@@ -72,7 +72,7 @@
                                     <?php foreach ($modulo['acoes'] as $acao): ?>
                                     <div class="col-auto">
                                         <label class="form-check">
-                                            <input type="checkbox" class="form-check-input" 
+                                            <input type="checkbox" class="form-check-input"
                                                    name="permissoes[<?= $modulo_key ?>][<?= $acao ?>]" value="1"
                                                    <?= isset($permissoes[$modulo_key][$acao]) && $permissoes[$modulo_key][$acao] ? 'checked' : '' ?>>
                                             <span class="form-check-label"><?= ucfirst($acao) ?></span>
@@ -94,7 +94,7 @@
                             <div class="mb-3">
                                 <label class="form-label required">Nível de Acesso</label>
                                 <select name="nivel" id="nivel" class="form-select" required>
-                                    <option value="atendente" <?= $usuario->nivel == 'atendente' ? 'selected' : '' ?>>Atendente</option>
+                                    <option value="usuario" <?= $usuario->nivel == 'usuario' ? 'selected' : '' ?>>Usuário</option>
                                     <option value="admin" <?= $usuario->nivel == 'admin' ? 'selected' : '' ?>>Admin</option>
                                 </select>
                             </div>
@@ -126,6 +126,6 @@
 
 <script>
 document.getElementById('nivel').addEventListener('change', function() {
-    document.getElementById('permissoesCard').style.display = this.value === 'atendente' ? 'block' : 'none';
+    document.getElementById('permissoesCard').style.display = this.value === 'usuario' ? 'block' : 'none';
 });
 </script>

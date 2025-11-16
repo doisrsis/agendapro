@@ -3,9 +3,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Model de Configurações
- * 
+ *
  * Gerencia configurações do sistema
- * 
+ *
  * @author Rafael Dias - doisr.com.br
  * @date 13/11/2024
  */
@@ -32,10 +32,10 @@ class Configuracao_model extends CI_Model {
         if ($grupo) {
             $this->db->where('grupo', $grupo);
         }
-        
+
         $this->db->order_by('grupo', 'ASC');
         $this->db->order_by('chave', 'ASC');
-        
+
         return $this->db->get($this->table)->result();
     }
 
@@ -45,11 +45,11 @@ class Configuracao_model extends CI_Model {
     public function get_all_as_array($grupo = null) {
         $configs = $this->get_all($grupo);
         $array = [];
-        
+
         foreach ($configs as $config) {
             $array[$config->chave] = $config->valor;
         }
-        
+
         return $array;
     }
 
@@ -66,14 +66,14 @@ class Configuracao_model extends CI_Model {
     public function set($chave, $valor, $tipo = 'texto', $grupo = 'geral', $descricao = null) {
         // Verificar se já existe
         $existe = $this->db->get_where($this->table, ['chave' => $chave])->row();
-        
+
         if ($existe) {
             // Atualizar
             $data = [
                 'valor' => $valor,
                 'atualizado_em' => date('Y-m-d H:i:s')
             ];
-            
+
             $this->db->where('chave', $chave);
             return $this->db->update($this->table, $data);
         } else {
@@ -86,7 +86,7 @@ class Configuracao_model extends CI_Model {
                 'descricao' => $descricao,
                 'criado_em' => date('Y-m-d H:i:s')
             ];
-            
+
             $this->db->insert($this->table, $data);
             return $this->db->insert_id();
         }
@@ -117,14 +117,14 @@ class Configuracao_model extends CI_Model {
         $this->db->select('grupo');
         $this->db->distinct();
         $this->db->order_by('grupo', 'ASC');
-        
+
         $result = $this->db->get($this->table)->result();
-        
+
         $grupos = [];
         foreach ($result as $row) {
             $grupos[] = $row->grupo;
         }
-        
+
         return $grupos;
     }
 
@@ -171,7 +171,7 @@ class Configuracao_model extends CI_Model {
             'valor' => $valor,
             'atualizado_em' => date('Y-m-d H:i:s')
         ];
-        
+
         $this->db->where('chave', $chave);
         return $this->db->update($this->table, $data);
     }
@@ -204,5 +204,24 @@ class Configuracao_model extends CI_Model {
      */
     public function get_notificacoes() {
         return $this->get_all_as_array('notificacoes');
+    }
+
+    /**
+     * Obter valor de configuração diretamente (atalho)
+     *
+     * @param string $chave Chave da configuração
+     * @param mixed $default Valor padrão se não encontrar
+     * @return mixed
+     */
+    public function get_valor($chave, $default = '') {
+        $config = $this->get_by_chave($chave);
+        return $config ? $config->valor : $default;
+    }
+
+    /**
+     * Obter configurações SMTP
+     */
+    public function get_smtp() {
+        return $this->get_all_as_array('smtp');
     }
 }

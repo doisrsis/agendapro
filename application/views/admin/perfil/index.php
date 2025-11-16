@@ -56,7 +56,7 @@
                             </span>
                             <?php else: ?>
                             <span class="badge bg-blue">
-                                <i class="ti ti-user me-1"></i>Atendente
+                                <i class="ti ti-user me-1"></i>Usuário
                             </span>
                             <?php endif; ?>
                         </div>
@@ -119,13 +119,13 @@
                         <form method="post" action="<?= base_url('admin/perfil') ?>">
                             <div class="alert alert-info">
                                 <i class="ti ti-info-circle me-2"></i>
-                                <strong>Dica de segurança:</strong> Use uma senha forte com pelo menos 6 caracteres, 
+                                <strong>Dica de segurança:</strong> Use uma senha forte com pelo menos 6 caracteres,
                                 combinando letras, números e símbolos.
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label required">Senha Atual</label>
-                                <input type="password" class="form-control" name="senha_atual" 
+                                <input type="password" class="form-control" name="senha_atual"
                                        required autocomplete="current-password">
                                 <small class="form-hint">Digite sua senha atual para confirmar a alteração</small>
                             </div>
@@ -136,7 +136,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label required">Nova Senha</label>
-                                        <input type="password" class="form-control" name="nova_senha" 
+                                        <input type="password" class="form-control" name="nova_senha"
                                                required minlength="6" autocomplete="new-password">
                                         <small class="form-hint">Mínimo 6 caracteres</small>
                                     </div>
@@ -144,7 +144,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label required">Confirmar Nova Senha</label>
-                                        <input type="password" class="form-control" name="confirmar_senha" 
+                                        <input type="password" class="form-control" name="confirmar_senha"
                                                required autocomplete="new-password">
                                         <small class="form-hint">Digite a mesma senha novamente</small>
                                     </div>
@@ -199,7 +199,7 @@
                                         </span>
                                         <?php else: ?>
                                         <span class="badge bg-blue-lt fs-4">
-                                            <i class="ti ti-user me-1"></i>Atendente
+                                            <i class="ti ti-user me-1"></i>Usuário
                                         </span>
                                         <?php endif; ?>
                                     </div>
@@ -209,7 +209,7 @@
 
                         <div class="alert alert-warning mb-0">
                             <i class="ti ti-alert-triangle me-2"></i>
-                            <strong>Importante:</strong> Nunca compartilhe sua senha com outras pessoas. 
+                            <strong>Importante:</strong> Nunca compartilhe sua senha com outras pessoas.
                             Em caso de suspeita de acesso não autorizado, altere sua senha imediatamente.
                         </div>
                     </div>

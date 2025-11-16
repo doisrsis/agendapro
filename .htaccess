@@ -11,14 +11,14 @@ Options +FollowSymLinks
 # Ativar RewriteEngine
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
+
     # Define a base do rewrite
-    RewriteBase /orcamento/
-    
+    RewriteBase /projeto_base/
+
     # Redirecionar para HTTPS (descomente em produção)
     # RewriteCond %{HTTPS} off
     # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-    
+
     # Remover index.php da URL
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
@@ -35,13 +35,13 @@ Options +FollowSymLinks
 <IfModule mod_headers.c>
     # Prevenir clickjacking
     Header always set X-Frame-Options "SAMEORIGIN"
-    
+
     # Prevenir MIME sniffing
     Header always set X-Content-Type-Options "nosniff"
-    
+
     # Ativar proteção XSS no navegador
     Header always set X-XSS-Protection "1; mode=block"
-    
+
     # Referrer Policy
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
@@ -54,7 +54,7 @@ Options +FollowSymLinks
 # Cache de arquivos estáticos
 <IfModule mod_expires.c>
     ExpiresActive On
-    
+
     # Imagens
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
@@ -62,11 +62,11 @@ Options +FollowSymLinks
     ExpiresByType image/webp "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/x-icon "access plus 1 year"
-    
+
     # CSS e JavaScript
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
-    
+
     # Fontes
     ExpiresByType font/woff "access plus 1 year"
     ExpiresByType font/woff2 "access plus 1 year"

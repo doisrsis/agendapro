@@ -23,8 +23,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/orcamento/';
-/*$config['base_url'] = 'HTTPS://lecortine.com.br/orcamento/'; */
+$config['base_url'] = 'http://localhost/projeto_base/';
 /*
 |--------------------------------------------------------------------------
 | Index File

@@ -59,7 +59,7 @@
                         </div>
                     </div>
 
-                    <!-- Permissões (apenas para atendentes) -->
+                    <!-- Permissões (apenas para usuários comuns) -->
                     <div class="card mb-3" id="permissoesCard" style="display:none;">
                         <div class="card-header"><h3 class="card-title">Permissões por Módulo</h3></div>
                         <div class="card-body">
@@ -70,7 +70,7 @@
                                     <?php foreach ($modulo['acoes'] as $acao): ?>
                                     <div class="col-auto">
                                         <label class="form-check">
-                                            <input type="checkbox" class="form-check-input" 
+                                            <input type="checkbox" class="form-check-input"
                                                    name="permissoes[<?= $modulo_key ?>][<?= $acao ?>]" value="1">
                                             <span class="form-check-label"><?= ucfirst($acao) ?></span>
                                         </label>
@@ -92,7 +92,7 @@
                             <div class="mb-3">
                                 <label class="form-label required">Nível de Acesso</label>
                                 <select name="nivel" id="nivel" class="form-select" required>
-                                    <option value="atendente">Atendente</option>
+                                    <option value="usuario">Usuário</option>
                                     <option value="admin">Admin</option>
                                 </select>
                                 <small class="form-hint">Admin tem acesso total ao sistema</small>
@@ -126,6 +126,6 @@
 
 <script>
 document.getElementById('nivel').addEventListener('change', function() {
-    document.getElementById('permissoesCard').style.display = this.value === 'atendente' ? 'block' : 'none';
+    document.getElementById('permissoesCard').style.display = this.value === 'usuario' ? 'block' : 'none';
 });
 </script>

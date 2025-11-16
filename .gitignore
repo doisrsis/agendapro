@@ -1,34 +1,64 @@
-.DS_Store
+# ============================================================================
+# .gitignore - Projeto Base Dashboard
+# Autor: Rafael Dias - doisr.com.br
+# ============================================================================
 
+# CodeIgniter
 application/cache/*
 !application/cache/index.html
-
-#application/logs/*#
+application/logs/*
 !application/logs/index.html
 
-!application/*/.htaccess
+# Configurações sensíveis
+application/config/database.php
+application/config/email.php
 
-composer.lock
-tests/mocks/database/ci_test.sqlite
+# Uploads e arquivos temporários
+uploads/*
+!uploads/index.html
+assets/uploads/*
+!assets/uploads/index.html
 
-user_guide_src/build/*
-user_guide_src/cilexer/build/*
-user_guide_src/cilexer/dist/*
-user_guide_src/cilexer/pycilexer.egg-info/*
-/vendor/
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# IDE Files
-#-------------------------
-/nbproject/
-.idea/*
-
-## Sublime Text cache files
-*.tmlanguage.cache
-*.tmPreferences.cache
-*.stTheme.cache
-*.sublime-workspace
+# IDEs
+.vscode/
+.idea/
 *.sublime-project
-/tests/tests/
-/tests/results/
+*.sublime-workspace
+nbproject/
+.project
+.settings/
 
-sync_config.jsonc
+# Dependências
+vendor/
+node_modules/
+bower_components/
+
+# Arquivos temporários
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Arquivos de backup
+*.bak
+*.backup
+*.old
+
+# Arquivos do Windows
+*.lnk
+
+# Arquivos do Mac
+.AppleDouble
+.LSOverride
+
+# Outros
+.env
+.htpasswd
+composer.phar

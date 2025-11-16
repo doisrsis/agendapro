@@ -52,8 +52,8 @@
                     <div class="col-md-5">
                         <label class="form-label">Buscar</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" name="busca" 
-                                   value="<?= $busca ?>" 
+                            <input type="text" class="form-control" name="busca"
+                                   value="<?= $busca ?>"
                                    placeholder="Nome ou e-mail...">
                             <button type="submit" class="btn btn-primary">
                                 <i class="ti ti-search"></i>
@@ -65,7 +65,7 @@
                         <select name="nivel" class="form-select" onchange="this.form.submit()">
                             <option value="">Todos</option>
                             <option value="admin" <?= $nivel == 'admin' ? 'selected' : '' ?>>Admin</option>
-                            <option value="atendente" <?= $nivel == 'atendente' ? 'selected' : '' ?>>Atendente</option>
+                            <option value="usuario" <?= $nivel == 'usuario' ? 'selected' : '' ?>>Usuário</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -151,7 +151,7 @@
                                 </span>
                                 <?php else: ?>
                                 <span class="badge bg-blue">
-                                    <i class="ti ti-user me-1"></i>Atendente
+                                    <i class="ti ti-user me-1"></i>Usuário
                                 </span>
                                 <?php endif; ?>
                             </td>
@@ -173,25 +173,25 @@
                             </td>
                             <td>
                                 <div class="btn-list flex-nowrap">
-                                    <a href="<?= base_url('admin/usuarios/editar/' . $usuario->id) ?>" 
-                                       class="btn btn-sm btn-icon btn-warning" 
+                                    <a href="<?= base_url('admin/usuarios/editar/' . $usuario->id) ?>"
+                                       class="btn btn-sm btn-icon btn-warning"
                                        title="Editar">
                                         <i class="ti ti-edit"></i>
                                     </a>
-                                    <a href="<?= base_url('admin/usuarios/alterar_senha/' . $usuario->id) ?>" 
-                                       class="btn btn-sm btn-icon btn-info" 
+                                    <a href="<?= base_url('admin/usuarios/alterar_senha/' . $usuario->id) ?>"
+                                       class="btn btn-sm btn-icon btn-info"
                                        title="Alterar Senha">
                                         <i class="ti ti-key"></i>
                                     </a>
                                     <?php if ($usuario->id != $this->session->userdata('usuario_id')): ?>
-                                    <a href="<?= base_url('admin/usuarios/alternar_status/' . $usuario->id) ?>" 
-                                       class="btn btn-sm btn-icon btn-<?= $usuario->status == 'ativo' ? 'secondary' : 'success' ?>" 
+                                    <a href="<?= base_url('admin/usuarios/alternar_status/' . $usuario->id) ?>"
+                                       class="btn btn-sm btn-icon btn-<?= $usuario->status == 'ativo' ? 'secondary' : 'success' ?>"
                                        title="<?= $usuario->status == 'ativo' ? 'Desativar' : 'Ativar' ?>"
                                        onclick="return confirm('Tem certeza que deseja <?= $usuario->status == 'ativo' ? 'desativar' : 'ativar' ?> este usuário?')">
                                         <i class="ti ti-<?= $usuario->status == 'ativo' ? 'ban' : 'check' ?>"></i>
                                     </a>
-                                    <a href="<?= base_url('admin/usuarios/excluir/' . $usuario->id) ?>" 
-                                       class="btn btn-sm btn-icon btn-danger" 
+                                    <a href="<?= base_url('admin/usuarios/excluir/' . $usuario->id) ?>"
+                                       class="btn btn-sm btn-icon btn-danger"
                                        title="Excluir"
                                        onclick="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')">
                                         <i class="ti ti-trash"></i>
