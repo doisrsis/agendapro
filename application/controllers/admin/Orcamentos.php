@@ -29,9 +29,11 @@ class Orcamentos extends Admin_Controller {
         
         // Configuração de paginação
         $config['base_url'] = base_url('admin/orcamentos/index');
-        $config['total_rows'] = $this->Orcamento_model->count_all();
-        $config['per_page'] = 20;
-        $config['uri_segment'] = 4;
+        $config['per_page'] = 10;
+        $config['page_query_string'] = true;
+        $config['query_string_segment'] = 'pagina';
+        $config['reuse_query_string'] = true;
+        $config['use_page_numbers'] = true;
         
         // Estilo da paginação
         $config['full_tag_open'] = '<ul class="pagination">';
@@ -58,25 +60,49 @@ class Orcamentos extends Admin_Controller {
         
         // Filtros
         $filtros = [];
-        
-        if ($this->input->get('status')) {
-            $filtros['status'] = $this->input->get('status');
+        $status = $this->input->get('status', true);
+        $busca = $this->input->get('busca', true);
+        $data_inicio = $this->input->get('data_inicio', true);
+        $data_fim = $this->input->get('data_fim', true);
+
+        if ($status !== null && $status !== '') {
+            $filtros['status'] = $status;
         }
-        
-        if ($this->input->get('busca')) {
-            $filtros['busca'] = $this->input->get('busca');
+
+        if (!empty($busca)) {
+            $filtros['busca'] = $busca;
         }
-        
-        if ($this->input->get('data_inicio')) {
-            $filtros['data_inicio'] = $this->input->get('data_inicio');
+
+        if (!empty($data_inicio)) {
+            $filtros['data_inicio'] = $data_inicio;
         }
-        
-        if ($this->input->get('data_fim')) {
-            $filtros['data_fim'] = $this->input->get('data_fim');
+
+        if (!empty($data_fim)) {
+            $filtros['data_fim'] = $data_fim;
         }
-        
+
+        $config['total_rows'] = $this->Orcamento_model->count_filtered($filtros);
+
+        $this->pagination->initialize($config);
+
+        // Determinar página atual e calcular offset
+        $pagina_param = $this->input->get('pagina', true);
+        if (!is_string($pagina_param)) {
+            $pagina_param = '';
+        }
+        $pagina_param = trim($pagina_param);
+        if ($pagina_param === '' || !ctype_digit($pagina_param) || (int) $pagina_param < 1) {
+            $pagina_param = '1';
+        }
+
+        // Forçar valor normalizado para a biblioteca de paginação
+        $_GET['pagina'] = $pagina_param;
+
+        $pagina_atual = (int) $pagina_param;
+        $offset = ($pagina_atual - 1) * $config['per_page'];
+
         // Buscar orçamentos
-        $data['orcamentos'] = $this->Orcamento_model->get_all_with_cliente($config['per_page'], $this->uri->segment(4), $filtros);
+        $data['orcamentos'] = $this->Orcamento_model->get_all_with_cliente($config['per_page'], $offset, $filtros);
         $data['pagination'] = $this->pagination->create_links();
         $data['filtros'] = $filtros;
         

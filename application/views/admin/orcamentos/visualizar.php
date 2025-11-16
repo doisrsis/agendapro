@@ -120,7 +120,7 @@
                                     <th>Produto</th>
                                     <th>Detalhes</th>
                                     <th>Dimensões</th>
-                                    <th class="text-end">Valor</th>
+                                    <th class="text-end">Valores</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -161,7 +161,37 @@
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-end">
-                                                <strong>R$ <?= number_format($item->preco_total, 2, ',', '.') ?></strong>
+                                                <?php
+                                                    $extras_total_item = 0;
+                                                    if (!empty($item->extras)) {
+                                                        foreach ($item->extras as $extra_item) {
+                                                            $extras_total_item += (float) ($extra_item->valor ?? 0);
+                                                        }
+                                                    }
+                                                    $valor_base_item = (float) $item->preco_total - $extras_total_item;
+                                                    if ($valor_base_item < 0) {
+                                                        $valor_base_item = 0;
+                                                    }
+                                                ?>
+                                                <div class="d-flex flex-column align-items-end gap-1">
+                                                    <span class="small text-muted">Valor base</span>
+                                                    <strong>R$ <?= number_format($valor_base_item, 2, ',', '.') ?></strong>
+                                                    <span class="small text-muted mt-2"><strong>Extras</strong></span>
+                                                <!--strong>R$ <//?= number_format($extras_total_item, 2, ',', '.') ?></strong-->
+                                                    <?php if(!empty($item->extras)): ?>
+                                                        <div class="mt-2 text-start w-100">
+                                                            <?php foreach($item->extras as $extra_item): ?>
+                                                                <div class="d-flex justify-content-between gap-2 small">
+                                                                    <span><?= $extra_item->extra_nome ?></span>
+                                                                    <span>R$ <?= number_format((float)($extra_item->valor ?? 0), 2, ',', '.') ?></span>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <!--hr class="my-2 w-100">
+                                                    <span class="text-muted small">Subtotal</span>
+                                                    <h4 class="mb-0 text-primary">R$ <//?= number_format($item->preco_total, 2, ',', '.') ?></h4-->
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

@@ -46,7 +46,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-3">
                         <?php if($produto->imagem_principal): ?>
-                            <img src="<?= base_url('uploads/produtos/' . $produto->imagem_principal) ?>" 
+                            <img src="<?= base_url('uploads/produtos/' . $produto->imagem_principal) ?>"
                                  class="img-fluid rounded" alt="<?= $produto->nome ?>">
                         <?php endif; ?>
                     </div>
@@ -99,8 +99,8 @@
 
         <!-- Extras -->
         <?php if(!empty($extras)): ?>
-        <div class="card mb-3 extras-card">
-            <div class="card-header">
+        <div class="card mb-3 extras-card" style="border: 2px solid #e0e0e0; border-radius: 10px;">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
                 <h5 class="mb-0"><i class="ti ti-plus"></i> Extras Selecionados</h5>
             </div>
             <div class="card-body">
@@ -116,7 +116,7 @@
                                     <?= $extra->tipo_preco === 'fixo' ? 'Valor fixo' : 'Valor por m²' ?>
                                 </span>
                                 <?php if(isset($extra->valor)): ?>
-                                    <div class="extra-price">+ R$ <?= number_format((float)$extra->valor, 2, ',', '.') ?></div>
+                                    <!--div class="extra-price">+ R$ <//?= number_format((float)$extra->valor, 2, ',', '.') ?></div-->
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -125,6 +125,34 @@
             </div>
         </div>
         <?php endif; ?>
+
+        <!-- Detalhamento de Valores -->
+        <div class="card mb-3" style="border: 2px solid #e0e0e0; border-radius: 10px;">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                <h5 class="mb-0"><i class="ti ti-currency-real"></i> Detalhamento do Valor</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span>Valor do Item</span>
+                    <strong>R$ <?= number_format($detalhes_valor['base'], 2, ',', '.') ?></strong>
+                </div>
+                <hr class="my-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span><b>Extras Selecionados</b></span>
+                    <!--strong>R$ <//?= number_format($detalhes_valor['extras_total'], 2, ',', '.') ?></strong-->
+                </div>
+                <?php if(!empty($extras)): ?>
+                    <ul class="mt-3 list-unstyled mb-0">
+                        <?php foreach($extras as $extra): ?>
+                            <li class="d-flex justify-content-between align-items-center flex-wrap gap-2 small">
+                                <span><?= $extra->nome ?></span>
+                                <strong>R$ <?= number_format((float)($extra->valor ?? 0), 2, ',', '.') ?></strong>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+        </div>
 
         <!-- Endereço / Retirada -->
         <div class="card mb-3" style="border: 2px solid #e0e0e0; border-radius: 10px;">
