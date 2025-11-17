@@ -83,6 +83,8 @@ class Logs extends Admin_Controller {
         $data['logs'] = $this->Log_model->get_all($filtros, $config['per_page'], $offset);
         $data['pagination'] = $this->pagination->create_links();
         $data['total'] = $config['total_rows'];
+        $data['total_logs'] = $config['total_rows'];
+        $data['filtros'] = $filtros;
 
         // Buscar usuários para filtro
         $data['usuarios'] = $this->Usuario_model->get_all(['status' => 'ativo']);
@@ -127,8 +129,24 @@ class Logs extends Admin_Controller {
 
         $dias = $this->input->post('dias') ?? 30;
 
+        // Contar quantos logs serão removidos
+        $data_limite = date('Y-m-d H:i:s', strtotime("-{$dias} days"));
+        $this->db->where('criado_em <', $data_limite);
+        $total_remover = $this->db->count_all_results('logs');
+
         if ($this->Log_model->limpar_antigos($dias)) {
-            $this->session->set_flashdata('sucesso', 'Logs antigos foram removidos com sucesso!');
+            $this->session->set_flashdata('sucesso', "Logs antigos foram removidos com sucesso! Total removido: {$total_remover}");
+
+            // Registrar ação de limpeza
+            $this->load->model('Log_model');
+            $this->Log_model->insert([
+                'usuario_id' => $this->session->userdata('usuario_id'),
+                'acao' => 'limpar',
+                'tabela' => 'logs',
+                'dados_novos' => json_encode(['dias' => $dias, 'total_removido' => $total_remover]),
+                'ip' => $this->input->ip_address(),
+                'user_agent' => $this->input->user_agent()
+            ]);
         } else {
             $this->session->set_flashdata('erro', 'Erro ao remover logs antigos.');
         }

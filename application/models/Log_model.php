@@ -140,9 +140,9 @@ class Log_model extends CI_Model {
      * Limpar logs antigos
      */
     public function limpar_antigos($dias = 30) {
-        $data_limite = date('Y-m-d', strtotime("-{$dias} days"));
+        $data_limite = date('Y-m-d H:i:s', strtotime("-{$dias} days"));
 
-        $this->db->where('DATE(criado_em) <', $data_limite);
+        $this->db->where('criado_em <', $data_limite);
         return $this->db->delete($this->table);
     }
 
