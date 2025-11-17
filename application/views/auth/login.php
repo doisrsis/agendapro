@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <title><?= $titulo ?? 'Login - Le Cortine' ?></title>
+    <title><?= $titulo ?? 'Login - ' . get_nome_sistema() ?></title>
 
     <!-- CSS files -->
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet"/>
@@ -29,7 +29,7 @@
         <div class="container container-tight py-4">
             <div class="text-center mb-4">
                 <a href="<?= base_url() ?>" class="navbar-brand navbar-brand-autodark">
-                    <img src="<?= base_url('assets/img/logo.png') ?>" height="56" alt="Le Cortine">
+                    <?= exibir_logo_login() ?>
                 </a>
             </div>
 

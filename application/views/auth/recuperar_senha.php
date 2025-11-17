@@ -4,12 +4,12 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <title><?= $titulo ?? 'Recuperar Senha' ?></title>
-    
+    <title><?= $titulo ?? 'Recuperar Senha - ' . get_nome_sistema() ?></title>
+
     <!-- CSS files -->
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet"/>
-    
+
     <style>
         @import url('https://rsms.me/inter/inter.css');
         :root {
@@ -30,7 +30,7 @@
         <div class="container container-tight py-4">
             <div class="text-center mb-4">
                 <a href="<?= base_url() ?>" class="navbar-brand navbar-brand-autodark">
-                    <h1 class="text-white mb-0">Le Cortine</h1>
+                    <?= exibir_logo_login() ?>
                 </a>
             </div>
             <div class="card card-md">

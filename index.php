@@ -38,6 +38,29 @@
 
 /*
  *---------------------------------------------------------------
+ * REMOVER INSTALADOR APÓS INSTALAÇÃO
+ *---------------------------------------------------------------
+ */
+if (is_dir(__DIR__ . '/install') && file_exists(__DIR__ . '/application/config/database.php')) {
+    // Verificar se database.php está configurado
+    $db_content = file_get_contents(__DIR__ . '/application/config/database.php');
+    if (strpos($db_content, 'projeto_base') !== false || strpos($db_content, "'database' => '") !== false) {
+        // Sistema instalado, remover pasta install
+        function deleteDirectory($dir) {
+            if (!file_exists($dir)) return true;
+            if (!is_dir($dir)) return unlink($dir);
+            foreach (scandir($dir) as $item) {
+                if ($item == '.' || $item == '..') continue;
+                if (!deleteDirectory($dir . DIRECTORY_SEPARATOR . $item)) return false;
+            }
+            return rmdir($dir);
+        }
+        @deleteDirectory(__DIR__ . '/install');
+    }
+}
+
+/*
+ *---------------------------------------------------------------
  * APPLICATION ENVIRONMENT
  *---------------------------------------------------------------
  *

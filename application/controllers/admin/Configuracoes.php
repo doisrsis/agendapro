@@ -191,15 +191,71 @@ class Configuracoes extends Admin_Controller {
     private function salvar_configuracoes($grupo) {
         $configs = $this->input->post('config');
 
-        if (!$configs) {
+        if (!$configs && empty($_FILES['sistema_logo']['name'])) {
             $this->session->set_flashdata('erro', 'Nenhuma configuração foi enviada.');
-            redirect('admin/configuracoes/' . $grupo);
+            redirect('admin/configuracoes?aba=' . $grupo);
             return;
         }
 
         $sucesso = true;
 
-        foreach ($configs as $chave => $valor) {
+        // Processar upload de logo (apenas para grupo geral)
+        if ($grupo == 'geral') {
+            // Remover logo se solicitado
+            if ($this->input->post('remover_logo')) {
+                $logo_antiga = $this->Configuracao_model->get_by_chave('sistema_logo');
+                if ($logo_antiga && $logo_antiga->valor) {
+                    $caminho_logo = './assets/img/logo/' . $logo_antiga->valor;
+                    if (file_exists($caminho_logo)) {
+                        @unlink($caminho_logo);
+                    }
+                    $this->Configuracao_model->update_by_chave('sistema_logo', '');
+                }
+            }
+            // Upload de nova logo
+            elseif (!empty($_FILES['sistema_logo']['name'])) {
+                $config['upload_path'] = './assets/img/logo/';
+                $config['allowed_types'] = 'gif|jpg|jpeg|png|svg';
+                $config['max_size'] = 2048; // 2MB
+                $config['encrypt_name'] = TRUE;
+
+                $this->load->library('upload', $config);
+
+                if ($this->upload->do_upload('sistema_logo')) {
+                    $upload_data = $this->upload->data();
+                    $nome_arquivo = $upload_data['file_name'];
+
+                    // Remover logo antiga se existir
+                    $logo_antiga = $this->Configuracao_model->get_by_chave('sistema_logo');
+                    if ($logo_antiga && $logo_antiga->valor) {
+                        $caminho_logo_antiga = './assets/img/logo/' . $logo_antiga->valor;
+                        if (file_exists($caminho_logo_antiga)) {
+                            @unlink($caminho_logo_antiga);
+                        }
+                    }
+
+                    // Salvar nome do arquivo no banco
+                    $config_logo = $this->Configuracao_model->get_by_chave('sistema_logo');
+                    if ($config_logo) {
+                        $this->Configuracao_model->update_by_chave('sistema_logo', $nome_arquivo);
+                    } else {
+                        $this->Configuracao_model->insert([
+                            'chave' => 'sistema_logo',
+                            'valor' => $nome_arquivo,
+                            'grupo' => 'geral',
+                            'tipo' => 'arquivo'
+                        ]);
+                    }
+                } else {
+                    $this->session->set_flashdata('erro', 'Erro ao fazer upload da logo: ' . $this->upload->display_errors('', ''));
+                    $sucesso = false;
+                }
+            }
+        }
+
+        // Salvar outras configurações
+        if ($configs) {
+            foreach ($configs as $chave => $valor) {
             // Verificar se configuração existe
             $config = $this->Configuracao_model->get_by_chave($chave);
 
@@ -221,6 +277,7 @@ class Configuracoes extends Admin_Controller {
                     $sucesso = false;
                 }
             }
+            }
         }
 
         if ($sucesso) {
@@ -229,6 +286,6 @@ class Configuracoes extends Admin_Controller {
             $this->session->set_flashdata('erro', 'Erro ao salvar algumas configurações.');
         }
 
-        redirect('admin/configuracoes/' . $grupo);
+        redirect('admin/configuracoes?aba=' . $grupo);
     }
 }

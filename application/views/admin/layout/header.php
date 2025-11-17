@@ -55,8 +55,7 @@
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
                     <a href="<?= base_url('admin') ?>" class="d-flex align-items-center">
-                        <i class="ti ti-layout-dashboard me-2" style="font-size: 24px;"></i>
-                        <span>Dashboard</span>
+                        <?= exibir_logo('', 'max-height: 32px;') ?>
                     </a>
                 </h1>
                 <div class="navbar-nav flex-row order-md-last">

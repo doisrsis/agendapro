@@ -81,7 +81,7 @@
                 <div class="tab-content">
                     <!-- ABA GERAL -->
                     <div class="tab-pane <?= $aba_ativa == 'geral' ? 'active show' : '' ?>" id="tab-geral" role="tabpanel">
-                        <form method="post" action="<?= base_url('admin/configuracoes') ?>">
+                        <form method="post" action="<?= base_url('admin/configuracoes') ?>" enctype="multipart/form-data">
                             <input type="hidden" name="grupo" value="geral">
 
                             <h3 class="mb-3">Informações do Sistema</h3>
@@ -130,20 +130,48 @@
 
                             <hr class="my-4">
 
-                            <div class="alert alert-info">
-                                <div class="d-flex">
-                                    <div>
-                                        <i class="ti ti-info-circle icon alert-icon"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="alert-title">Personalização</h4>
-                                        <div class="text-secondary">
-                                            As opções de upload de logo e favicon estarão disponíveis em breve.
-                                            Por enquanto, você pode substituir manualmente os arquivos em <code>assets/img/</code>
+                            <h3 class="mb-3">Personalização</h3>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Logo do Sistema</label>
+
+                                        <?php
+                                        $logo_atual = get_config_value($configs_geral, 'sistema_logo');
+                                        if ($logo_atual && file_exists('./assets/img/logo/' . $logo_atual)):
+                                        ?>
+                                        <div class="mb-2">
+                                            <img src="<?= base_url('assets/img/logo/' . $logo_atual) ?>"
+                                                 alt="Logo Atual"
+                                                 style="max-height: 80px; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: white;">
+                                            <div class="mt-2">
+                                                <small class="text-muted">Logo atual: <?= $logo_atual ?></small>
+                                            </div>
                                         </div>
+                                        <?php endif; ?>
+
+                                        <input type="file" class="form-control" name="sistema_logo" accept="image/*">
+                                        <small class="form-hint">
+                                            Formatos aceitos: JPG, PNG, SVG. Tamanho recomendado: 200x50px.
+                                            <?php if ($logo_atual): ?>
+                                            Deixe em branco para manter a logo atual.
+                                            <?php else: ?>
+                                            Se não enviar logo, será usado o nome do sistema.
+                                            <?php endif; ?>
+                                        </small>
                                     </div>
                                 </div>
                             </div>
+
+                            <?php if ($logo_atual): ?>
+                            <div class="mb-3">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="remover_logo" value="1">
+                                    <span class="form-check-label">Remover logo atual</span>
+                                </label>
+                            </div>
+                            <?php endif; ?>
 
                             <div class="d-flex justify-content-end mt-4">
                                 <button type="submit" class="btn btn-primary">
