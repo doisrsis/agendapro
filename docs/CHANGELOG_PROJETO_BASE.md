@@ -328,8 +328,73 @@ Um projeto base **limpo**, **documentado** e **pronto para uso**, que economiza 
 
 ---
 
-**Versão:** 1.0.0
-**Data:** 16/11/2024 19:21
+---
+
+## 🆕 v1.1.0 - Sistema de Upload de Logo (16/11/2024 21:14)
+
+### ✨ Novas Funcionalidades:
+
+**1. Sistema de Upload de Logo**
+- ✅ Campo de upload em Configurações → Geral
+- ✅ Formatos aceitos: JPG, PNG, SVG
+- ✅ Tamanho máximo: 2MB
+- ✅ Preview da logo atual
+- ✅ Opção para remover logo
+- ✅ Remove logo antiga automaticamente ao enviar nova
+
+**2. Helper de Logo**
+- ✅ `application/helpers/logo_helper.php` criado
+- ✅ Função `exibir_logo()` - Para menu admin (32px)
+- ✅ Função `exibir_logo_login()` - Para login (80px)
+- ✅ Função `get_nome_sistema()` - Retorna nome do sistema
+- ✅ **Fallback automático:** Se não houver logo, exibe o nome do sistema
+
+**3. Integração Completa**
+- ✅ Logo no menu superior do admin
+- ✅ Logo na página de login
+- ✅ Logo na página de recuperação de senha
+- ✅ Logo na página de resetar senha
+- ✅ Título dinâmico em todas as páginas
+
+### 📝 Arquivos Modificados:
+
+**Controllers:**
+- `application/controllers/admin/Configuracoes.php` - Processamento de upload
+
+**Views:**
+- `application/views/admin/configuracoes/index.php` - Campo de upload
+- `application/views/admin/layout/header.php` - Logo no menu
+- `application/views/auth/login.php` - Logo na tela de login
+- `application/views/auth/recuperar_senha.php` - Logo na recuperação
+- `application/views/auth/resetar_senha.php` - Logo no reset
+
+**Config:**
+- `application/config/autoload.php` - Carrega helper automaticamente
+
+**Outros:**
+- `index.php` - Remoção automática da pasta install/
+- `.gitignore` - Atualizado
+
+### 📁 Arquivos Criados:
+
+- `application/helpers/logo_helper.php` - Helper de logo
+- `assets/img/logo/` - Pasta para uploads
+- `assets/img/logo/index.html` - Proteção de diretório
+
+### 🎯 Como Usar:
+
+1. Acesse: **Configurações → Geral**
+2. Na seção "Personalização", faça upload da logo
+3. A logo aparecerá automaticamente em:
+   - Menu superior
+   - Página de login
+   - Recuperação de senha
+4. Se não enviar logo, o nome do sistema será exibido
+
+---
+
+**Versão:** 1.1.0
+**Data:** 16/11/2024 21:14
 **Status:** ✅ Concluído e Pronto para Uso
 
 ---
