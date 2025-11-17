@@ -393,8 +393,63 @@ Um projeto base **limpo**, **documentado** e **pronto para uso**, que economiza 
 
 ---
 
-**Versão:** 1.1.0
-**Data:** 16/11/2024 21:14
+## 🐛 v1.1.1 - Correções de Bugs e Instalador Completo (16/11/2024 23:01)
+
+### 🔧 Correções de Bugs:
+
+**1. Sistema de Logs**
+- ✅ Corrigido variável `$filtros` não passada para a view
+- ✅ Corrigido variável `$total_logs` não passada para a view
+- ✅ Corrigido método `limpar_antigos()` para usar datetime completo
+- ✅ Adicionado contador de logs removidos com feedback ao usuário
+- ✅ Corrigido insert de log de limpeza (usar `dados_novos` ao invés de `descricao`)
+
+**2. Instalador Web**
+- ✅ Recriado instalador completo na pasta `setup/`
+- ✅ Instalador limpa banco antes de importar (evita duplicação de usuário)
+- ✅ Instalador atualiza `.htaccess` com `RewriteBase` correto automaticamente
+- ✅ Instalador detecta pasta do projeto automaticamente
+- ✅ Atualizado `index.php` para remover pastas `install/` e `setup/`
+
+### 📝 Arquivos Modificados:
+
+**Controllers:**
+- `application/controllers/admin/Logs.php` - Correções de variáveis e método limpar
+
+**Models:**
+- `application/models/Log_model.php` - Correção do método limpar_antigos()
+
+**Outros:**
+- `index.php` - Remoção automática de pastas install/ e setup/
+
+### 📁 Arquivos Criados:
+
+**Instalador Completo:**
+- `setup/index.php` - Página principal do instalador
+- `setup/steps/requirements.php` - Passo 1: Verificação de requisitos
+- `setup/steps/database.php` - Passo 2: Configuração do banco
+- `setup/steps/config.php` - Passo 3: Configuração do sistema
+- `setup/steps/admin.php` - Passo 4: Criar administrador
+- `setup/steps/finish.php` - Passo 5: Finalização e instalação
+
+### 🎯 Como Usar o Instalador:
+
+1. Acesse: `http://localhost/SEU_PROJETO/setup/`
+2. Siga os 5 passos do instalador
+3. O sistema será instalado automaticamente
+4. A pasta `setup/` será removida no primeiro acesso
+
+### 🔒 Segurança:
+
+- Instalador verifica se já está instalado
+- Banco é limpo antes de importar (evita duplicação)
+- .htaccess atualizado automaticamente
+- Pasta setup removida após instalação
+
+---
+
+**Versão:** 1.1.1
+**Data:** 16/11/2024 23:01
 **Status:** ✅ Concluído e Pronto para Uso
 
 ---
