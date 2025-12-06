@@ -13,7 +13,7 @@ Options +FollowSymLinks
     RewriteEngine On
 
     # Define a base do rewrite
-    RewriteBase /projeto_base/
+    RewriteBase /agendapro/
 
     # Redirecionar para HTTPS (descomente em produção)
     # RewriteCond %{HTTPS} off

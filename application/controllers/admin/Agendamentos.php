@@ -1,0 +1,273 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/**
+ * Controller de Agendamentos
+ *
+ * Gerenciamento de agendamentos do sistema
+ *
+ * @author Rafael Dias - doisr.com.br
+ * @date 05/12/2024
+ */
+class Agendamentos extends Admin_Controller {
+
+    protected $modulo_atual = 'agendamentos';
+
+    public function __construct() {
+        parent::__construct();
+        $this->load->model('Agendamento_model');
+        $this->load->model('Estabelecimento_model');
+        $this->load->model('Profissional_model');
+        $this->load->model('Servico_model');
+        $this->load->model('Cliente_model');
+    }
+
+    /**
+     * Listagem de agendamentos
+     */
+    public function index() {
+        $data['titulo'] = 'Agendamentos';
+        $data['menu_ativo'] = 'agendamentos';
+
+        $filtros = [];
+
+        if ($this->input->get('estabelecimento_id')) {
+            $filtros['estabelecimento_id'] = $this->input->get('estabelecimento_id');
+        }
+
+        if ($this->input->get('profissional_id')) {
+            $filtros['profissional_id'] = $this->input->get('profissional_id');
+        }
+
+        if ($this->input->get('status')) {
+            $filtros['status'] = $this->input->get('status');
+        }
+
+        if ($this->input->get('data')) {
+            $filtros['data'] = $this->input->get('data');
+        }
+
+        if ($this->input->get('data_inicio') && $this->input->get('data_fim')) {
+            $filtros['data_inicio'] = $this->input->get('data_inicio');
+            $filtros['data_fim'] = $this->input->get('data_fim');
+        }
+
+        // Paginação
+        $config['base_url'] = base_url('admin/agendamentos');
+        $config['total_rows'] = $this->Agendamento_model->count($filtros);
+        $config['per_page'] = 50;
+        $config['use_page_numbers'] = TRUE;
+        $config['reuse_query_string'] = TRUE;
+
+        $this->load->library('pagination');
+        $this->pagination->initialize($config);
+
+        $page = $this->input->get('page') ? $this->input->get('page') : 1;
+        $offset = ($page - 1) * $config['per_page'];
+
+        $data['agendamentos'] = $this->Agendamento_model->get_all($filtros, $config['per_page'], $offset);
+        $data['pagination'] = $this->pagination->create_links();
+        $data['total'] = $config['total_rows'];
+        $data['filtros'] = $filtros;
+        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        $data['profissionais'] = $this->Profissional_model->get_all(['status' => 'ativo']);
+
+        $this->load->view('admin/layout/header', $data);
+        $this->load->view('admin/agendamentos/index', $data);
+        $this->load->view('admin/layout/footer');
+    }
+
+    /**
+     * Criar novo agendamento
+     */
+    public function criar() {
+        if ($this->input->method() === 'post') {
+            $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            $this->form_validation->set_rules('cliente_id', 'Cliente', 'required|integer');
+            $this->form_validation->set_rules('profissional_id', 'Profissional', 'required|integer');
+            $this->form_validation->set_rules('servico_id', 'Serviço', 'required|integer');
+            $this->form_validation->set_rules('data', 'Data', 'required');
+            $this->form_validation->set_rules('hora_inicio', 'Horário', 'required');
+
+            if ($this->form_validation->run()) {
+                $dados = [
+                    'estabelecimento_id' => $this->input->post('estabelecimento_id'),
+                    'cliente_id' => $this->input->post('cliente_id'),
+                    'profissional_id' => $this->input->post('profissional_id'),
+                    'servico_id' => $this->input->post('servico_id'),
+                    'data' => $this->input->post('data'),
+                    'hora_inicio' => $this->input->post('hora_inicio'),
+                    'status' => $this->input->post('status') ?: 'confirmado',
+                    'observacoes' => $this->input->post('observacoes'),
+                ];
+
+                $id = $this->Agendamento_model->create($dados);
+
+                if ($id) {
+                    $this->session->set_flashdata('sucesso', 'Agendamento criado com sucesso!');
+                    redirect('admin/agendamentos');
+                } else {
+                    $this->session->set_flashdata('erro', 'Erro ao criar agendamento. Verifique a disponibilidade.');
+                }
+            }
+        }
+
+        $data['titulo'] = 'Novo Agendamento';
+        $data['menu_ativo'] = 'agendamentos';
+        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        $data['clientes'] = [];
+        $data['profissionais'] = [];
+        $data['servicos'] = [];
+
+        $this->load->view('admin/layout/header', $data);
+        $this->load->view('admin/agendamentos/form', $data);
+        $this->load->view('admin/layout/footer');
+    }
+
+    /**
+     * Editar agendamento
+     */
+    public function editar($id) {
+        $agendamento = $this->Agendamento_model->get_by_id($id);
+
+        if (!$agendamento) {
+            $this->session->set_flashdata('erro', 'Agendamento não encontrado.');
+            redirect('admin/agendamentos');
+        }
+
+        if ($this->input->method() === 'post') {
+            $this->form_validation->set_rules('data', 'Data', 'required');
+            $this->form_validation->set_rules('hora_inicio', 'Horário', 'required');
+
+            if ($this->form_validation->run()) {
+                $dados = [
+                    'data' => $this->input->post('data'),
+                    'hora_inicio' => $this->input->post('hora_inicio'),
+                    'status' => $this->input->post('status'),
+                    'observacoes' => $this->input->post('observacoes'),
+                ];
+
+                if ($this->Agendamento_model->update($id, $dados)) {
+                    $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
+                    redirect('admin/agendamentos');
+                } else {
+                    $this->session->set_flashdata('erro', 'Erro ao atualizar agendamento. Verifique a disponibilidade.');
+                }
+            }
+        }
+
+        $data['titulo'] = 'Editar Agendamento';
+        $data['menu_ativo'] = 'agendamentos';
+        $data['agendamento'] = $agendamento;
+        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        $this->load->view('admin/layout/header', $data);
+        $this->load->view('admin/agendamentos/form', $data);
+        $this->load->view('admin/layout/footer');
+    }
+
+    /**
+     * Cancelar agendamento
+     */
+    public function cancelar($id) {
+        $agendamento = $this->Agendamento_model->get_by_id($id);
+
+        if (!$agendamento) {
+            $this->session->set_flashdata('erro', 'Agendamento não encontrado.');
+            redirect('admin/agendamentos');
+        }
+
+        $motivo = $this->input->post('motivo');
+
+        if ($this->Agendamento_model->cancelar($id, 'admin', $motivo)) {
+            $this->session->set_flashdata('sucesso', 'Agendamento cancelado com sucesso!');
+        } else {
+            $this->session->set_flashdata('erro', 'Erro ao cancelar agendamento.');
+        }
+
+        redirect('admin/agendamentos');
+    }
+
+    /**
+     * Finalizar agendamento
+     */
+    public function finalizar($id) {
+        if ($this->Agendamento_model->finalizar($id)) {
+            $this->session->set_flashdata('sucesso', 'Agendamento finalizado com sucesso!');
+        } else {
+            $this->session->set_flashdata('erro', 'Erro ao finalizar agendamento.');
+        }
+
+        redirect('admin/agendamentos');
+    }
+
+    /**
+     * Buscar horários disponíveis via AJAX
+     */
+    public function get_horarios_disponiveis() {
+        $profissional_id = $this->input->get('profissional_id');
+        $data = $this->input->get('data');
+        $servico_id = $this->input->get('servico_id');
+
+        if (!$profissional_id || !$data || !$servico_id) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Parâmetros inválidos']);
+            return;
+        }
+
+        $servico = $this->Servico_model->get_by_id($servico_id);
+
+        if (!$servico) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Serviço não encontrado']);
+            return;
+        }
+
+        $horarios = $this->Agendamento_model->get_horarios_disponiveis(
+            $profissional_id,
+            $data,
+            $servico->duracao
+        );
+
+        header('Content-Type: application/json');
+        echo json_encode($horarios);
+    }
+
+    /**
+     * Buscar clientes do estabelecimento via AJAX
+     */
+    public function get_clientes($estabelecimento_id) {
+        $clientes = $this->Cliente_model->get_all([
+            'estabelecimento_id' => $estabelecimento_id
+        ]);
+
+        header('Content-Type: application/json');
+        echo json_encode($clientes);
+    }
+
+    /**
+     * Buscar profissionais do estabelecimento via AJAX
+     */
+    public function get_profissionais($estabelecimento_id) {
+        $profissionais = $this->Profissional_model->get_all([
+            'estabelecimento_id' => $estabelecimento_id,
+            'status' => 'ativo'
+        ]);
+
+        header('Content-Type: application/json');
+        echo json_encode($profissionais);
+    }
+
+    /**
+     * Buscar serviços do estabelecimento via AJAX
+     */
+    public function get_servicos($estabelecimento_id) {
+        $servicos = $this->Servico_model->get_all([
+            'estabelecimento_id' => $estabelecimento_id,
+            'status' => 'ativo'
+        ]);
+
+        header('Content-Type: application/json');
+        echo json_encode($servicos);
+    }
+}

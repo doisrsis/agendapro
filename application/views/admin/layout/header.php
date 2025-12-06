@@ -128,6 +128,48 @@
                                 </a>
                             </li>
 
+                            <!-- Módulos de Agendamento -->
+                            <li class="nav-item <?= $menu_ativo == 'agendamentos' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/agendamentos') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-calendar"></i>
+                                    </span>
+                                    <span class="nav-link-title">Agendamentos</span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item <?= $menu_ativo == 'clientes' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/clientes') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-user-heart"></i>
+                                    </span>
+                                    <span class="nav-link-title">Clientes</span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown <?= in_array($menu_ativo, ['estabelecimentos', 'profissionais', 'servicos']) ? 'active' : '' ?>">
+                                <a class="nav-link dropdown-toggle" href="#navbar-cadastros" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-building-store"></i>
+                                    </span>
+                                    <span class="nav-link-title">Cadastros</span>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item <?= $menu_ativo == 'estabelecimentos' ? 'active' : '' ?>" href="<?= base_url('admin/estabelecimentos') ?>">
+                                        <i class="ti ti-building me-2"></i>
+                                        Estabelecimentos
+                                    </a>
+                                    <a class="dropdown-item <?= $menu_ativo == 'profissionais' ? 'active' : '' ?>" href="<?= base_url('admin/profissionais') ?>">
+                                        <i class="ti ti-users me-2"></i>
+                                        Profissionais
+                                    </a>
+                                    <a class="dropdown-item <?= $menu_ativo == 'servicos' ? 'active' : '' ?>" href="<?= base_url('admin/servicos') ?>">
+                                        <i class="ti ti-scissors me-2"></i>
+                                        Serviços
+                                    </a>
+                                </div>
+                            </li>
+
                             <?php if ($usuario_logado->nivel == 'admin'): ?>
                             <li class="nav-item <?= $menu_ativo == 'usuarios' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('admin/usuarios') ?>">

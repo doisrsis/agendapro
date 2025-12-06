@@ -83,7 +83,9 @@ class Logs extends Admin_Controller {
         $data['logs'] = $this->Log_model->get_all($filtros, $config['per_page'], $offset);
         $data['pagination'] = $this->pagination->create_links();
         $data['total'] = $config['total_rows'];
-        $data['total_logs'] = $config['total_rows'];
+        $data['total_logs'] = $config['total_rows']; // Alias para compatibilidade com a view
+
+        // Passar filtros para a view
         $data['filtros'] = $filtros;
 
         // Buscar usuários para filtro
@@ -91,6 +93,9 @@ class Logs extends Admin_Controller {
 
         // Ações disponíveis
         $data['acoes'] = ['login', 'logout', 'criar', 'editar', 'excluir'];
+
+        // Tabelas disponíveis (buscar dinamicamente ou definir manualmente)
+        $data['tabelas'] = ['usuarios', 'configuracoes', 'logs', 'notificacoes'];
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/logs/index', $data);

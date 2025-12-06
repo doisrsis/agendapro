@@ -75,10 +75,10 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => 'localhost',
-	'username' => 'root',
-	'password' => '',
-	'database' => 'projeto_base',
+	'hostname' => '177.136.251.242',
+	'username' => 'dois8950_proagenda',
+	'password' => 'ylfBb.-gl)c*Wa-6@2025',
+	'database' => 'dois8950_agendapro',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
