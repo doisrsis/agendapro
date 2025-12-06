@@ -85,8 +85,6 @@ class Mercadopago_lib {
             'token' => $dados['token'], // Token do cartão gerado pelo Mercado Pago JS
             'description' => $dados['descricao'],
             'installments' => (int) $dados['parcelas'],
-            'payment_method_id' => $dados['payment_method_id'],
-            'issuer_id' => $dados['issuer_id'],
             'payer' => [
                 'email' => $dados['email'],
                 'identification' => [
@@ -97,6 +95,14 @@ class Mercadopago_lib {
             'notification_url' => $dados['notification_url'] ?? base_url('webhook/mercadopago'),
             'external_reference' => $dados['external_reference'] ?? null,
         ];
+
+        // Adicionar payment_method_id e issuer_id apenas se fornecidos
+        if (!empty($dados['payment_method_id'])) {
+            $payload['payment_method_id'] = $dados['payment_method_id'];
+        }
+        if (!empty($dados['issuer_id'])) {
+            $payload['issuer_id'] = (int) $dados['issuer_id'];
+        }
 
         return $this->make_request('POST', '/v1/payments', $payload);
     }

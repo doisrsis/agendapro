@@ -79,6 +79,29 @@
             </div>
         </div>
 
+        <!-- Testes de Pagamento -->
+        <div class="card mt-3 bg-primary-lt">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="mb-1">
+                            <i class="ti ti-credit-card me-2"></i>
+                            Testes de Pagamento Real
+                        </h3>
+                        <p class="text-muted mb-0">
+                            Teste pagamentos PIX e Cartão com dados de teste do Mercado Pago
+                        </p>
+                    </div>
+                    <div class="col-auto">
+                        <a href="<?= base_url('admin/pagamento-test') ?>" class="btn btn-primary">
+                            <i class="ti ti-arrow-right me-2"></i>
+                            Acessar Testes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Informações do Sistema -->
         <div class="card mt-3">
             <div class="card-header">

@@ -254,6 +254,14 @@ class Configuracoes extends Admin_Controller {
             }
         }
 
+        // Tratamento especial para checkbox mercadopago_sandbox
+        if ($grupo == 'mercadopago') {
+            // Se o checkbox não foi enviado, significa que foi desmarcado
+            if (!isset($configs['mercadopago_sandbox'])) {
+                $configs['mercadopago_sandbox'] = '0';
+            }
+        }
+
         // Salvar outras configurações
         if ($configs) {
             foreach ($configs as $chave => $valor) {

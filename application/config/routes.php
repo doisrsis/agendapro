@@ -123,6 +123,11 @@ $route['admin/pagamentos/reembolsar/(:num)'] = 'admin/pagamentos/reembolsar/$1';
 $route['admin/mercadopago-test'] = 'admin/mercadopago_test/index';
 $route['admin/mercadopago_test/(:any)'] = 'admin/mercadopago_test/$1';
 
+// Testes de Pagamento
+$route['admin/pagamento-test'] = 'admin/pagamento_test/index';
+$route['admin/pagamento_test/(:any)'] = 'admin/pagamento_test/$1';
+$route['admin/pagamento_test/(:any)/(:any)'] = 'admin/pagamento_test/$1/$2';
+
 // Webhook
 $route['webhook/mercadopago'] = 'webhook/mercadopago';
 
