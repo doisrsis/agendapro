@@ -170,6 +170,15 @@
                                 </div>
                             </li>
 
+                            <li class="nav-item <?= $menu_ativo == 'pagamentos' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/pagamentos') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-credit-card"></i>
+                                    </span>
+                                    <span class="nav-link-title">Pagamentos</span>
+                                </a>
+                            </li>
+
                             <?php if ($usuario_logado->nivel == 'admin'): ?>
                             <li class="nav-item <?= $menu_ativo == 'usuarios' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('admin/usuarios') ?>">

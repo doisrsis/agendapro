@@ -39,6 +39,7 @@ class Configuracoes extends Admin_Controller {
         // Buscar configurações de todos os grupos necessários
         $data['configs_geral'] = $this->Configuracao_model->get_by_grupo('geral');
         $data['configs_smtp'] = $this->Configuracao_model->get_by_grupo('smtp');
+        $data['configs_mercadopago'] = $this->Configuracao_model->get_by_grupo('mercadopago');
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/configuracoes/index', $data);

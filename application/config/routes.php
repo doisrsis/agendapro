@@ -101,6 +101,31 @@ $route['admin/agendamentos/get_clientes/(:num)'] = 'admin/agendamentos/get_clien
 $route['admin/agendamentos/get_profissionais/(:num)'] = 'admin/agendamentos/get_profissionais/$1';
 $route['admin/agendamentos/get_servicos/(:num)'] = 'admin/agendamentos/get_servicos/$1';
 
+// Disponibilidade
+$route['admin/disponibilidade/profissional/(:num)'] = 'admin/disponibilidade/profissional/$1';
+$route['admin/disponibilidade/criar/(:num)'] = 'admin/disponibilidade/criar/$1';
+$route['admin/disponibilidade/editar/(:num)'] = 'admin/disponibilidade/editar/$1';
+$route['admin/disponibilidade/deletar/(:num)'] = 'admin/disponibilidade/deletar/$1';
+$route['admin/disponibilidade/criar_padrao/(:num)'] = 'admin/disponibilidade/criar_padrao/$1';
+
+// Bloqueios
+$route['admin/bloqueios'] = 'admin/bloqueios/index';
+$route['admin/bloqueios/criar'] = 'admin/bloqueios/criar';
+$route['admin/bloqueios/editar/(:num)'] = 'admin/bloqueios/editar/$1';
+$route['admin/bloqueios/deletar/(:num)'] = 'admin/bloqueios/deletar/$1';
+
+// Pagamentos
+$route['admin/pagamentos'] = 'admin/pagamentos/index';
+$route['admin/pagamentos/criar_pix/(:num)'] = 'admin/pagamentos/criar_pix/$1';
+$route['admin/pagamentos/reembolsar/(:num)'] = 'admin/pagamentos/reembolsar/$1';
+
+// Testes Mercado Pago
+$route['admin/mercadopago-test'] = 'admin/mercadopago_test/index';
+$route['admin/mercadopago_test/(:any)'] = 'admin/mercadopago_test/$1';
+
+// Webhook
+$route['webhook/mercadopago'] = 'webhook/mercadopago';
+
 // Usuários (já existente)
 $route['admin/usuarios'] = 'admin/usuarios';
 $route['admin/usuarios/(:any)'] = 'admin/usuarios/$1';

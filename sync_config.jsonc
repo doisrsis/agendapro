@@ -20,19 +20,55 @@
 		"distPath": [],
 		"excludePath": [
 			".git",
-    ".gitignore",
-	".htaccess",
-    "sync_config.jsonc",
-    "node_modules",
-    "application/logs/*",
-    "application/cache/*",
-    "application/config/config.php",      // ⚠️ Diferente em cada ambiente
-    "application/config/database.php",    // ⚠️ Diferente em cada ambiente
-    "uploads/*"
+			".gitignore",
+			".htaccess",
+			"sync_config.jsonc",
+			"node_modules",
+			"application/logs/*",
+			"application/cache/*",
+			"application/config/config.php", // ⚠️ Diferente em cada ambiente
+			"application/config/database.php", // ⚠️ Diferente em cada ambiente
+			"uploads/*"
 		],
 		"downloadPath": "",
 		"downloadExcludePath": [],
 		"default": true
+	},
+	"iafiladev": {
+		"type": "ftp",
+		"host": "177.136.251.242",
+		"port": 21,
+		"username": "iafiladev@iafila.doisr.com.br",
+		"password": "sE[3Pr2+?ct-h(,{@2025",
+		"proxy": false,
+		"upload_on_save": true,
+		"watch": true,
+		"submit_git_before_upload": true,
+		"submit_git_msg": "",
+		"build": "",
+		"compress": true,
+		"remote_unpacked": false,
+		"delete_remote_compress": false,
+		"delete_local_compress": false,
+		"deleteRemote": true,
+		"upload_to_root": true,
+		"distPath": [],
+		"excludePath": [
+			".git",
+			".gitignore",
+			".htaccess",
+			"sync_config.jsonc",
+			"node_modules",
+			"application/logs/*",
+			"application/cache/*",
+			"application/config/config.php", // ⚠️ Diferente em cada ambiente
+			"application/config/database.php", // ⚠️ Diferente em cada ambiente
+			"uploads/*"
+		],
+		"downloadPath": "",
+		"downloadExcludePath": [],
+		"default": true,
+		"secretKeyPath": "C:\\Users\\Raffa\\vscode_sync_tool\\agendapro\\secret_key_iafiladev.txt"
 	}
 	// Configuração de referência
 	// Nome do ambiente, suporta nome personalizado

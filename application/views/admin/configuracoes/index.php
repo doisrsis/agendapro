@@ -74,6 +74,12 @@
                             SMTP
                         </a>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <a href="#tab-mercadopago" class="nav-link <?= $aba_ativa == 'mercadopago' ? 'active' : '' ?>" data-bs-toggle="tab" aria-selected="<?= $aba_ativa == 'mercadopago' ? 'true' : 'false' ?>" role="tab">
+                            <i class="ti ti-credit-card me-2"></i>
+                            Mercado Pago
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -359,6 +365,241 @@
                                         Salvar Configurações
                                     </button>
                                 </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- ABA MERCADO PAGO -->
+                    <div class="tab-pane <?= $aba_ativa == 'mercadopago' ? 'active show' : '' ?>" id="tab-mercadopago" role="tabpanel">
+                        <form method="post" action="<?= base_url('admin/configuracoes') ?>">
+                            <input type="hidden" name="grupo" value="mercadopago">
+
+                            <div class="alert alert-info mb-3">
+                                <div class="d-flex">
+                                    <div>
+                                        <i class="ti ti-info-circle icon alert-icon"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="alert-title">Sobre o Mercado Pago</h4>
+                                        <div class="text-secondary">
+                                            Configure suas credenciais do Mercado Pago para processar pagamentos PIX e cartão de crédito.
+                                            Obtenha suas credenciais em:
+                                            <a href="https://www.mercadopago.com.br/developers/panel/credentials" target="_blank" class="alert-link">
+                                                Painel de Desenvolvedores
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3 class="mb-3">Credenciais da API</h3>
+
+                            <div class="alert alert-warning mb-3">
+                                <div class="d-flex">
+                                    <div>
+                                        <i class="ti ti-alert-triangle icon alert-icon"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Importante:</strong> Configure ambas as credenciais (teste e produção).
+                                        O sistema usará automaticamente as credenciais corretas baseado no modo selecionado abaixo.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Credenciais de TESTE -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-azure-lt">
+                                    <h4 class="card-title mb-0">
+                                        <i class="ti ti-flask me-2"></i>
+                                        Credenciais de Teste (Sandbox)
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Access Token de Teste</label>
+                                        <input type="text" class="form-control font-monospace" name="config[mercadopago_access_token_test]"
+                                            value="<?= get_config_value($configs_mercadopago, 'mercadopago_access_token_test') ?>"
+                                            placeholder="TEST-...">
+                                        <small class="form-hint">Token de teste para ambiente sandbox</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Public Key de Teste</label>
+                                        <input type="text" class="form-control font-monospace" name="config[mercadopago_public_key_test]"
+                                            value="<?= get_config_value($configs_mercadopago, 'mercadopago_public_key_test') ?>"
+                                            placeholder="TEST-...">
+                                        <small class="form-hint">Chave pública de teste</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Credenciais de PRODUÇÃO -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-green-lt">
+                                    <h4 class="card-title mb-0">
+                                        <i class="ti ti-shield-check me-2"></i>
+                                        Credenciais de Produção
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Access Token de Produção</label>
+                                        <input type="text" class="form-control font-monospace" name="config[mercadopago_access_token_prod]"
+                                            value="<?= get_config_value($configs_mercadopago, 'mercadopago_access_token_prod') ?>"
+                                            placeholder="APP_USR-...">
+                                        <small class="form-hint">Token de produção para transações reais</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Public Key de Produção</label>
+                                        <input type="text" class="form-control font-monospace" name="config[mercadopago_public_key_prod]"
+                                            value="<?= get_config_value($configs_mercadopago, 'mercadopago_public_key_prod') ?>"
+                                            placeholder="APP_USR-...">
+                                        <small class="form-hint">Chave pública de produção</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h3 class="mb-3">Modo de Operação</h3>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-check form-switch form-switch-lg">
+                                        <input class="form-check-input" type="checkbox" name="config[mercadopago_sandbox]" value="1"
+                                            <?= (get_config_value($configs_mercadopago, 'mercadopago_sandbox', '1') == '1') ? 'checked' : '' ?>>
+                                        <span class="form-check-label">
+                                            <strong>Modo Sandbox (Testes)</strong>
+                                            <span class="form-check-description">
+                                                <span class="badge bg-azure me-2">TESTE</span>
+                                                Ativado: Usa credenciais de teste.
+                                                <span class="badge bg-green ms-2">PRODUÇÃO</span>
+                                                Desativado: Usa credenciais de produção.
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>Status Atual:</strong>
+                                <?php if (get_config_value($configs_mercadopago, 'mercadopago_sandbox', '1') == '1'): ?>
+                                    <span class="badge bg-azure">Modo TESTE ativado</span> - Transações não são reais
+                                <?php else: ?>
+                                    <span class="badge bg-green">Modo PRODUÇÃO ativado</span> - Transações são reais e cobradas
+                                <?php endif; ?>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h3 class="mb-3">URLs de Webhook</h3>
+
+                            <div class="alert alert-info mb-3">
+                                <i class="ti ti-info-circle me-2"></i>
+                                Configure URLs diferentes para teste e produção no
+                                <a href="https://www.mercadopago.com.br/developers/panel/webhooks" target="_blank" class="alert-link">
+                                    painel de webhooks do Mercado Pago
+                                </a>
+                            </div>
+
+                            <!-- Webhook de TESTE -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-azure-lt">
+                                    <h4 class="card-title mb-0">
+                                        <i class="ti ti-webhook me-2"></i>
+                                        Webhook de Teste
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">URL do Webhook de Teste</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control font-monospace"
+                                                   name="config[mercadopago_webhook_url_test]"
+                                                   value="<?= get_config_value($configs_mercadopago, 'mercadopago_webhook_url_test', base_url('webhook/mercadopago')) ?>"
+                                                   id="webhook-url-test"
+                                                   placeholder="<?= base_url('webhook/mercadopago') ?>">
+                                            <button class="btn btn-icon" type="button"
+                                                    onclick="navigator.clipboard.writeText(document.getElementById('webhook-url-test').value); alert('URL de teste copiada!')">
+                                                <i class="ti ti-copy"></i>
+                                            </button>
+                                        </div>
+                                        <small class="form-hint">
+                                            Configure esta URL para receber notificações de pagamentos de teste (pode ser localhost)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Webhook de PRODUÇÃO -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-green-lt">
+                                    <h4 class="card-title mb-0">
+                                        <i class="ti ti-webhook me-2"></i>
+                                        Webhook de Produção
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label required">URL do Webhook de Produção</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control font-monospace"
+                                                   name="config[mercadopago_webhook_url_prod]"
+                                                   value="<?= get_config_value($configs_mercadopago, 'mercadopago_webhook_url_prod', base_url('webhook/mercadopago')) ?>"
+                                                   id="webhook-url-prod"
+                                                   placeholder="https://seudominio.com/webhook/mercadopago"
+                                                   required>
+                                            <button class="btn btn-icon" type="button"
+                                                    onclick="navigator.clipboard.writeText(document.getElementById('webhook-url-prod').value); alert('URL de produção copiada!')">
+                                                <i class="ti ti-copy"></i>
+                                            </button>
+                                        </div>
+                                        <small class="form-hint">
+                                            Configure esta URL para receber notificações de pagamentos reais
+                                        </small>
+                                    </div>
+
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="ti ti-alert-triangle me-2"></i>
+                                        <strong>Importante:</strong> Em produção, a URL deve ser acessível via HTTPS e não pode ser localhost.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h3 class="mb-3">Documentação</h3>
+
+                            <div class="list-group">
+                                <a href="https://www.mercadopago.com.br/developers/pt/docs/checkout-api-v2/overview"
+                                   target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-book me-2"></i>
+                                    Visão Geral da API
+                                </a>
+                                <a href="https://www.mercadopago.com.br/developers/pt/docs/checkout-api-v2/payment-integration/pix"
+                                   target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-qrcode me-2"></i>
+                                    Integração PIX
+                                </a>
+                                <a href="https://www.mercadopago.com.br/developers/pt/docs/checkout-api-v2/payment-integration/cards"
+                                   target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-credit-card me-2"></i>
+                                    Integração Cartões
+                                </a>
+                                <a href="https://www.mercadopago.com.br/developers/pt/docs/checkout-api-v2/notifications"
+                                   target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-bell me-2"></i>
+                                    Webhooks e Notificações
+                                </a>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-device-floppy me-2"></i>
+                                    Salvar Configurações
+                                </button>
                             </div>
                         </form>
                     </div>
