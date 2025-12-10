@@ -61,23 +61,24 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Nível</label>
-                        <select name="nivel" class="form-select" onchange="this.form.submit()">
+                        <label class="form-label">Tipo</label>
+                        <select name="tipo" class="form-select" onchange="this.form.submit()">
                             <option value="">Todos</option>
-                            <option value="admin" <?= $nivel == 'admin' ? 'selected' : '' ?>>Admin</option>
-                            <option value="usuario" <?= $nivel == 'usuario' ? 'selected' : '' ?>>Usuário</option>
+                            <option value="super_admin" <?= $tipo == 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
+                            <option value="estabelecimento" <?= $tipo == 'estabelecimento' ? 'selected' : '' ?>>Estabelecimento</option>
+                            <option value="profissional" <?= $tipo == 'profissional' ? 'selected' : '' ?>>Profissional</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Status</label>
-                        <select name="status" class="form-select" onchange="this.form.submit()">
+                        <select name="ativo" class="form-select" onchange="this.form.submit()">
                             <option value="">Todos</option>
-                            <option value="ativo" <?= $status == 'ativo' ? 'selected' : '' ?>>Ativo</option>
-                            <option value="inativo" <?= $status == 'inativo' ? 'selected' : '' ?>>Inativo</option>
+                            <option value="1" <?= $ativo === '1' ? 'selected' : '' ?>>Ativo</option>
+                            <option value="0" <?= $ativo === '0' ? 'selected' : '' ?>>Inativo</option>
                         </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
-                        <?php if ($busca || $nivel || $status): ?>
+                        <?php if ($busca || $tipo || $ativo !== null): ?>
                         <a href="<?= base_url('admin/usuarios') ?>" class="btn btn-outline-secondary w-100">
                             <i class="ti ti-x me-2"></i>Limpar
                         </a>
@@ -132,7 +133,7 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar avatar-sm me-2 <?= $usuario->status == 'ativo' ? 'bg-success' : 'bg-secondary' ?>-lt">
+                                <div class="avatar avatar-sm me-2 <?= $usuario->ativo == 1 ? 'bg-success' : 'bg-secondary' ?>-lt">
                                         <i class="ti ti-user"></i>
                                     </div>
                                     <div>
@@ -145,9 +146,17 @@
                                 </div>
                             </td>
                             <td>
-                                <?php if ($usuario->nivel == 'admin'): ?>
+                                <?php if ($usuario->tipo == 'super_admin'): ?>
                                 <span class="badge bg-red">
-                                    <i class="ti ti-shield-check me-1"></i>Admin
+                                    <i class="ti ti-shield-check me-1"></i>Super Admin
+                                </span>
+                                <?php elseif ($usuario->tipo == 'estabelecimento'): ?>
+                                <span class="badge bg-primary">
+                                    <i class="ti ti-building me-1"></i>Estabelecimento
+                                </span>
+                                <?php elseif ($usuario->tipo == 'profissional'): ?>
+                                <span class="badge bg-info">
+                                    <i class="ti ti-user me-1"></i>Profissional
                                 </span>
                                 <?php else: ?>
                                 <span class="badge bg-blue">
@@ -156,7 +165,7 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($usuario->status == 'ativo'): ?>
+                                <?php if ($usuario->ativo == 1): ?>
                                 <span class="badge bg-success">Ativo</span>
                                 <?php else: ?>
                                 <span class="badge bg-secondary">Inativo</span>
@@ -185,10 +194,10 @@
                                     </a>
                                     <?php if ($usuario->id != $this->session->userdata('usuario_id')): ?>
                                     <a href="<?= base_url('admin/usuarios/alternar_status/' . $usuario->id) ?>"
-                                       class="btn btn-sm btn-icon btn-<?= $usuario->status == 'ativo' ? 'secondary' : 'success' ?>"
-                                       title="<?= $usuario->status == 'ativo' ? 'Desativar' : 'Ativar' ?>"
-                                       onclick="return confirm('Tem certeza que deseja <?= $usuario->status == 'ativo' ? 'desativar' : 'ativar' ?> este usuário?')">
-                                        <i class="ti ti-<?= $usuario->status == 'ativo' ? 'ban' : 'check' ?>"></i>
+                                       class="btn btn-sm btn-icon btn-<?= $usuario->ativo == 1 ? 'secondary' : 'success' ?>"
+                                       title="<?= $usuario->ativo == 1 ? 'Desativar' : 'Ativar' ?>"
+                                       onclick="return confirm('Tem certeza que deseja <?= $usuario->ativo == 1 ? 'desativar' : 'ativar' ?> este usuário?')">
+                                        <i class="ti ti-<?= $usuario->ativo == 1 ? 'ban' : 'check' ?>"></i>
                                     </a>
                                     <a href="<?= base_url('admin/usuarios/excluir/' . $usuario->id) ?>"
                                        class="btn btn-sm btn-icon btn-danger"

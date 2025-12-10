@@ -3,9 +3,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Controller Base Customizado
- * 
+ *
  * Extende o CI_Controller com funcionalidades adicionais
- * 
+ *
  * @author Rafael Dias - doisr.com.br
  * @date 13/11/2024
  */
@@ -16,21 +16,40 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Admin_Controller extends CI_Controller {
 
     protected $usuario;
+    protected $estabelecimento_id;
+    protected $estabelecimento;
 
     public function __construct() {
         parent::__construct();
-        
+
         // Carregar biblioteca de autenticação
         $this->load->library('auth_check');
-        
+
         // Verificar se está logado
         $this->auth_check->check_login();
-        
+
         // Obter dados do usuário
         $this->usuario = $this->auth_check->get_usuario();
-        
+
+        // Carregar dados do estabelecimento (se aplicável)
+        if ($this->usuario->tipo === 'estabelecimento' || $this->usuario->tipo === 'profissional') {
+            $this->estabelecimento_id = $this->usuario->estabelecimento_id;
+
+            if ($this->estabelecimento_id) {
+                $this->load->model('Estabelecimento_model');
+                $this->estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+
+                // Verificar se estabelecimento está ativo
+                $this->auth_check->verificar_estabelecimento_ativo();
+            }
+        }
+
         // Disponibilizar para as views
-        $this->load->vars(['usuario_logado' => $this->usuario]);
+        $this->load->vars([
+            'usuario_logado' => $this->usuario,
+            'estabelecimento_id' => $this->estabelecimento_id ?? null,
+            'estabelecimento' => $this->estabelecimento ?? null
+        ]);
     }
 
     /**
@@ -51,6 +70,39 @@ class Admin_Controller extends CI_Controller {
             $this->session->set_flashdata('erro', 'Você não tem permissão para acessar esta funcionalidade.');
             redirect('admin/dashboard');
         }
+    }
+
+    /**
+     * Verificar se pode criar profissional (limite do plano)
+     */
+    protected function pode_criar_profissional() {
+        if (!$this->estabelecimento_id) {
+            return true; // Super admin pode criar
+        }
+
+        return $this->auth_check->pode_criar_profissional($this->estabelecimento_id);
+    }
+
+    /**
+     * Verificar se pode criar agendamento (limite do plano)
+     */
+    protected function pode_criar_agendamento() {
+        if (!$this->estabelecimento_id) {
+            return true; // Super admin pode criar
+        }
+
+        return $this->auth_check->pode_criar_agendamento($this->estabelecimento_id);
+    }
+
+    /**
+     * Verificar se tem recurso específico
+     */
+    protected function tem_recurso($recurso) {
+        if (!$this->estabelecimento_id) {
+            return true; // Super admin tem todos os recursos
+        }
+
+        return $this->auth_check->tem_recurso($recurso, $this->estabelecimento_id);
     }
 
     /**
@@ -147,10 +199,10 @@ class Public_Controller extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
-        
+
         // Configurações específicas para área pública
         $this->load->model('Configuracao_model');
-        
+
         // Carregar configurações do site
         $configuracoes = $this->Configuracao_model->get_all_as_array();
         $this->load->vars(['configuracoes' => $configuracoes]);

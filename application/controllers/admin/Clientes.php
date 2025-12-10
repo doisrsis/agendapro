@@ -29,7 +29,12 @@ class Clientes extends Admin_Controller {
 
         $filtros = [];
 
-        if ($this->input->get('estabelecimento_id')) {
+        // Filtrar por estabelecimento (multi-tenant)
+        if ($this->estabelecimento_id) {
+            // Usuário de estabelecimento/profissional: filtrar apenas seu estabelecimento
+            $filtros['estabelecimento_id'] = $this->estabelecimento_id;
+        } elseif ($this->input->get('estabelecimento_id')) {
+            // Super admin: pode filtrar por qualquer estabelecimento
             $filtros['estabelecimento_id'] = $this->input->get('estabelecimento_id');
         }
 
@@ -42,7 +47,12 @@ class Clientes extends Admin_Controller {
         }
 
         $data['clientes'] = $this->Cliente_model->get_all($filtros);
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        // Estabelecimentos apenas para super admin
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
+
         $data['filtros'] = $filtros;
 
         $this->load->view('admin/layout/header', $data);
@@ -61,6 +71,12 @@ class Clientes extends Admin_Controller {
             redirect('admin/clientes');
         }
 
+        // Verificar se cliente pertence ao estabelecimento (multi-tenant)
+        if ($this->estabelecimento_id && $cliente->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Você não tem permissão para visualizar este cliente.');
+            redirect('admin/clientes');
+        }
+
         $data['titulo'] = 'Detalhes do Cliente';
         $data['menu_ativo'] = 'clientes';
         $data['cliente'] = $cliente;
@@ -76,14 +92,19 @@ class Clientes extends Admin_Controller {
      */
     public function criar() {
         if ($this->input->method() === 'post') {
-            $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            // Validação condicional de estabelecimento_id
+            if (!$this->estabelecimento_id) {
+                $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            }
+
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
             $this->form_validation->set_rules('whatsapp', 'WhatsApp', 'required|max_length[20]');
             $this->form_validation->set_rules('email', 'E-mail', 'valid_email');
 
             if ($this->form_validation->run()) {
                 $dados = [
-                    'estabelecimento_id' => $this->input->post('estabelecimento_id'),
+                    // Multi-tenant: usar estabelecimento do usuário ou do formulário
+                    'estabelecimento_id' => $this->estabelecimento_id ?: $this->input->post('estabelecimento_id'),
                     'nome' => $this->input->post('nome'),
                     'cpf' => $this->input->post('cpf'),
                     'whatsapp' => $this->input->post('whatsapp'),
@@ -103,6 +124,7 @@ class Clientes extends Admin_Controller {
                 $id = $this->Cliente_model->create($dados);
 
                 if ($id) {
+                    $this->registrar_log('criar', 'clientes', $id, null, $dados);
                     $this->session->set_flashdata('sucesso', 'Cliente criado com sucesso!');
                     redirect('admin/clientes');
                 } else {
@@ -113,7 +135,11 @@ class Clientes extends Admin_Controller {
 
         $data['titulo'] = 'Novo Cliente';
         $data['menu_ativo'] = 'clientes';
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        // Estabelecimentos apenas para super admin
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/clientes/form', $data);
@@ -131,12 +157,20 @@ class Clientes extends Admin_Controller {
             redirect('admin/clientes');
         }
 
+        // Verificar se cliente pertence ao estabelecimento (multi-tenant)
+        if ($this->estabelecimento_id && $cliente->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Você não tem permissão para editar este cliente.');
+            redirect('admin/clientes');
+        }
+
         if ($this->input->method() === 'post') {
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
             $this->form_validation->set_rules('whatsapp', 'WhatsApp', 'required|max_length[20]');
             $this->form_validation->set_rules('email', 'E-mail', 'valid_email');
 
             if ($this->form_validation->run()) {
+                $dados_antigos = (array) $cliente;
+
                 $dados = [
                     'nome' => $this->input->post('nome'),
                     'cpf' => $this->input->post('cpf'),
@@ -158,6 +192,7 @@ class Clientes extends Admin_Controller {
                 }
 
                 if ($this->Cliente_model->update($id, $dados)) {
+                    $this->registrar_log('atualizar', 'clientes', $id, $dados_antigos, $dados);
                     $this->session->set_flashdata('sucesso', 'Cliente atualizado com sucesso!');
                     redirect('admin/clientes');
                 } else {
@@ -169,7 +204,11 @@ class Clientes extends Admin_Controller {
         $data['titulo'] = 'Editar Cliente';
         $data['menu_ativo'] = 'clientes';
         $data['cliente'] = $cliente;
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        // Estabelecimentos apenas para super admin
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/clientes/form', $data);
@@ -187,11 +226,18 @@ class Clientes extends Admin_Controller {
             redirect('admin/clientes');
         }
 
+        // Verificar se cliente pertence ao estabelecimento (multi-tenant)
+        if ($this->estabelecimento_id && $cliente->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Você não tem permissão para deletar este cliente.');
+            redirect('admin/clientes');
+        }
+
         if ($this->Cliente_model->delete($id)) {
             if ($cliente->foto && file_exists('./uploads/clientes/' . $cliente->foto)) {
                 unlink('./uploads/clientes/' . $cliente->foto);
             }
 
+            $this->registrar_log('deletar', 'clientes', $id, (array) $cliente, null);
             $this->session->set_flashdata('sucesso', 'Cliente deletado com sucesso!');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao deletar cliente.');

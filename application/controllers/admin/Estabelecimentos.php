@@ -55,10 +55,20 @@ class Estabelecimentos extends Admin_Controller {
     public function criar() {
         if ($this->input->method() === 'post') {
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[200]');
-            $this->form_validation->set_rules('email', 'E-mail', 'valid_email');
-            $this->form_validation->set_rules('plano', 'Plano', 'required|in_list[trimestral,semestral,anual]');
+            $this->form_validation->set_rules('email', 'E-mail', 'required|valid_email');
+            $this->form_validation->set_rules('senha', 'Senha', 'required|min_length[6]');
+            $this->form_validation->set_rules('confirmar_senha', 'Confirmar Senha', 'required|matches[senha]');
+            $this->form_validation->set_rules('plano_id', 'Plano', 'required|integer');
 
             if ($this->form_validation->run()) {
+                // Verificar se email já existe
+                $this->load->model('Usuario_model');
+                if ($this->Usuario_model->email_existe($this->input->post('email'))) {
+                    $this->session->set_flashdata('erro', 'Este e-mail já está cadastrado.');
+                    redirect('admin/estabelecimentos/criar');
+                    return;
+                }
+
                 $dados = [
                     'nome' => $this->input->post('nome'),
                     'cnpj_cpf' => $this->input->post('cnpj_cpf'),
@@ -69,8 +79,6 @@ class Estabelecimentos extends Admin_Controller {
                     'telefone' => $this->input->post('telefone'),
                     'whatsapp' => $this->input->post('whatsapp'),
                     'email' => $this->input->post('email'),
-                    'plano' => $this->input->post('plano'),
-                    'plano_vencimento' => $this->input->post('plano_vencimento'),
                     'tempo_minimo_agendamento' => $this->input->post('tempo_minimo_agendamento') ?: 60,
                     'status' => $this->input->post('status') ?: 'ativo',
                 ];
@@ -86,7 +94,46 @@ class Estabelecimentos extends Admin_Controller {
                 $id = $this->Estabelecimento_model->create($dados);
 
                 if ($id) {
-                    $this->session->set_flashdata('sucesso', 'Estabelecimento criado com sucesso!');
+                    // Criar usuário automaticamente
+                    $dados_usuario = [
+                        'nome' => $this->input->post('nome'),
+                        'email' => $this->input->post('email'),
+                        'telefone' => $this->input->post('telefone'),
+                        'senha' => $this->input->post('senha'),
+                        'tipo' => 'estabelecimento',
+                        'estabelecimento_id' => $id,
+                        'ativo' => 1
+                    ];
+
+                    $usuario_id = $this->Usuario_model->criar($dados_usuario);
+
+                    // Criar assinatura automaticamente
+                    $this->load->model('Plano_model');
+                    $this->load->model('Assinatura_model');
+
+                    $plano_id = $this->input->post('plano_id');
+                    $plano = $this->Plano_model->get($plano_id);
+
+                    if ($plano) {
+                        $dados_assinatura = [
+                            'estabelecimento_id' => $id,
+                            'plano_id' => $plano_id,
+                            'data_inicio' => date('Y-m-d'),
+                            'data_fim' => date('Y-m-d', strtotime('+' . $plano->trial_dias . ' days')),
+                            'status' => 'trial',
+                            'valor_pago' => 0.00,
+                            'auto_renovar' => 1
+                        ];
+
+                        $this->Assinatura_model->criar($dados_assinatura);
+                    }
+
+                    if ($usuario_id) {
+                        $this->session->set_flashdata('sucesso', 'Estabelecimento, usuário e assinatura criados! Credenciais: ' . $this->input->post('email'));
+                    } else {
+                        $this->session->set_flashdata('sucesso', 'Estabelecimento criado, mas houve erro ao criar usuário.');
+                    }
+
                     redirect('admin/estabelecimentos');
                 } else {
                     $this->session->set_flashdata('erro', 'Erro ao criar estabelecimento.');
@@ -96,6 +143,10 @@ class Estabelecimentos extends Admin_Controller {
 
         $data['titulo'] = 'Novo Estabelecimento';
         $data['menu_ativo'] = 'estabelecimentos';
+
+        // Carregar planos ativos
+        $this->load->model('Plano_model');
+        $data['planos'] = $this->Plano_model->get_all(true);
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/estabelecimentos/form', $data);
@@ -115,7 +166,14 @@ class Estabelecimentos extends Admin_Controller {
 
         if ($this->input->method() === 'post') {
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[200]');
-            $this->form_validation->set_rules('email', 'E-mail', 'valid_email');
+            $this->form_validation->set_rules('email', 'E-mail', 'required|valid_email');
+            $this->form_validation->set_rules('plano_id', 'Plano', 'required|integer');
+
+            // Validar senha apenas se preenchida
+            if ($this->input->post('senha')) {
+                $this->form_validation->set_rules('senha', 'Senha', 'min_length[6]');
+                $this->form_validation->set_rules('confirmar_senha', 'Confirmar Senha', 'matches[senha]');
+            }
 
             if ($this->form_validation->run()) {
                 $dados = [
@@ -147,17 +205,84 @@ class Estabelecimentos extends Admin_Controller {
                 }
 
                 if ($this->Estabelecimento_model->update($id, $dados)) {
-                    $this->session->set_flashdata('sucesso', 'Estabelecimento atualizado com sucesso!');
-                    redirect('admin/estabelecimentos');
+                    // Atualizar usuário vinculado se existir
+                    $this->load->model('Usuario_model');
+                    $usuarios = $this->Usuario_model->get_all('estabelecimento');
+                    $usuario = null;
+                    foreach ($usuarios as $u) {
+                        if ($u->estabelecimento_id == $id) {
+                            $usuario = $u;
+                            break;
+                        }
+                    }
+
+                    if ($usuario) {
+                        $dados_usuario = [
+                            'nome' => $this->input->post('nome'),
+                            'email' => $this->input->post('email'),
+                            'telefone' => $this->input->post('telefone')
+                        ];
+
+                        // Atualizar senha se fornecida
+                        if ($this->input->post('senha')) {
+                            $dados_usuario['senha'] = $this->input->post('senha');
+                        }
+
+                        $this->Usuario_model->atualizar($usuario->id, $dados_usuario);
+                    }
                 } else {
                     $this->session->set_flashdata('erro', 'Erro ao atualizar estabelecimento.');
+                    redirect('admin/estabelecimentos'); // Redirect on error
                 }
+
+                // Verificar se o plano foi alterado
+                $this->load->model('Assinatura_model');
+                $this->load->model('Plano_model');
+
+                $plano_id_novo = $this->input->post('plano_id');
+                $assinatura_atual = $this->Assinatura_model->get_ativa_por_estabelecimento($id);
+
+                if ($assinatura_atual && $assinatura_atual->plano_id != $plano_id_novo) {
+                    // Plano foi alterado - criar nova assinatura
+                    $plano = $this->Plano_model->get($plano_id_novo);
+
+                    if ($plano) {
+                        // Cancelar assinatura antiga
+                        $this->Assinatura_model->atualizar($assinatura_atual->id, ['status' => 'cancelada']);
+
+                        // Criar nova assinatura
+                        $dados_assinatura = [
+                            'estabelecimento_id' => $id,
+                            'plano_id' => $plano_id_novo,
+                            'data_inicio' => date('Y-m-d'),
+                            'data_fim' => date('Y-m-d', strtotime('+30 days')),
+                            'status' => 'ativa',
+                            'valor_pago' => 0.00,
+                            'auto_renovar' => 1
+                        ];
+
+                        $this->Assinatura_model->criar($dados_assinatura);
+                        $this->session->set_flashdata('sucesso', 'Estabelecimento atualizado e plano alterado com sucesso!');
+                    } else {
+                        $this->session->set_flashdata('erro', 'Erro ao alterar plano: Plano não encontrado.');
+                    }
+                } else {
+                    $this->session->set_flashdata('sucesso', 'Estabelecimento atualizado com sucesso!');
+                }
+
+                redirect('admin/estabelecimentos');
             }
         }
 
         $data['titulo'] = 'Editar Estabelecimento';
         $data['menu_ativo'] = 'estabelecimentos';
         $data['estabelecimento'] = $estabelecimento;
+
+        // Carregar planos e assinatura atual
+        $this->load->model('Plano_model');
+        $this->load->model('Assinatura_model');
+        $data['planos'] = $this->Plano_model->get_all(true);
+        $data['assinatura_atual'] = $this->Assinatura_model->get_ativa_por_estabelecimento($id);
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/estabelecimentos/form', $data);

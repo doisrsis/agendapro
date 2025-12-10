@@ -113,4 +113,53 @@ class Servico_model extends CI_Model {
         $query = $this->db->get();
         return $query->result();
     }
+
+    /**
+     * Contar serviços por filtros
+     */
+    public function count($filtros = []) {
+        $this->db->from($this->table);
+
+        if (!empty($filtros['estabelecimento_id'])) {
+            $this->db->where('estabelecimento_id', $filtros['estabelecimento_id']);
+        }
+
+        if (!empty($filtros['status'])) {
+            $this->db->where('status', $filtros['status']);
+        }
+
+        return $this->db->count_all_results();
+    }
+
+    // =========================================================================
+    // ALIASES PARA COMPATIBILIDADE DE NOMENCLATURA
+    // =========================================================================
+
+    /**
+     * Alias para get_by_id()
+     */
+    public function get($id) {
+        return $this->get_by_id($id);
+    }
+
+    /**
+     * Alias para create()
+     */
+    public function criar($dados) {
+        return $this->create($dados);
+    }
+
+    /**
+     * Alias para update()
+     */
+    public function atualizar($id, $dados) {
+        return $this->update($id, $dados);
+    }
+
+    /**
+     * Alias para delete()
+     */
+    public function excluir($id) {
+        return $this->delete($id);
+    }
 }

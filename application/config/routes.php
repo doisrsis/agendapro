@@ -49,98 +49,59 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Examples:	my-controller/index	-> my_controller/index
 |		my-controller/my-method	-> my_controller/my_method
 */
-// Rota padrão - Redireciona para login
-$route['default_controller'] = 'auth/login';
+
+// =========================================================================
+// ROTAS DE AUTENTICAÇÃO
+// =========================================================================
+
+$route['default_controller'] = 'login';
 $route['404_override'] = '';
-$route['translate_uri_dashes'] = TRUE;
+$route['translate_uri_dashes'] = FALSE;
 
-// Rotas de autenticação
-$route['login'] = 'auth/login';
-$route['logout'] = 'auth/logout';
-$route['recuperar-senha'] = 'auth/recuperar_senha';
-$route['resetar-senha/(:any)'] = 'auth/resetar_senha/$1';
+// Login e Logout
+$route['login'] = 'login/index';
+$route['logout'] = 'login/logout';
+$route['sair'] = 'login/logout';
 
-// Rotas administrativas
+// Recuperação de Senha
+$route['recuperar-senha'] = 'login/recuperar_senha';
+$route['resetar-senha/(:any)'] = 'login/resetar_senha/$1';
+
+// =========================================================================
+// ROTAS ADMIN (Super Admin)
+// =========================================================================
+
 $route['admin'] = 'admin/dashboard';
 $route['admin/dashboard'] = 'admin/dashboard';
+$route['admin/(:any)'] = 'admin/$1';
 
-// Estabelecimentos
-$route['admin/estabelecimentos'] = 'admin/estabelecimentos/index';
-$route['admin/estabelecimentos/criar'] = 'admin/estabelecimentos/criar';
-$route['admin/estabelecimentos/editar/(:num)'] = 'admin/estabelecimentos/editar/$1';
-$route['admin/estabelecimentos/deletar/(:num)'] = 'admin/estabelecimentos/deletar/$1';
+// =========================================================================
+// ROTAS PAINEL (Estabelecimento)
+// =========================================================================
 
-// Profissionais
-$route['admin/profissionais'] = 'admin/profissionais/index';
-$route['admin/profissionais/criar'] = 'admin/profissionais/criar';
-$route['admin/profissionais/editar/(:num)'] = 'admin/profissionais/editar/$1';
-$route['admin/profissionais/deletar/(:num)'] = 'admin/profissionais/deletar/$1';
-$route['admin/profissionais/get_servicos/(:num)'] = 'admin/profissionais/get_servicos/$1';
+$route['painel'] = 'painel/dashboard';
+$route['painel/dashboard'] = 'painel/dashboard';
+$route['painel/(:any)'] = 'painel/$1';
 
-// Serviços
-$route['admin/servicos'] = 'admin/servicos/index';
-$route['admin/servicos/criar'] = 'admin/servicos/criar';
-$route['admin/servicos/editar/(:num)'] = 'admin/servicos/editar/$1';
-$route['admin/servicos/deletar/(:num)'] = 'admin/servicos/deletar/$1';
+// Páginas especiais do painel
+$route['painel/suspenso'] = 'painel/suspenso';
+$route['painel/cancelado'] = 'painel/cancelado';
+$route['painel/assinatura-expirada'] = 'painel/assinatura_expirada';
 
-// Clientes
-$route['admin/clientes'] = 'admin/clientes/index';
-$route['admin/clientes/criar'] = 'admin/clientes/criar';
-$route['admin/clientes/editar/(:num)'] = 'admin/clientes/editar/$1';
-$route['admin/clientes/visualizar/(:num)'] = 'admin/clientes/visualizar/$1';
-$route['admin/clientes/deletar/(:num)'] = 'admin/clientes/deletar/$1';
+// =========================================================================
+// ROTAS AGENDA (Profissional)
+// =========================================================================
 
-// Agendamentos
-$route['admin/agendamentos'] = 'admin/agendamentos/index';
-$route['admin/agendamentos/criar'] = 'admin/agendamentos/criar';
-$route['admin/agendamentos/editar/(:num)'] = 'admin/agendamentos/editar/$1';
-$route['admin/agendamentos/cancelar/(:num)'] = 'admin/agendamentos/cancelar/$1';
-$route['admin/agendamentos/finalizar/(:num)'] = 'admin/agendamentos/finalizar/$1';
-$route['admin/agendamentos/get_horarios_disponiveis'] = 'admin/agendamentos/get_horarios_disponiveis';
-$route['admin/agendamentos/get_clientes/(:num)'] = 'admin/agendamentos/get_clientes/$1';
-$route['admin/agendamentos/get_profissionais/(:num)'] = 'admin/agendamentos/get_profissionais/$1';
-$route['admin/agendamentos/get_servicos/(:num)'] = 'admin/agendamentos/get_servicos/$1';
+$route['agenda'] = 'agenda/dashboard';
+$route['agenda/dashboard'] = 'agenda/dashboard';
+$route['agenda/(:any)'] = 'agenda/$1';
 
-// Disponibilidade
-$route['admin/disponibilidade/profissional/(:num)'] = 'admin/disponibilidade/profissional/$1';
-$route['admin/disponibilidade/criar/(:num)'] = 'admin/disponibilidade/criar/$1';
-$route['admin/disponibilidade/editar/(:num)'] = 'admin/disponibilidade/editar/$1';
-$route['admin/disponibilidade/deletar/(:num)'] = 'admin/disponibilidade/deletar/$1';
-$route['admin/disponibilidade/criar_padrao/(:num)'] = 'admin/disponibilidade/criar_padrao/$1';
+// =========================================================================
+// ROTAS PÚBLICAS
+// =========================================================================
 
-// Bloqueios
-$route['admin/bloqueios'] = 'admin/bloqueios/index';
-$route['admin/bloqueios/criar'] = 'admin/bloqueios/criar';
-$route['admin/bloqueios/editar/(:num)'] = 'admin/bloqueios/editar/$1';
-$route['admin/bloqueios/deletar/(:num)'] = 'admin/bloqueios/deletar/$1';
-
-// Pagamentos
-$route['admin/pagamentos'] = 'admin/pagamentos/index';
-$route['admin/pagamentos/criar_pix/(:num)'] = 'admin/pagamentos/criar_pix/$1';
-$route['admin/pagamentos/reembolsar/(:num)'] = 'admin/pagamentos/reembolsar/$1';
-
-// Testes Mercado Pago
-$route['admin/mercadopago-test'] = 'admin/mercadopago_test/index';
-$route['admin/mercadopago_test/(:any)'] = 'admin/mercadopago_test/$1';
-
-// Testes de Pagamento
-$route['admin/pagamento-test'] = 'admin/pagamento_test/index';
-$route['admin/pagamento_test/(:any)'] = 'admin/pagamento_test/$1';
-$route['admin/pagamento_test/(:any)/(:any)'] = 'admin/pagamento_test/$1/$2';
-
-// Webhook
+// Webhook Mercado Pago
 $route['webhook/mercadopago'] = 'webhook/mercadopago';
 
-// Usuários (já existente)
-$route['admin/usuarios'] = 'admin/usuarios';
-$route['admin/usuarios/(:any)'] = 'admin/usuarios/$1';
-
-// Configurações (já existente)
-$route['admin/configuracoes/testar_email'] = 'admin/configuracoes/testar_email';
-$route['admin/configuracoes/smtp'] = 'admin/configuracoes/smtp';
-$route['admin/configuracoes/geral'] = 'admin/configuracoes/geral';
-$route['admin/configuracoes'] = 'admin/configuracoes/index';
-
-// Perfil e Logs (já existente)
-$route['admin/perfil'] = 'admin/perfil';
-$route['admin/logs'] = 'admin/logs';
+// API Pública (se houver)
+$route['api/(:any)'] = 'api/$1';

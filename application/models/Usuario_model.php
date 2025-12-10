@@ -2,12 +2,16 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Model de Usuários
+ * Model: Usuario_model
+ * Descrição: Gerenciamento de usuários multi-tenant
  *
- * Gerencia operações relacionadas aos usuários do sistema
+ * Tipos de usuários:
+ * - super_admin: Acesso total ao sistema
+ * - estabelecimento: Dono do estabelecimento
+ * - profissional: Profissional autônomo ou vinculado
  *
  * @author Rafael Dias - doisr.com.br
- * @date 13/11/2024
+ * @date 09/12/2024
  */
 class Usuario_model extends CI_Model {
 
@@ -18,111 +22,50 @@ class Usuario_model extends CI_Model {
     }
 
     /**
-     * Buscar usuário por ID
+     * Criar novo usuário
+     *
+     * @param array $dados
+     * @return int|false ID do usuário criado ou false
      */
-    public function get($id) {
-        return $this->db->get_where($this->table, ['id' => $id])->row();
-    }
-
-    /**
-     * Buscar usuário por email
-     */
-    public function get_by_email($email) {
-        return $this->db->get_where($this->table, ['email' => $email])->row();
-    }
-
-    /**
-     * Listar todos os usuários
-     * Aceita tanto array de filtros quanto parâmetros individuais
-     */
-    public function get_all($busca = null, $nivel = null, $status = null) {
-        // Se o primeiro parâmetro for um array, usar como filtros
-        if (is_array($busca)) {
-            $filtros = $busca;
-            $busca = isset($filtros['busca']) ? $filtros['busca'] : null;
-            $nivel = isset($filtros['nivel']) ? $filtros['nivel'] : null;
-            $status = isset($filtros['status']) ? $filtros['status'] : null;
-        }
-
-        // Busca
-        if ($busca) {
-            $this->db->group_start();
-            $this->db->like('nome', $busca);
-            $this->db->or_like('email', $busca);
-            $this->db->group_end();
-        }
-
-        // Filtros
-        if ($nivel) {
-            $this->db->where('nivel', $nivel);
-        }
-
-        if ($status) {
-            $this->db->where('status', $status);
-        }
-
-        $this->db->order_by('nome', 'ASC');
-        return $this->db->get($this->table)->result();
-    }
-
-    /**
-     * Inserir novo usuário
-     */
-    public function insert($data) {
+    public function criar($dados) {
         // Hash da senha
-        if (isset($data['senha'])) {
-            $data['senha'] = password_hash($data['senha'], PASSWORD_DEFAULT);
+        if (isset($dados['senha'])) {
+            $dados['senha'] = password_hash($dados['senha'], PASSWORD_BCRYPT);
         }
 
-        $data['criado_em'] = date('Y-m-d H:i:s');
+        // Definir valores padrão
+        $dados['ativo'] = $dados['ativo'] ?? 1;
+        $dados['primeiro_acesso'] = 1;
+        $dados['criado_em'] = date('Y-m-d H:i:s');
 
-        $this->db->insert($this->table, $data);
-        return $this->db->insert_id();
+        if ($this->db->insert($this->table, $dados)) {
+            return $this->db->insert_id();
+        }
+
+        return false;
     }
 
     /**
-     * Atualizar usuário
+     * Autenticar usuário
+     *
+     * @param string $email
+     * @param string $senha
+     * @return object|false Dados do usuário ou false
      */
-    public function update($id, $data) {
-        // Hash da senha se foi alterada
-        if (isset($data['senha']) && !empty($data['senha'])) {
-            $data['senha'] = password_hash($data['senha'], PASSWORD_DEFAULT);
-        } else {
-            unset($data['senha']);
-        }
+    public function autenticar($email, $senha) {
+        $usuario = $this->db
+            ->where('email', $email)
+            ->where('ativo', 1)
+            ->get($this->table)
+            ->row();
 
-        $data['atualizado_em'] = date('Y-m-d H:i:s');
-
-        $this->db->where('id', $id);
-        return $this->db->update($this->table, $data);
-    }
-
-    /**
-     * Deletar usuário
-     */
-    public function delete($id) {
-        $this->db->where('id', $id);
-        return $this->db->delete($this->table);
-    }
-
-    /**
-     * Verificar credenciais de login
-     */
-    public function verificar_login($email, $senha) {
-        $usuario = $this->get_by_email($email);
-
-        if (!$usuario) {
-            return false;
-        }
-
-        if ($usuario->status !== 'ativo') {
-            return false;
-        }
-
-        if (password_verify($senha, $usuario->senha)) {
+        if ($usuario && password_verify($senha, $usuario->senha)) {
             // Atualizar último acesso
-            $this->db->where('id', $usuario->id);
-            $this->db->update($this->table, ['ultimo_acesso' => date('Y-m-d H:i:s')]);
+            $this->db->where('id', $usuario->id)
+                ->update($this->table, ['ultimo_acesso' => date('Y-m-d H:i:s')]);
+
+            // Remover senha do objeto retornado
+            unset($usuario->senha);
 
             return $usuario;
         }
@@ -131,9 +74,144 @@ class Usuario_model extends CI_Model {
     }
 
     /**
-     * Gerar token de recuperação de senha
+     * Buscar usuário por ID
+     *
+     * @param int $id
+     * @return object|null
      */
-    public function gerar_token_recuperacao($email) {
+    public function get($id) {
+        $usuario = $this->db
+            ->where('id', $id)
+            ->get($this->table)
+            ->row();
+
+        if ($usuario) {
+            unset($usuario->senha);
+        }
+
+        return $usuario;
+    }
+
+    /**
+     * Buscar usuário por e-mail
+     *
+     * @param string $email
+     * @return object|null
+     */
+    public function get_by_email($email) {
+        $usuario = $this->db
+            ->where('email', $email)
+            ->get($this->table)
+            ->row();
+
+        if ($usuario) {
+            unset($usuario->senha);
+        }
+
+        return $usuario;
+    }
+
+    /**
+     * Listar todos os usuários
+     *
+     * @param string $tipo Filtrar por tipo (opcional)
+     * @return array
+     */
+    public function get_all($tipo = null) {
+        if ($tipo) {
+            $this->db->where('tipo', $tipo);
+        }
+
+        $usuarios = $this->db
+            ->select('id, email, tipo, nome, telefone, ativo, estabelecimento_id, profissional_id, ultimo_acesso')
+            ->get($this->table)
+            ->result();
+
+        return $usuarios;
+    }
+
+     /**
+     * Listar usuários com filtros avançados
+     *
+     * @param string $busca Busca por nome ou email
+     * @param array $filtros Filtros adicionais (tipo, ativo, estabelecimento_id)
+     * @return array
+     */
+    public function get_all_with_filters($busca = null, $filtros = []) {
+        $this->db->select('u.*, e.nome as estabelecimento_nome, p.nome as profissional_nome')
+            ->from($this->table . ' u')
+            ->join('estabelecimentos e', 'u.estabelecimento_id = e.id', 'left')
+            ->join('profissionais p', 'u.profissional_id = p.id', 'left');
+
+        // Busca por nome ou email
+        if ($busca) {
+            $this->db->group_start()
+                ->like('u.nome', $busca)
+                ->or_like('u.email', $busca)
+                ->group_end();
+        }
+
+        // Filtros
+        if (isset($filtros['tipo'])) {
+            $this->db->where('u.tipo', $filtros['tipo']);
+        }
+
+        if (isset($filtros['ativo'])) {
+            $this->db->where('u.ativo', $filtros['ativo']);
+        }
+
+        if (isset($filtros['estabelecimento_id'])) {
+            $this->db->where('u.estabelecimento_id', $filtros['estabelecimento_id']);
+        }
+
+        $this->db->order_by('u.nome', 'ASC');
+
+        return $this->db->get()->result();
+    }
+
+    /**
+     * Atualizar usuário
+     *
+     * @param int $id
+     * @param array $dados
+     * @return bool
+     */
+    public function atualizar($id, $dados) {
+        // Se estiver atualizando senha, fazer hash
+        if (isset($dados['senha']) && !empty($dados['senha'])) {
+            $dados['senha'] = password_hash($dados['senha'], PASSWORD_BCRYPT);
+        } else {
+            unset($dados['senha']);
+        }
+
+        $dados['atualizado_em'] = date('Y-m-d H:i:s');
+
+        return $this->db->where('id', $id)->update($this->table, $dados);
+    }
+
+    /**
+     * Atualizar senha
+     *
+     * @param int $id
+     * @param string $nova_senha
+     * @return bool
+     */
+    public function atualizar_senha($id, $nova_senha) {
+        $dados = [
+            'senha' => password_hash($nova_senha, PASSWORD_BCRYPT),
+            'atualizado_em' => date('Y-m-d H:i:s')
+        ];
+
+        return $this->db->where('id', $id)->update($this->table, $dados);
+    }
+
+    /**
+     * Gerar token para reset de senha
+     *
+     * @param string $email
+     * @return string|false Token gerado ou false
+     */
+    public function gerar_token_reset($email) {
         $usuario = $this->get_by_email($email);
 
         if (!$usuario) {
@@ -143,140 +221,185 @@ class Usuario_model extends CI_Model {
         $token = bin2hex(random_bytes(32));
         $expiracao = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-        $this->db->where('id', $usuario->id);
-        $this->db->update($this->table, [
-            'token_recuperacao' => $token,
+        $dados = [
+            'token_reset_senha' => $token,
             'token_expiracao' => $expiracao
-        ]);
+        ];
 
-        return $token;
-    }
-
-    /**
-     * Verificar token de recuperação
-     */
-    public function verificar_token($token) {
-        $this->db->where('token_recuperacao', $token);
-        $this->db->where('token_expiracao >', date('Y-m-d H:i:s'));
-        $usuario = $this->db->get($this->table)->row();
-
-        return $usuario ? $usuario : false;
-    }
-
-    /**
-     * Resetar senha com token
-     */
-    public function resetar_senha($token, $nova_senha) {
-        $usuario = $this->verificar_token($token);
-
-        if (!$usuario) {
-            return false;
+        if ($this->db->where('id', $usuario->id)->update($this->table, $dados)) {
+            return $token;
         }
 
-        $this->db->where('id', $usuario->id);
-        return $this->db->update($this->table, [
-            'senha' => password_hash($nova_senha, PASSWORD_DEFAULT),
-            'token_recuperacao' => null,
-            'token_expiracao' => null,
-            'atualizado_em' => date('Y-m-d H:i:s')
-        ]);
+        return false;
+    }
+
+    /**
+     * Validar token de reset
+     *
+     * @param string $token
+     * @return object|false Dados do usuário ou false
+     */
+    public function validar_token_reset($token) {
+        $usuario = $this->db
+            ->where('token_reset_senha', $token)
+            ->where('token_expiracao >=', date('Y-m-d H:i:s'))
+            ->get($this->table)
+            ->row();
+
+        if ($usuario) {
+            unset($usuario->senha);
+            return $usuario;
+        }
+
+        return false;
+    }
+
+    /**
+     * Limpar token de reset após uso
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function limpar_token_reset($id) {
+        $dados = [
+            'token_reset_senha' => null,
+            'token_expiracao' => null
+        ];
+
+        return $this->db->where('id', $id)->update($this->table, $dados);
+    }
+
+    /**
+     * Marcar primeiro acesso como concluído
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function marcar_primeiro_acesso($id) {
+        return $this->db->where('id', $id)->update($this->table, ['primeiro_acesso' => 0]);
+    }
+
+    /**
+     * Ativar/Desativar usuário
+     *
+     * @param int $id
+     * @param bool $ativo
+     * @return bool
+     */
+    public function toggle_ativo($id, $ativo = true) {
+        return $this->db->where('id', $id)->update($this->table, ['ativo' => $ativo ? 1 : 0]);
+    }
+
+    /**
+     * Excluir usuário
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function excluir($id) {
+        return $this->db->where('id', $id)->delete($this->table);
+    }
+
+    /**
+     * Verificar se e-mail já existe
+     *
+     * @param string $email
+     * @param int $excluir_id ID para excluir da verificação (útil em edições)
+     * @return bool
+     */
+    public function email_existe($email, $excluir_id = null) {
+        $this->db->where('email', $email);
+
+        if ($excluir_id) {
+            $this->db->where('id !=', $excluir_id);
+        }
+
+        return $this->db->count_all_results($this->table) > 0;
+    }
+
+    /**
+     * Buscar usuários por estabelecimento
+     *
+     * @param int $estabelecimento_id
+     * @return array
+     */
+    public function get_by_estabelecimento($estabelecimento_id) {
+        return $this->db
+            ->select('id, email, tipo, nome, telefone, ativo, ultimo_acesso')
+            ->where('estabelecimento_id', $estabelecimento_id)
+            ->get($this->table)
+            ->result();
+    }
+
+    /**
+     * Criar usuário para estabelecimento
+     *
+     * @param int $estabelecimento_id
+     * @param string $email
+     * @param string $senha
+     * @param string $nome
+     * @return int|false
+     */
+    public function criar_usuario_estabelecimento($estabelecimento_id, $email, $senha, $nome) {
+        $dados = [
+            'email' => $email,
+            'senha' => $senha,
+            'tipo' => 'estabelecimento',
+            'estabelecimento_id' => $estabelecimento_id,
+            'nome' => $nome,
+            'ativo' => 1,
+            'primeiro_acesso' => 1
+        ];
+
+        return $this->criar($dados);
+    }
+
+    /**
+     * Criar usuário para profissional
+     *
+     * @param int $profissional_id
+     * @param int $estabelecimento_id
+     * @param string $email
+     * @param string $senha
+     * @param string $nome
+     * @return int|false
+     */
+    public function criar_usuario_profissional($profissional_id, $estabelecimento_id, $email, $senha, $nome) {
+        $dados = [
+            'email' => $email,
+            'senha' => $senha,
+            'tipo' => 'profissional',
+            'profissional_id' => $profissional_id,
+            'estabelecimento_id' => $estabelecimento_id,
+            'nome' => $nome,
+            'ativo' => 1,
+            'primeiro_acesso' => 1
+        ];
+
+        return $this->criar($dados);
     }
 
     /**
      * Contar usuários
+     *
+     * @param array $filtros Filtros opcionais (tipo, estabelecimento_id, ativo)
+     * @return int
      */
-    public function count($filters = []) {
-        if (isset($filters['status'])) {
-            $this->db->where('status', $filters['status']);
+    public function count($filtros = []) {
+        $this->db->from($this->table);
+
+        if (!empty($filtros['tipo'])) {
+            $this->db->where('tipo', $filtros['tipo']);
         }
 
-        return $this->db->count_all_results($this->table);
-    }
-
-    /**
-     * Buscar permissões do usuário
-     */
-    public function get_permissoes($usuario_id) {
-        $this->db->where('usuario_id', $usuario_id);
-        $result = $this->db->get('usuario_permissoes')->result();
-
-        $permissoes = [];
-        foreach ($result as $row) {
-            $permissoes[$row->modulo] = [
-                'visualizar' => (bool)$row->pode_visualizar,
-                'criar' => (bool)$row->pode_criar,
-                'editar' => (bool)$row->pode_editar,
-                'excluir' => (bool)$row->pode_excluir
-            ];
+        if (!empty($filtros['estabelecimento_id'])) {
+            $this->db->where('estabelecimento_id', $filtros['estabelecimento_id']);
         }
 
-        return $permissoes;
-    }
-
-    /**
-     * Salvar permissões do usuário
-     */
-    public function salvar_permissoes($usuario_id, $permissoes) {
-        // Deletar permissões antigas
-        $this->delete_permissoes($usuario_id);
-
-        // Inserir novas permissões
-        foreach ($permissoes as $modulo => $acoes) {
-            $data = [
-                'usuario_id' => $usuario_id,
-                'modulo' => $modulo,
-                'pode_visualizar' => isset($acoes['visualizar']) ? 1 : 0,
-                'pode_criar' => isset($acoes['criar']) ? 1 : 0,
-                'pode_editar' => isset($acoes['editar']) ? 1 : 0,
-                'pode_excluir' => isset($acoes['excluir']) ? 1 : 0
-            ];
-
-            $this->db->insert('usuario_permissoes', $data);
+        if (isset($filtros['ativo'])) {
+            $this->db->where('ativo', $filtros['ativo']);
         }
 
-        return true;
-    }
-
-    /**
-     * Deletar todas as permissões do usuário
-     */
-    public function delete_permissoes($usuario_id) {
-        $this->db->where('usuario_id', $usuario_id);
-        return $this->db->delete('usuario_permissoes');
-    }
-
-    /**
-     * Verificar se usuário tem permissão
-     */
-    public function tem_permissao($usuario_id, $modulo, $acao = 'visualizar') {
-        $usuario = $this->get($usuario_id);
-
-        // Admin tem todas as permissões
-        if ($usuario && $usuario->nivel == 'admin') {
-            return true;
-        }
-
-        // Buscar permissão específica
-        $this->db->where('usuario_id', $usuario_id);
-        $this->db->where('modulo', $modulo);
-        $permissao = $this->db->get('usuario_permissoes')->row();
-
-        if (!$permissao) {
-            return false;
-        }
-
-        // Verificar ação específica
-        switch ($acao) {
-            case 'visualizar':
-                return (bool)$permissao->pode_visualizar;
-            case 'criar':
-                return (bool)$permissao->pode_criar;
-            case 'editar':
-                return (bool)$permissao->pode_editar;
-            case 'excluir':
-                return (bool)$permissao->pode_excluir;
-            default:
-                return false;
-        }
+        return $this->db->count_all_results();
     }
 }

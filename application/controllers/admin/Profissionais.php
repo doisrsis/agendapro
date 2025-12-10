@@ -30,7 +30,10 @@ class Profissionais extends Admin_Controller {
 
         $filtros = [];
 
-        if ($this->input->get('estabelecimento_id')) {
+        // Multi-tenant: filtrar por estabelecimento
+        if ($this->estabelecimento_id) {
+            $filtros['estabelecimento_id'] = $this->estabelecimento_id;
+        } elseif ($this->input->get('estabelecimento_id')) {
             $filtros['estabelecimento_id'] = $this->input->get('estabelecimento_id');
         }
 
@@ -43,7 +46,11 @@ class Profissionais extends Admin_Controller {
         }
 
         $data['profissionais'] = $this->Profissional_model->get_all($filtros);
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
+
         $data['filtros'] = $filtros;
 
         $this->load->view('admin/layout/header', $data);
@@ -55,14 +62,23 @@ class Profissionais extends Admin_Controller {
      * Criar novo profissional
      */
     public function criar() {
+        // Verificar limite do plano
+        if ($this->estabelecimento_id && !$this->pode_criar_profissional()) {
+            $this->session->set_flashdata('erro', 'Limite de profissionais atingido. Faça upgrade do seu plano.');
+            redirect('admin/profissionais');
+        }
+
         if ($this->input->method() === 'post') {
-            $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            if (!$this->estabelecimento_id) {
+                $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            }
+
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
             $this->form_validation->set_rules('email', 'E-mail', 'valid_email');
 
             if ($this->form_validation->run()) {
                 $dados = [
-                    'estabelecimento_id' => $this->input->post('estabelecimento_id'),
+                    'estabelecimento_id' => $this->estabelecimento_id ?: $this->input->post('estabelecimento_id'),
                     'nome' => $this->input->post('nome'),
                     'whatsapp' => $this->input->post('whatsapp'),
                     'telefone' => $this->input->post('telefone'),
@@ -85,6 +101,7 @@ class Profissionais extends Admin_Controller {
                     $servicos_ids = $this->input->post('servicos') ?: [];
                     $this->Profissional_model->vincular_servicos($id, $servicos_ids);
 
+                    $this->registrar_log('criar', 'profissionais', $id, null, $dados);
                     $this->session->set_flashdata('sucesso', 'Profissional criado com sucesso!');
                     redirect('admin/profissionais');
                 } else {
@@ -95,7 +112,11 @@ class Profissionais extends Admin_Controller {
 
         $data['titulo'] = 'Novo Profissional';
         $data['menu_ativo'] = 'profissionais';
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
+
         $data['servicos'] = [];
 
         $this->load->view('admin/layout/header', $data);
@@ -114,11 +135,19 @@ class Profissionais extends Admin_Controller {
             redirect('admin/profissionais');
         }
 
+        // Verificar permissão
+        if ($this->estabelecimento_id && $profissional->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Você não tem permissão para editar este profissional.');
+            redirect('admin/profissionais');
+        }
+
         if ($this->input->method() === 'post') {
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
             $this->form_validation->set_rules('email', 'E-mail', 'valid_email');
 
             if ($this->form_validation->run()) {
+                $dados_antigos = (array) $profissional;
+
                 $dados = [
                     'nome' => $this->input->post('nome'),
                     'whatsapp' => $this->input->post('whatsapp'),
@@ -143,6 +172,7 @@ class Profissionais extends Admin_Controller {
                     $servicos_ids = $this->input->post('servicos') ?: [];
                     $this->Profissional_model->vincular_servicos($id, $servicos_ids);
 
+                    $this->registrar_log('atualizar', 'profissionais', $id, $dados_antigos, $dados);
                     $this->session->set_flashdata('sucesso', 'Profissional atualizado com sucesso!');
                     redirect('admin/profissionais');
                 } else {
@@ -154,7 +184,11 @@ class Profissionais extends Admin_Controller {
         $data['titulo'] = 'Editar Profissional';
         $data['menu_ativo'] = 'profissionais';
         $data['profissional'] = $profissional;
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
+
         $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $profissional->estabelecimento_id, 'status' => 'ativo']);
         $data['servicos_vinculados'] = array_column($this->Profissional_model->get_servicos($id), 'id');
 
@@ -174,11 +208,18 @@ class Profissionais extends Admin_Controller {
             redirect('admin/profissionais');
         }
 
+        // Verificar permissão
+        if ($this->estabelecimento_id && $profissional->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Você não tem permissão para deletar este profissional.');
+            redirect('admin/profissionais');
+        }
+
         if ($this->Profissional_model->delete($id)) {
             if ($profissional->foto && file_exists('./uploads/profissionais/' . $profissional->foto)) {
                 unlink('./uploads/profissionais/' . $profissional->foto);
             }
 
+            $this->registrar_log('deletar', 'profissionais', $id, (array) $profissional, null);
             $this->session->set_flashdata('sucesso', 'Profissional deletado com sucesso!');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao deletar profissional.');

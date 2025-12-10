@@ -31,7 +31,10 @@ class Agendamentos extends Admin_Controller {
 
         $filtros = [];
 
-        if ($this->input->get('estabelecimento_id')) {
+        // Multi-tenant: filtrar por estabelecimento
+        if ($this->estabelecimento_id) {
+            $filtros['estabelecimento_id'] = $this->estabelecimento_id;
+        } elseif ($this->input->get('estabelecimento_id')) {
             $filtros['estabelecimento_id'] = $this->input->get('estabelecimento_id');
         }
 
@@ -69,8 +72,16 @@ class Agendamentos extends Admin_Controller {
         $data['pagination'] = $this->pagination->create_links();
         $data['total'] = $config['total_rows'];
         $data['filtros'] = $filtros;
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
-        $data['profissionais'] = $this->Profissional_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+            $data['profissionais'] = $this->Profissional_model->get_all(['status' => 'ativo']);
+        } else {
+            $data['profissionais'] = $this->Profissional_model->get_all([
+                'estabelecimento_id' => $this->estabelecimento_id,
+                'status' => 'ativo'
+            ]);
+        }
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/agendamentos/index', $data);
@@ -81,8 +92,17 @@ class Agendamentos extends Admin_Controller {
      * Criar novo agendamento
      */
     public function criar() {
+        // Verificar limite do plano
+        if ($this->estabelecimento_id && !$this->pode_criar_agendamento()) {
+            $this->session->set_flashdata('erro', 'Limite de agendamentos do mês atingido. Faça upgrade do seu plano.');
+            redirect('admin/agendamentos');
+        }
+
         if ($this->input->method() === 'post') {
-            $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            if (!$this->estabelecimento_id) {
+                $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            }
+
             $this->form_validation->set_rules('cliente_id', 'Cliente', 'required|integer');
             $this->form_validation->set_rules('profissional_id', 'Profissional', 'required|integer');
             $this->form_validation->set_rules('servico_id', 'Serviço', 'required|integer');
@@ -91,7 +111,7 @@ class Agendamentos extends Admin_Controller {
 
             if ($this->form_validation->run()) {
                 $dados = [
-                    'estabelecimento_id' => $this->input->post('estabelecimento_id'),
+                    'estabelecimento_id' => $this->estabelecimento_id ?: $this->input->post('estabelecimento_id'),
                     'cliente_id' => $this->input->post('cliente_id'),
                     'profissional_id' => $this->input->post('profissional_id'),
                     'servico_id' => $this->input->post('servico_id'),
@@ -104,6 +124,7 @@ class Agendamentos extends Admin_Controller {
                 $id = $this->Agendamento_model->create($dados);
 
                 if ($id) {
+                    $this->registrar_log('criar', 'agendamentos', $id, null, $dados);
                     $this->session->set_flashdata('sucesso', 'Agendamento criado com sucesso!');
                     redirect('admin/agendamentos');
                 } else {
@@ -114,7 +135,11 @@ class Agendamentos extends Admin_Controller {
 
         $data['titulo'] = 'Novo Agendamento';
         $data['menu_ativo'] = 'agendamentos';
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
+
         $data['clientes'] = [];
         $data['profissionais'] = [];
         $data['servicos'] = [];
@@ -135,11 +160,19 @@ class Agendamentos extends Admin_Controller {
             redirect('admin/agendamentos');
         }
 
+        // Verificar permissão
+        if ($this->estabelecimento_id && $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Sem permissão.');
+            redirect('admin/agendamentos');
+        }
+
         if ($this->input->method() === 'post') {
             $this->form_validation->set_rules('data', 'Data', 'required');
             $this->form_validation->set_rules('hora_inicio', 'Horário', 'required');
 
             if ($this->form_validation->run()) {
+                $dados_antigos = (array) $agendamento;
+
                 $dados = [
                     'data' => $this->input->post('data'),
                     'hora_inicio' => $this->input->post('hora_inicio'),
@@ -148,6 +181,7 @@ class Agendamentos extends Admin_Controller {
                 ];
 
                 if ($this->Agendamento_model->update($id, $dados)) {
+                    $this->registrar_log('atualizar', 'agendamentos', $id, $dados_antigos, $dados);
                     $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
                     redirect('admin/agendamentos');
                 } else {
@@ -159,7 +193,10 @@ class Agendamentos extends Admin_Controller {
         $data['titulo'] = 'Editar Agendamento';
         $data['menu_ativo'] = 'agendamentos';
         $data['agendamento'] = $agendamento;
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/agendamentos/form', $data);
@@ -177,9 +214,16 @@ class Agendamentos extends Admin_Controller {
             redirect('admin/agendamentos');
         }
 
+        // Verificar permissão
+        if ($this->estabelecimento_id && $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Sem permissão.');
+            redirect('admin/agendamentos');
+        }
+
         $motivo = $this->input->post('motivo');
 
         if ($this->Agendamento_model->cancelar($id, 'admin', $motivo)) {
+            $this->registrar_log('cancelar', 'agendamentos', $id, (array) $agendamento, ['status' => 'cancelado', 'motivo' => $motivo]);
             $this->session->set_flashdata('sucesso', 'Agendamento cancelado com sucesso!');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao cancelar agendamento.');

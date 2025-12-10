@@ -58,30 +58,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Permissões (apenas para usuários comuns) -->
-                    <div class="card mb-3" id="permissoesCard" style="display:none;">
-                        <div class="card-header"><h3 class="card-title">Permissões por Módulo</h3></div>
-                        <div class="card-body">
-                            <?php foreach ($modulos as $modulo_key => $modulo): ?>
-                            <div class="mb-3">
-                                <label class="form-label"><i class="ti <?= $modulo['icone'] ?> me-2"></i><?= $modulo['nome'] ?></label>
-                                <div class="row">
-                                    <?php foreach ($modulo['acoes'] as $acao): ?>
-                                    <div class="col-auto">
-                                        <label class="form-check">
-                                            <input type="checkbox" class="form-check-input"
-                                                   name="permissoes[<?= $modulo_key ?>][<?= $acao ?>]" value="1">
-                                            <span class="form-check-label"><?= ucfirst($acao) ?></span>
-                                        </label>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <hr>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="col-md-4">
@@ -90,19 +66,40 @@
                         <div class="card-header"><h3 class="card-title">Configurações</h3></div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label class="form-label required">Nível de Acesso</label>
-                                <select name="nivel" id="nivel" class="form-select" required>
-                                    <option value="usuario">Usuário</option>
-                                    <option value="admin">Admin</option>
+                                <label class="form-label required">Tipo de Usuário</label>
+                                <select name="tipo" id="tipo" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="super_admin">Super Admin</option>
+                                    <option value="estabelecimento">Estabelecimento</option>
+                                    <option value="profissional">Profissional</option>
                                 </select>
-                                <small class="form-hint">Admin tem acesso total ao sistema</small>
+                                <small class="form-hint">Super Admin tem acesso total ao sistema</small>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label required">Status</label>
-                                <select name="status" class="form-select" required>
-                                    <option value="ativo">Ativo</option>
-                                    <option value="inativo">Inativo</option>
+
+                            <!-- Estabelecimento (condicional) -->
+                            <div class="mb-3" id="estabelecimento_field" style="display:none;">
+                                <label class="form-label required">Estabelecimento</label>
+                                <select name="estabelecimento_id" id="estabelecimento_id" class="form-select">
+                                    <option value="">Selecione...</option>
+                                    <?php foreach ($estabelecimentos as $est): ?>
+                                    <option value="<?= $est->id ?>"><?= $est->nome_fantasia ?></option>
+                                    <?php endforeach; ?>
                                 </select>
+                            </div>
+
+                            <!-- Profissional (condicional) -->
+                            <div class="mb-3" id="profissional_field" style="display:none;">
+                                <label class="form-label required">Profissional</label>
+                                <select name="profissional_id" id="profissional_id" class="form-select">
+                                    <option value="">Selecione um estabelecimento primeiro...</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" name="ativo" value="1" checked>
+                                    <span class="form-check-label">Usuário Ativo</span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -125,7 +122,53 @@
 </div>
 
 <script>
-document.getElementById('nivel').addEventListener('change', function() {
-    document.getElementById('permissoesCard').style.display = this.value === 'usuario' ? 'block' : 'none';
+// Controlar exibição de campos baseado no tipo
+document.getElementById('tipo').addEventListener('change', function() {
+    const tipo = this.value;
+    const estabelecimentoField = document.getElementById('estabelecimento_field');
+    const profissionalField = document.getElementById('profissional_field');
+    const estabelecimentoSelect = document.getElementById('estabelecimento_id');
+    const profissionalSelect = document.getElementById('profissional_id');
+
+    // Resetar
+    estabelecimentoField.style.display = 'none';
+    profissionalField.style.display = 'none';
+    estabelecimentoSelect.removeAttribute('required');
+    profissionalSelect.removeAttribute('required');
+
+    if (tipo === 'estabelecimento') {
+        estabelecimentoField.style.display = 'block';
+        estabelecimentoSelect.setAttribute('required', 'required');
+    } else if (tipo === 'profissional') {
+        estabelecimentoField.style.display = 'block';
+        profissionalField.style.display = 'block';
+        estabelecimentoSelect.setAttribute('required', 'required');
+        profissionalSelect.setAttribute('required', 'required');
+    }
+});
+
+// Carregar profissionais via AJAX quando selecionar estabelecimento
+document.getElementById('estabelecimento_id').addEventListener('change', function() {
+    const estabelecimentoId = this.value;
+    const profissionalSelect = document.getElementById('profissional_id');
+
+    if (!estabelecimentoId) {
+        profissionalSelect.innerHTML = '<option value="">Selecione um estabelecimento primeiro...</option>';
+        return;
+    }
+
+    // Carregar profissionais
+    fetch('<?= base_url('admin/profissionais/get_profissionais/') ?>' + estabelecimentoId)
+        .then(response => response.json())
+        .then(data => {
+            profissionalSelect.innerHTML = '<option value="">Selecione...</option>';
+            data.forEach(prof => {
+                profissionalSelect.innerHTML += `<option value="${prof.id}">${prof.nome}</option>`;
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar profissionais:', error);
+            profissionalSelect.innerHTML = '<option value="">Erro ao carregar profissionais</option>';
+        });
 });
 </script>

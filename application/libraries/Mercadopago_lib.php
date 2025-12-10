@@ -275,4 +275,162 @@ class Mercadopago_lib {
     public function is_sandbox() {
         return $this->sandbox;
     }
+
+    // ========================================================================
+    // MÉTODOS PARA ASSINATURAS RECORRENTES (PLANOS)
+    // ========================================================================
+
+    /**
+     * Criar plano de assinatura no Mercado Pago
+     *
+     * @param array $dados ['nome', 'valor_mensal', 'descricao']
+     * @return array
+     */
+    public function criar_plano($dados) {
+        $payload = [
+            'reason' => $dados['nome'] . ' - AgendaPro',
+            'auto_recurring' => [
+                'frequency' => 1,
+                'frequency_type' => 'months',
+                'transaction_amount' => (float) $dados['valor_mensal'],
+                'currency_id' => 'BRL'
+            ],
+            'back_url' => base_url('painel/dashboard')
+        ];
+
+        $result = $this->make_request('POST', '/preapproval_plan', $payload);
+
+        return [
+            'success' => ($result['status'] >= 200 && $result['status'] < 300),
+            'data' => $result['response'],
+            'http_code' => $result['status']
+        ];
+    }
+
+    /**
+     * Atualizar plano no Mercado Pago
+     * ATENÇÃO: MP não permite alterar valor de planos ativos
+     *
+     * @param string $plan_id
+     * @param array $dados
+     * @return array
+     */
+    public function atualizar_plano($plan_id, $dados) {
+        // MP só permite atualizar reason (descrição)
+        $payload = [
+            'reason' => $dados['nome'] . ' - AgendaPro'
+        ];
+
+        $result = $this->make_request('PUT', '/preapproval_plan/' . $plan_id, $payload);
+
+        return [
+            'success' => ($result['status'] >= 200 && $result['status'] < 300),
+            'data' => $result['response'],
+            'http_code' => $result['status']
+        ];
+    }
+
+    /**
+     * Desativar plano no Mercado Pago
+     *
+     * @param string $plan_id
+     * @return array
+     */
+    public function desativar_plano($plan_id) {
+        $payload = [
+            'status' => 'inactive'
+        ];
+
+        $result = $this->make_request('PUT', '/preapproval_plan/' . $plan_id, $payload);
+
+        return [
+            'success' => ($result['status'] >= 200 && $result['status'] < 300),
+            'data' => $result['response'],
+            'http_code' => $result['status']
+        ];
+    }
+
+    /**
+     * Buscar plano no Mercado Pago
+     *
+     * @param string $plan_id
+     * @return array
+     */
+    public function buscar_plano($plan_id) {
+        $result = $this->make_request('GET', '/preapproval_plan/' . $plan_id);
+
+        return [
+            'success' => ($result['status'] >= 200 && $result['status'] < 300),
+            'data' => $result['response'],
+            'http_code' => $result['status']
+        ];
+    }
+
+    /**
+     * Criar assinatura (subscription) no Mercado Pago
+     *
+     * @param array $dados ['plan_id', 'payer_email', 'valor']
+     * @return array
+     */
+    public function criar_assinatura($dados) {
+        $payload = [
+            'preapproval_plan_id' => $dados['plan_id'],
+            'reason' => 'Assinatura AgendaPro',
+            'payer_email' => $dados['payer_email'],
+            'back_url' => base_url('painel/dashboard'),
+            'auto_recurring' => [
+                'frequency' => 1,
+                'frequency_type' => 'months',
+                'transaction_amount' => (float) $dados['valor'],
+                'currency_id' => 'BRL',
+                'start_date' => date('Y-m-d\TH:i:s.000P'),
+                'end_date' => date('Y-m-d\TH:i:s.000P', strtotime('+1 year'))
+            ],
+            'status' => 'authorized'
+        ];
+
+        $result = $this->make_request('POST', '/preapproval', $payload);
+
+        return [
+            'success' => ($result['status'] >= 200 && $result['status'] < 300),
+            'data' => $result['response'],
+            'http_code' => $result['status']
+        ];
+    }
+
+    /**
+     * Cancelar assinatura no Mercado Pago
+     *
+     * @param string $subscription_id
+     * @return array
+     */
+    public function cancelar_assinatura($subscription_id) {
+        $payload = [
+            'status' => 'cancelled'
+        ];
+
+        $result = $this->make_request('PUT', '/preapproval/' . $subscription_id, $payload);
+
+        return [
+            'success' => ($result['status'] >= 200 && $result['status'] < 300),
+            'data' => $result['response'],
+            'http_code' => $result['status']
+        ];
+    }
+
+    /**
+     * Buscar assinatura no Mercado Pago
+     *
+     * @param string $subscription_id
+     * @return array
+     */
+    public function buscar_assinatura($subscription_id) {
+        $result = $this->make_request('GET', '/preapproval/' . $subscription_id);
+
+        return [
+            'success' => ($result['status'] >= 200 && $result['status'] < 300),
+            'data' => $result['response'],
+            'http_code' => $result['status']
+        ];
+    }
 }

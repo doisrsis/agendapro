@@ -28,7 +28,9 @@ class Servicos extends Admin_Controller {
 
         $filtros = [];
 
-        if ($this->input->get('estabelecimento_id')) {
+        if ($this->estabelecimento_id) {
+            $filtros['estabelecimento_id'] = $this->estabelecimento_id;
+        } elseif ($this->input->get('estabelecimento_id')) {
             $filtros['estabelecimento_id'] = $this->input->get('estabelecimento_id');
         }
 
@@ -41,7 +43,11 @@ class Servicos extends Admin_Controller {
         }
 
         $data['servicos'] = $this->Servico_model->get_all($filtros);
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
+
         $data['filtros'] = $filtros;
 
         $this->load->view('admin/layout/header', $data);
@@ -54,14 +60,17 @@ class Servicos extends Admin_Controller {
      */
     public function criar() {
         if ($this->input->method() === 'post') {
-            $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            if (!$this->estabelecimento_id) {
+                $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            }
+
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
             $this->form_validation->set_rules('duracao', 'Duração', 'required|integer|greater_than[0]');
             $this->form_validation->set_rules('preco', 'Preço', 'required|decimal');
 
             if ($this->form_validation->run()) {
                 $dados = [
-                    'estabelecimento_id' => $this->input->post('estabelecimento_id'),
+                    'estabelecimento_id' => $this->estabelecimento_id ?: $this->input->post('estabelecimento_id'),
                     'nome' => $this->input->post('nome'),
                     'descricao' => $this->input->post('descricao'),
                     'duracao' => $this->input->post('duracao'),
@@ -72,6 +81,7 @@ class Servicos extends Admin_Controller {
                 $id = $this->Servico_model->create($dados);
 
                 if ($id) {
+                    $this->registrar_log('criar', 'servicos', $id, null, $dados);
                     $this->session->set_flashdata('sucesso', 'Serviço criado com sucesso!');
                     redirect('admin/servicos');
                 } else {
@@ -82,7 +92,10 @@ class Servicos extends Admin_Controller {
 
         $data['titulo'] = 'Novo Serviço';
         $data['menu_ativo'] = 'servicos';
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/servicos/form', $data);
@@ -100,12 +113,19 @@ class Servicos extends Admin_Controller {
             redirect('admin/servicos');
         }
 
+        if ($this->estabelecimento_id && $servico->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Sem permissão.');
+            redirect('admin/servicos');
+        }
+
         if ($this->input->method() === 'post') {
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
             $this->form_validation->set_rules('duracao', 'Duração', 'required|integer|greater_than[0]');
             $this->form_validation->set_rules('preco', 'Preço', 'required|decimal');
 
             if ($this->form_validation->run()) {
+                $dados_antigos = (array) $servico;
+
                 $dados = [
                     'nome' => $this->input->post('nome'),
                     'descricao' => $this->input->post('descricao'),
@@ -115,6 +135,7 @@ class Servicos extends Admin_Controller {
                 ];
 
                 if ($this->Servico_model->update($id, $dados)) {
+                    $this->registrar_log('atualizar', 'servicos', $id, $dados_antigos, $dados);
                     $this->session->set_flashdata('sucesso', 'Serviço atualizado com sucesso!');
                     redirect('admin/servicos');
                 } else {
@@ -126,7 +147,10 @@ class Servicos extends Admin_Controller {
         $data['titulo'] = 'Editar Serviço';
         $data['menu_ativo'] = 'servicos';
         $data['servico'] = $servico;
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($this->auth_check->is_super_admin()) {
+            $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        }
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/servicos/form', $data);
@@ -144,7 +168,13 @@ class Servicos extends Admin_Controller {
             redirect('admin/servicos');
         }
 
+        if ($this->estabelecimento_id && $servico->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Sem permissão.');
+            redirect('admin/servicos');
+        }
+
         if ($this->Servico_model->delete($id)) {
+            $this->registrar_log('deletar', 'servicos', $id, (array) $servico, null);
             $this->session->set_flashdata('sucesso', 'Serviço deletado com sucesso!');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao deletar serviço.');

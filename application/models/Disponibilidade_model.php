@@ -204,4 +204,36 @@ class Disponibilidade_model extends CI_Model {
 
         return $this->db->count_all_results($this->table);
     }
+
+    // =========================================================================
+    // ALIASES PARA COMPATIBILIDADE DE NOMENCLATURA
+    // =========================================================================
+
+    /**
+     * Alias para get_by_id()
+     */
+    public function get($id) {
+        return $this->get_by_id($id);
+    }
+
+    /**
+     * Alias para create()
+     */
+    public function criar($dados) {
+        return $this->create($dados);
+    }
+
+    /**
+     * Alias para update()
+     */
+    public function atualizar($id, $dados) {
+        return $this->update($id, $dados);
+    }
+
+    /**
+     * Alias para delete()
+     */
+    public function excluir($id) {
+        return $this->delete($id);
+    }
 }

@@ -147,7 +147,7 @@
                                 </a>
                             </li>
 
-                            <li class="nav-item dropdown <?= in_array($menu_ativo, ['estabelecimentos', 'profissionais', 'servicos']) ? 'active' : '' ?>">
+                            <li class="nav-item dropdown <?= in_array($menu_ativo, ['estabelecimentos', 'profissionais', 'servicos', 'planos']) ? 'active' : '' ?>">
                                 <a class="nav-link dropdown-toggle" href="#navbar-cadastros" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-building-store"></i>
@@ -166,6 +166,10 @@
                                     <a class="dropdown-item <?= $menu_ativo == 'servicos' ? 'active' : '' ?>" href="<?= base_url('admin/servicos') ?>">
                                         <i class="ti ti-scissors me-2"></i>
                                         Serviços
+                                    </a>
+                                    <a class="dropdown-item <?= $menu_ativo == 'planos' ? 'active' : '' ?>" href="<?= base_url('admin/planos') ?>">
+                                        <i class="ti ti-package me-2"></i>
+                                        Planos
                                     </a>
                                 </div>
                             </li>

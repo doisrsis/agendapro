@@ -1,10 +1,10 @@
-<!-- Similar ao criar.php mas com dados preenchidos -->
+<!-- Cabeçalho -->
 <div class="page-header d-print-none">
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
                 <div class="page-pretitle"><a href="<?= base_url('admin/usuarios') ?>">Usuários</a></div>
-                <h2 class="page-title"><i class="ti ti-edit me-2"></i>Editar Usuário</h2>
+                <h2 class="page-title"><i class="ti ti-user-edit me-2"></i>Editar Usuário</h2>
             </div>
             <div class="col-auto ms-auto">
                 <a href="<?= base_url('admin/usuarios') ?>" class="btn btn-outline-secondary">
@@ -28,6 +28,7 @@
         <form method="post">
             <div class="row">
                 <div class="col-md-8">
+                    <!-- Dados Básicos -->
                     <div class="card mb-3">
                         <div class="card-header"><h3 class="card-title">Dados do Usuário</h3></div>
                         <div class="card-body">
@@ -45,69 +46,68 @@
                                 <label class="form-label required">E-mail</label>
                                 <input type="email" class="form-control" name="email" value="<?= $usuario->email ?>" required>
                             </div>
-                            <div class="alert alert-info">
-                                <i class="ti ti-info-circle me-2"></i>
-                                Deixe os campos de senha em branco para manter a senha atual.
-                            </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Nova Senha</label>
                                     <input type="password" class="form-control" name="senha" minlength="6">
+                                    <small class="form-hint">Deixe em branco para manter a senha atual</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Confirmar Senha</label>
+                                    <label class="form-label">Confirmar Nova Senha</label>
                                     <input type="password" class="form-control" name="confirmar_senha">
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="card mb-3" id="permissoesCard" style="display:<?= $usuario->nivel == 'usuario' ? 'block' : 'none' ?>;">
-                        <div class="card-header"><h3 class="card-title">Permissões por Módulo</h3></div>
-                        <div class="card-body">
-                            <?php foreach ($modulos as $modulo_key => $modulo): ?>
-                            <div class="mb-3">
-                                <label class="form-label"><i class="ti <?= $modulo['icone'] ?> me-2"></i><?= $modulo['nome'] ?></label>
-                                <div class="row">
-                                    <?php foreach ($modulo['acoes'] as $acao): ?>
-                                    <div class="col-auto">
-                                        <label class="form-check">
-                                            <input type="checkbox" class="form-check-input"
-                                                   name="permissoes[<?= $modulo_key ?>][<?= $acao ?>]" value="1"
-                                                   <?= isset($permissoes[$modulo_key][$acao]) && $permissoes[$modulo_key][$acao] ? 'checked' : '' ?>>
-                                            <span class="form-check-label"><?= ucfirst($acao) ?></span>
-                                        </label>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <hr>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="col-md-4">
+                    <!-- Configurações -->
                     <div class="card mb-3">
                         <div class="card-header"><h3 class="card-title">Configurações</h3></div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label class="form-label required">Nível de Acesso</label>
-                                <select name="nivel" id="nivel" class="form-select" required>
-                                    <option value="usuario" <?= $usuario->nivel == 'usuario' ? 'selected' : '' ?>>Usuário</option>
-                                    <option value="admin" <?= $usuario->nivel == 'admin' ? 'selected' : '' ?>>Admin</option>
+                                <label class="form-label required">Tipo de Usuário</label>
+                                <select name="tipo" id="tipo" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="super_admin" <?= $usuario->tipo == 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
+                                    <option value="estabelecimento" <?= $usuario->tipo == 'estabelecimento' ? 'selected' : '' ?>>Estabelecimento</option>
+                                    <option value="profissional" <?= $usuario->tipo == 'profissional' ? 'selected' : '' ?>>Profissional</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label required">Status</label>
-                                <select name="status" class="form-select" required>
-                                    <option value="ativo" <?= $usuario->status == 'ativo' ? 'selected' : '' ?>>Ativo</option>
-                                    <option value="inativo" <?= $usuario->status == 'inativo' ? 'selected' : '' ?>>Inativo</option>
+
+                            <!-- Estabelecimento (condicional) -->
+                            <div class="mb-3" id="estabelecimento_field" style="display:<?= in_array($usuario->tipo, ['estabelecimento', 'profissional']) ? 'block' : 'none' ?>;">
+                                <label class="form-label required">Estabelecimento</label>
+                                <select name="estabelecimento_id" id="estabelecimento_id" class="form-select" <?= in_array($usuario->tipo, ['estabelecimento', 'profissional']) ? 'required' : '' ?>>
+                                    <option value="">Selecione...</option>
+                                    <?php foreach ($estabelecimentos as $est): ?>
+                                    <option value="<?= $est->id ?>" <?= $usuario->estabelecimento_id == $est->id ? 'selected' : '' ?>><?= $est->nome_fantasia ?></option>
+                                    <?php endforeach; ?>
                                 </select>
+                            </div>
+
+                            <!-- Profissional (condicional) -->
+                            <div class="mb-3" id="profissional_field" style="display:<?= $usuario->tipo == 'profissional' ? 'block' : 'none' ?>;">
+                                <label class="form-label required">Profissional</label>
+                                <select name="profissional_id" id="profissional_id" class="form-select" <?= $usuario->tipo == 'profissional' ? 'required' : '' ?>>
+                                    <option value="">Selecione...</option>
+                                    <?php foreach ($profissionais as $prof): ?>
+                                    <option value="<?= $prof->id ?>" <?= $usuario->profissional_id == $prof->id ? 'selected' : '' ?>><?= $prof->nome ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" name="ativo" value="1" <?= $usuario->ativo ? 'checked' : '' ?>>
+                                    <span class="form-check-label">Usuário Ativo</span>
+                                </label>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Ações -->
                     <div class="card">
                         <div class="card-body">
                             <button type="submit" class="btn btn-primary w-100 mb-2">
@@ -125,7 +125,55 @@
 </div>
 
 <script>
-document.getElementById('nivel').addEventListener('change', function() {
-    document.getElementById('permissoesCard').style.display = this.value === 'usuario' ? 'block' : 'none';
+// Controlar exibição de campos baseado no tipo
+document.getElementById('tipo').addEventListener('change', function() {
+    const tipo = this.value;
+    const estabelecimentoField = document.getElementById('estabelecimento_field');
+    const profissionalField = document.getElementById('profissional_field');
+    const estabelecimentoSelect = document.getElementById('estabelecimento_id');
+    const profissionalSelect = document.getElementById('profissional_id');
+
+    // Resetar
+    estabelecimentoField.style.display = 'none';
+    profissionalField.style.display = 'none';
+    estabelecimentoSelect.removeAttribute('required');
+    profissionalSelect.removeAttribute('required');
+
+    if (tipo === 'estabelecimento') {
+        estabelecimentoField.style.display = 'block';
+        estabelecimentoSelect.setAttribute('required', 'required');
+    } else if (tipo === 'profissional') {
+        estabelecimentoField.style.display = 'block';
+        profissionalField.style.display = 'block';
+        estabelecimentoSelect.setAttribute('required', 'required');
+        profissionalSelect.setAttribute('required', 'required');
+    }
+});
+
+// Carregar profissionais via AJAX quando selecionar estabelecimento
+document.getElementById('estabelecimento_id').addEventListener('change', function() {
+    const estabelecimentoId = this.value;
+    const profissionalSelect = document.getElementById('profissional_id');
+    const currentProfissionalId = '<?= $usuario->profissional_id ?>';
+
+    if (!estabelecimentoId) {
+        profissionalSelect.innerHTML = '<option value="">Selecione um estabelecimento primeiro...</option>';
+        return;
+    }
+
+    // Carregar profissionais
+    fetch('<?= base_url('admin/profissionais/get_profissionais/') ?>' + estabelecimentoId)
+        .then(response => response.json())
+        .then(data => {
+            profissionalSelect.innerHTML = '<option value="">Selecione...</option>';
+            data.forEach(prof => {
+                const selected = prof.id == currentProfissionalId ? 'selected' : '';
+                profissionalSelect.innerHTML += `<option value="${prof.id}" ${selected}>${prof.nome}</option>`;
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar profissionais:', error);
+            profissionalSelect.innerHTML = '<option value="">Erro ao carregar profissionais</option>';
+        });
 });
 </script>

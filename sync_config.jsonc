@@ -28,7 +28,8 @@
 			"application/cache/*",
 			"application/config/config.php", // ⚠️ Diferente em cada ambiente
 			"application/config/database.php", // ⚠️ Diferente em cada ambiente
-			"uploads/*"
+			"uploads/*",
+			"docs/*"
 		],
 		"downloadPath": "",
 		"downloadExcludePath": [],
@@ -63,7 +64,8 @@
 			"application/cache/*",
 			"application/config/config.php", // ⚠️ Diferente em cada ambiente
 			"application/config/database.php", // ⚠️ Diferente em cada ambiente
-			"uploads/*"
+			"uploads/*",
+			"docs/*"
 		],
 		"downloadPath": "",
 		"downloadExcludePath": [],

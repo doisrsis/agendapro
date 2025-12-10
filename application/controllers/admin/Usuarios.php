@@ -14,10 +14,12 @@ class Usuarios extends Admin_Controller {
     public function __construct() {
         parent::__construct();
         $this->load->model('Usuario_model');
+        $this->load->model('Estabelecimento_model');
+        $this->load->model('Profissional_model');
         $this->load->library('pagination');
 
-        // Apenas admin pode acessar
-        if ($this->session->userdata('usuario_nivel') !== 'admin') {
+        // Apenas super_admin pode acessar
+        if (!$this->auth_check->is_super_admin()) {
             $this->session->set_flashdata('erro', 'Você não tem permissão para acessar esta área.');
             redirect('admin/dashboard');
         }
@@ -35,15 +37,22 @@ class Usuarios extends Admin_Controller {
 
         // Filtros
         $busca = $this->input->get('busca');
-        $nivel = $this->input->get('nivel');
-        $status = $this->input->get('status');
+        $tipo = $this->input->get('tipo');
+        $ativo = $this->input->get('ativo');
 
         // Buscar usuários
-        $data['usuarios'] = $this->Usuario_model->get_all($busca, $nivel, $status);
+        $filtros = [];
+        if ($tipo) $filtros['tipo'] = $tipo;
+        if ($ativo !== null && $ativo !== '') $filtros['ativo'] = $ativo;
+
+        $data['usuarios'] = $this->Usuario_model->get_all_with_filters($busca, $filtros);
         $data['total'] = count($data['usuarios']);
         $data['busca'] = $busca;
-        $data['nivel'] = $nivel;
-        $data['status'] = $status;
+        $data['tipo'] = $tipo;
+        $data['ativo'] = $ativo;
+
+        // Estabelecimentos para filtro
+        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all();
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/usuarios/index', $data);
@@ -62,8 +71,9 @@ class Usuarios extends Admin_Controller {
             return;
         }
 
-        // Módulos disponíveis para permissões
-        $data['modulos'] = $this->get_modulos_sistema();
+        // Estabelecimentos e profissionais para seleção
+        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+        $data['profissionais'] = [];
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/usuarios/criar', $data);
@@ -89,9 +99,17 @@ class Usuarios extends Admin_Controller {
             return;
         }
 
-        // Módulos e permissões atuais
-        $data['modulos'] = $this->get_modulos_sistema();
-        $data['permissoes'] = $this->Usuario_model->get_permissoes($id);
+        // Estabelecimentos e profissionais
+        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all(['status' => 'ativo']);
+
+        if ($data['usuario']->estabelecimento_id) {
+            $data['profissionais'] = $this->Profissional_model->get_all([
+                'estabelecimento_id' => $data['usuario']->estabelecimento_id,
+                'status' => 'ativo'
+            ]);
+        } else {
+            $data['profissionais'] = [];
+        }
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/usuarios/editar', $data);
@@ -107,8 +125,19 @@ class Usuarios extends Admin_Controller {
         $this->form_validation->set_rules('nome', 'Nome', 'required|min_length[3]|max_length[100]');
         $this->form_validation->set_rules('email', 'E-mail', 'required|valid_email|max_length[100]');
         $this->form_validation->set_rules('telefone', 'Telefone', 'max_length[20]');
-        $this->form_validation->set_rules('nivel', 'Nível', 'required|in_list[admin,usuario]');
-        $this->form_validation->set_rules('status', 'Status', 'required|in_list[ativo,inativo]');
+        $this->form_validation->set_rules('tipo', 'Tipo', 'required|in_list[super_admin,estabelecimento,profissional]');
+
+        // Validações condicionais por tipo
+        $tipo = $this->input->post('tipo');
+
+        if ($tipo == 'estabelecimento') {
+            $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+        }
+
+        if ($tipo == 'profissional') {
+            $this->form_validation->set_rules('estabelecimento_id', 'Estabelecimento', 'required|integer');
+            $this->form_validation->set_rules('profissional_id', 'Profissional', 'required|integer');
+        }
 
         if (!$id) {
             // Ao criar, senha é obrigatória
@@ -133,8 +162,7 @@ class Usuarios extends Admin_Controller {
         }
 
         // Verificar se email já existe (exceto o próprio usuário)
-        $email_existe = $this->Usuario_model->get_by_email($this->input->post('email'));
-        if ($email_existe && (!$id || $email_existe->id != $id)) {
+        if ($this->Usuario_model->email_existe($this->input->post('email'), $id)) {
             $this->session->set_flashdata('erro', 'Este e-mail já está cadastrado.');
             if ($id) {
                 redirect('admin/usuarios/editar/' . $id);
@@ -148,29 +176,30 @@ class Usuarios extends Admin_Controller {
             'nome' => $this->input->post('nome'),
             'email' => $this->input->post('email'),
             'telefone' => $this->input->post('telefone'),
-            'nivel' => $this->input->post('nivel'),
-            'status' => $this->input->post('status')
+            'tipo' => $tipo,
+            'ativo' => $this->input->post('ativo') ? 1 : 0
         ];
 
-        // Senha (apenas se preenchida) - o model já faz o hash
+        // Campos condicionais
+        if ($tipo == 'estabelecimento' || $tipo == 'profissional') {
+            $dados['estabelecimento_id'] = $this->input->post('estabelecimento_id');
+        }
+
+        if ($tipo == 'profissional') {
+            $dados['profissional_id'] = $this->input->post('profissional_id');
+        }
+
+        // Senha (apenas se preenchida)
         if ($this->input->post('senha')) {
             $dados['senha'] = $this->input->post('senha');
         }
 
         if ($id) {
             // Buscar dados antigos
-            $dados_antigos = $this->Usuario_model->get($id);
+            $dados_antigos = (array) $this->Usuario_model->get($id);
 
             // Atualizar
-            if ($this->Usuario_model->update($id, $dados)) {
-                // Salvar permissões (apenas para usuários comuns)
-                if ($dados['nivel'] == 'usuario') {
-                    $this->salvar_permissoes_usuario($id);
-                } else {
-                    // Se mudou para admin, remover permissões
-                    $this->Usuario_model->delete_permissoes($id);
-                }
-
+            if ($this->Usuario_model->atualizar($id, $dados)) {
                 // Registrar log
                 $this->registrar_log('editar', 'usuarios', $id, $dados_antigos, $dados);
 
@@ -181,13 +210,8 @@ class Usuarios extends Admin_Controller {
             redirect('admin/usuarios');
         } else {
             // Criar
-            $novo_id = $this->Usuario_model->insert($dados);
+            $novo_id = $this->Usuario_model->criar($dados);
             if ($novo_id) {
-                // Salvar permissões (apenas para usuários comuns)
-                if ($dados['nivel'] == 'usuario') {
-                    $this->salvar_permissoes_usuario($novo_id);
-                }
-
                 // Registrar log
                 $this->registrar_log('criar', 'usuarios', $novo_id, null, $dados);
 
@@ -315,11 +339,11 @@ class Usuarios extends Admin_Controller {
             redirect('admin/usuarios');
         }
 
-        $novo_status = $usuario->status == 'ativo' ? 'inativo' : 'ativo';
+        $novo_ativo = $usuario->ativo == 1 ? 0 : 1;
 
-        if ($this->Usuario_model->update($id, ['status' => $novo_status])) {
+        if ($this->Usuario_model->atualizar($id, ['ativo' => $novo_ativo])) {
             // Registrar log
-            $acao = $novo_status == 'ativo' ? 'ativar' : 'desativar';
+            $acao = $novo_ativo == 1 ? 'ativar' : 'desativar';
             $this->registrar_log($acao, 'usuarios', $id);
 
             $this->session->set_flashdata('sucesso', 'Status alterado com sucesso!');

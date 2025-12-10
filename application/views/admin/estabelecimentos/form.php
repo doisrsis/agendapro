@@ -42,10 +42,13 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">E-mail</label>
+                                    <label class="form-label required">E-mail</label>
                                     <input type="email" class="form-control" name="email"
-                                           value="<?= set_value('email', $estabelecimento->email ?? '') ?>">
+                                           value="<?= set_value('email', $estabelecimento->email ?? '') ?>" required>
                                     <?= form_error('email', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                    <?php if (!isset($estabelecimento)): ?>
+                                    <small class="form-hint">Será usado para login do usuário</small>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label">Telefone</label>
@@ -58,6 +61,38 @@
                                            value="<?= set_value('whatsapp', $estabelecimento->whatsapp ?? '') ?>">
                                 </div>
                             </div>
+
+                            <?php if (!isset($estabelecimento)): ?>
+                            <!-- Campos de senha apenas ao criar -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required">Senha</label>
+                                    <input type="password" class="form-control" name="senha" required minlength="6">
+                                    <?= form_error('senha', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                    <small class="form-hint">Mínimo 6 caracteres</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required">Confirmar Senha</label>
+                                    <input type="password" class="form-control" name="confirmar_senha" required>
+                                    <?= form_error('confirmar_senha', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                </div>
+                            </div>
+                            <?php else: ?>
+                            <!-- Campos de senha ao editar (opcional) -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nova Senha</label>
+                                    <input type="password" class="form-control" name="senha" minlength="6">
+                                    <?= form_error('senha', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                    <small class="form-hint">Deixe em branco para manter a senha atual</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Confirmar Nova Senha</label>
+                                    <input type="password" class="form-control" name="confirmar_senha">
+                                    <?= form_error('confirmar_senha', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
 
                             <div class="mb-3">
                                 <label class="form-label">Endereço</label>
@@ -103,25 +138,30 @@
                         </div>
                     </div>
 
-                    <!-- Plano -->
+                    <!-- Plano e Assinatura -->
                     <div class="card mb-3">
                         <div class="card-header">
-                            <h3 class="card-title">Plano e Status</h3>
+                            <h3 class="card-title">Plano de Assinatura</h3>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label required">Plano</label>
-                                <select class="form-select" name="plano" required>
-                                    <option value="trimestral" <?= set_select('plano', 'trimestral', ($estabelecimento->plano ?? '') == 'trimestral') ?>>Trimestral</option>
-                                    <option value="semestral" <?= set_select('plano', 'semestral', ($estabelecimento->plano ?? '') == 'semestral') ?>>Semestral</option>
-                                    <option value="anual" <?= set_select('plano', 'anual', ($estabelecimento->plano ?? '') == 'anual') ?>>Anual</option>
+                                <select class="form-select" name="plano_id" required>
+                                    <option value="">Selecione...</option>
+                                    <?php
+                                    $plano_selecionado = isset($assinatura_atual) && $assinatura_atual ? $assinatura_atual->plano_id : null;
+                                    foreach ($planos as $p):
+                                    ?>
+                                    <option value="<?= $p->id ?>" <?= ($plano_selecionado == $p->id) ? 'selected' : '' ?>>
+                                        <?= $p->nome ?> - R$ <?= number_format($p->valor_mensal, 2, ',', '.') ?>/mês
+                                    </option>
+                                    <?php endforeach; ?>
                                 </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Vencimento do Plano</label>
-                                <input type="date" class="form-control" name="plano_vencimento"
-                                       value="<?= set_value('plano_vencimento', $estabelecimento->plano_vencimento ?? '') ?>">
+                                <?php if (isset($estabelecimento)): ?>
+                                <small class="form-hint">Alterar o plano criará uma nova assinatura</small>
+                                <?php else: ?>
+                                <small class="form-hint">Uma assinatura será criada automaticamente</small>
+                                <?php endif; ?>
                             </div>
 
                             <div class="mb-3">
