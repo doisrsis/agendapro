@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<!-- Page body -->
+<!-- Page body --->
 <div class="page-body">
     <div class="container-xl">
 
@@ -164,7 +164,7 @@
                     </div>
                     <?php if (!empty($proximos_agendamentos)): ?>
                     <div class="card-footer">
-                        <a href="<?= base_url('admin/agendamentos') ?>" class="btn btn-link">Ver todos os agendamentos</a>
+                        <a href="<?= base_url('painel/agendamentos') ?>" class="btn btn-link">Ver todos os agendamentos</a>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -202,7 +202,7 @@
                     </div>
                     <?php if (!empty($clientes_recentes)): ?>
                     <div class="card-footer">
-                        <a href="<?= base_url('admin/clientes') ?>" class="btn btn-link">Ver todos os clientes</a>
+                        <a href="<?= base_url('painel/clientes') ?>" class="btn btn-link">Ver todos os clientes</a>
                     </div>
                     <?php endif; ?>
                 </div>

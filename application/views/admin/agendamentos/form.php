@@ -4,7 +4,7 @@
         <div class="row g-2 align-items-center">
             <div class="col">
                 <div class="page-pretitle">
-                    <a href="<?= base_url('admin/agendamentos') ?>">Agendamentos</a>
+                    <a href="<?= base_url(($base_controller ?? 'admin') . '/agendamentos') ?>">Agendamentos</a>
                 </div>
                 <h2 class="page-title">
                     <?= isset($agendamento) ? 'Editar Agendamento' : 'Novo Agendamento' ?>
@@ -167,7 +167,7 @@
             <!-- Botões -->
             <div class="card">
                 <div class="card-footer text-end">
-                    <a href="<?= base_url('admin/agendamentos') ?>" class="btn btn-link">
+                    <a href="<?= base_url(($base_controller ?? 'admin') . '/agendamentos') ?>" class="btn btn-link">
                         Cancelar
                     </a>
                     <button type="submit" class="btn btn-primary">

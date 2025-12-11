@@ -166,6 +166,16 @@ class Profissional_model extends CI_Model {
             ->count_all_results($this->table);
     }
 
+    /**
+     * Buscar profissionais por estabelecimento
+     *
+     * @param int $estabelecimento_id
+     * @return array
+     */
+    public function get_by_estabelecimento($estabelecimento_id) {
+        return $this->get_all(['estabelecimento_id' => $estabelecimento_id]);
+    }
+
     // =========================================================================
     // ALIASES PARA COMPATIBILIDADE DE NOMENCLATURA
     // =========================================================================

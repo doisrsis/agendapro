@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="col-auto ms-auto d-print-none">
-                <a href="<?= base_url('admin/clientes/criar') ?>" class="btn btn-primary">
+                <a href="<?= base_url(($base_controller ?? 'admin') . '/clientes/criar') ?>" class="btn btn-primary">
                     <i class="ti ti-plus me-2"></i>
                     Novo Cliente
                 </a>
@@ -54,8 +54,9 @@
                 </h3>
             </div>
             <div class="card-body">
-                <form method="get" action="<?= base_url('admin/clientes') ?>">
+                <form method="get" action="<?= base_url(($base_controller ?? 'admin') . '/clientes') ?>">
                     <div class="row g-3">
+                        <?php if (isset($estabelecimentos) && !empty($estabelecimentos)): ?>
                         <div class="col-md-4">
                             <label class="form-label">Estabelecimento</label>
                             <select class="form-select" name="estabelecimento_id">
@@ -67,6 +68,7 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <?php endif; ?>
                         <div class="col-md-3">
                             <label class="form-label">Tipo</label>
                             <select class="form-select" name="tipo">
@@ -105,7 +107,9 @@
                     <thead>
                         <tr>
                             <th>Cliente</th>
+                            <?php if (isset($estabelecimentos)): ?>
                             <th>Estabelecimento</th>
+                            <?php endif; ?>
                             <th>WhatsApp</th>
                             <th>CPF</th>
                             <th>Agendamentos</th>
@@ -143,7 +147,9 @@
                                     </div>
                                 </div>
                             </td>
+                            <?php if (isset($estabelecimentos)): ?>
                             <td><?= $cli->estabelecimento_nome ?></td>
+                            <?php endif; ?>
                             <td><?= $cli->whatsapp ?></td>
                             <td><?= $cli->cpf ?: '-' ?></td>
                             <td>
@@ -172,17 +178,17 @@
                             </td>
                             <td>
                                 <div class="btn-list flex-nowrap">
-                                    <a href="<?= base_url('admin/clientes/visualizar/' . $cli->id) ?>"
+                                    <a href="<?= base_url(($base_controller ?? 'admin') . '/clientes/visualizar/' . $cli->id) ?>"
                                        class="btn btn-sm btn-icon btn-ghost-info"
                                        title="Visualizar">
                                         <i class="ti ti-eye"></i>
                                     </a>
-                                    <a href="<?= base_url('admin/clientes/editar/' . $cli->id) ?>"
+                                    <a href="<?= base_url(($base_controller ?? 'admin') . '/clientes/editar/' . $cli->id) ?>"
                                        class="btn btn-sm btn-icon btn-ghost-primary"
                                        title="Editar">
                                         <i class="ti ti-edit"></i>
                                     </a>
-                                    <a href="<?= base_url('admin/clientes/deletar/' . $cli->id) ?>"
+                                    <a href="<?= base_url(($base_controller ?? 'admin') . '/clientes/deletar/' . $cli->id) ?>"
                                        class="btn btn-sm btn-icon btn-ghost-danger"
                                        title="Deletar"
                                        onclick="return confirm('Tem certeza que deseja deletar este cliente?')">

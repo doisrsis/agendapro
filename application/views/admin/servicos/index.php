@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="col-auto ms-auto d-print-none">
-                <a href="<?= base_url('admin/servicos/criar') ?>" class="btn btn-primary">
+                <a href="<?= base_url(($base_controller ?? 'admin') . '/servicos/criar') ?>" class="btn btn-primary">
                     <i class="ti ti-plus me-2"></i>
                     Novo Serviço
                 </a>
@@ -54,7 +54,7 @@
                 </h3>
             </div>
             <div class="card-body">
-                <form method="get" action="<?= base_url('admin/servicos') ?>">
+                <form method="get" action="<?= base_url(($base_controller ?? 'admin') . '/servicos') ?>">
                     <div class="row g-3">
                         <div class="col-md-5">
                             <label class="form-label">Estabelecimento</label>
@@ -137,12 +137,12 @@
                             </td>
                             <td>
                                 <div class="btn-list flex-nowrap">
-                                    <a href="<?= base_url('admin/servicos/editar/' . $serv->id) ?>"
+                                    <a href="<?= base_url(($base_controller ?? 'admin') . '/servicos/editar/' . $serv->id) ?>"
                                        class="btn btn-sm btn-icon btn-ghost-primary"
                                        title="Editar">
                                         <i class="ti ti-edit"></i>
                                     </a>
-                                    <a href="<?= base_url('admin/servicos/deletar/' . $serv->id) ?>"
+                                    <a href="<?= base_url(($base_controller ?? 'admin') . '/servicos/deletar/' . $serv->id) ?>"
                                        class="btn btn-sm btn-icon btn-ghost-danger"
                                        title="Deletar"
                                        onclick="return confirm('Tem certeza que deseja deletar este serviço?')">

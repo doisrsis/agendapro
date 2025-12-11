@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="col-auto ms-auto d-print-none">
-                <a href="<?= base_url('admin/agendamentos/criar') ?>" class="btn btn-primary">
+                <a href="<?= base_url(($base_controller ?? 'admin') . '/agendamentos/criar') ?>" class="btn btn-primary">
                     <i class="ti ti-plus me-2"></i>
                     Novo Agendamento
                 </a>
@@ -54,7 +54,7 @@
                 </h3>
             </div>
             <div class="card-body">
-                <form method="get" action="<?= base_url('admin/agendamentos') ?>">
+                <form method="get" action="<?= base_url(($base_controller ?? 'admin') . '/agendamentos') ?>">
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label">Estabelecimento</label>
@@ -177,7 +177,7 @@
                             <td>
                                 <div class="btn-list flex-nowrap">
                                     <?php if ($ag->status == 'confirmado'): ?>
-                                    <a href="<?= base_url('admin/agendamentos/finalizar/' . $ag->id) ?>"
+                                    <a href="<?= base_url(($base_controller ?? 'admin') . '/agendamentos/finalizar/' . $ag->id) ?>"
                                        class="btn btn-sm btn-icon btn-ghost-success"
                                        title="Finalizar"
                                        onclick="return confirm('Confirmar finalização do atendimento?')">
@@ -185,7 +185,7 @@
                                     </a>
                                     <?php endif; ?>
 
-                                    <a href="<?= base_url('admin/agendamentos/editar/' . $ag->id) ?>"
+                                    <a href="<?= base_url(($base_controller ?? 'admin') . '/agendamentos/editar/' . $ag->id) ?>"
                                        class="btn btn-sm btn-icon btn-ghost-primary"
                                        title="Editar">
                                         <i class="ti ti-edit"></i>
@@ -206,7 +206,7 @@
                                 <div class="modal fade" id="modal-cancelar-<?= $ag->id ?>" tabindex="-1">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
-                                            <form method="post" action="<?= base_url('admin/agendamentos/cancelar/' . $ag->id) ?>">
+                                            <form method="post" action="<?= base_url(($base_controller ?? 'admin') . '/agendamentos/cancelar/' . $ag->id) ?>">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title">Cancelar Agendamento</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

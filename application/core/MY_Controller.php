@@ -48,7 +48,8 @@ class Admin_Controller extends CI_Controller {
         $this->load->vars([
             'usuario_logado' => $this->usuario,
             'estabelecimento_id' => $this->estabelecimento_id ?? null,
-            'estabelecimento' => $this->estabelecimento ?? null
+            'estabelecimento' => $this->estabelecimento ?? null,
+            'base_controller' => 'admin'
         ]);
     }
 
@@ -240,5 +241,102 @@ class Public_Controller extends CI_Controller {
             $response['errors'] = $errors;
         }
         $this->json_response($response, $status);
+    }
+}
+
+/**
+ * Controller Base para Painel do Estabelecimento
+ */
+class Painel_Controller extends CI_Controller {
+
+    protected $estabelecimento_id;
+    protected $estabelecimento;
+    protected $usuario;
+    protected $assinatura;
+
+    public function __construct() {
+        parent::__construct();
+
+        // Carregar libraries e models
+        $this->load->library('auth_check');
+        $this->load->model('Estabelecimento_model');
+        $this->load->model('Assinatura_model');
+
+        // Verificar autenticação
+        $this->auth_check->check_login();
+
+        // Obter dados do usuário
+        $this->usuario = $this->auth_check->get_usuario();
+
+        // Verificar se é estabelecimento
+        if ($this->usuario->tipo !== 'estabelecimento') {
+            $this->session->set_flashdata('erro', 'Acesso negado.');
+            redirect('login');
+        }
+
+        // Carregar dados do estabelecimento
+        $this->estabelecimento_id = $this->usuario->estabelecimento_id;
+        $this->estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+        $this->assinatura = $this->Assinatura_model->get_ativa($this->estabelecimento_id);
+
+        // Verificar se estabelecimento está ativo
+        $this->auth_check->verificar_estabelecimento_ativo();
+
+        // Disponibilizar para views
+        $this->load->vars([
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'estabelecimento' => $this->estabelecimento,
+            'usuario_logado' => $this->usuario,
+            'assinatura_ativa' => $this->assinatura,
+            'base_controller' => 'painel'
+        ]);
+    }
+}
+
+/**
+ * Controller Base para Agenda do Profissional
+ */
+class Agenda_Controller extends CI_Controller {
+
+    protected $profissional_id;
+    protected $profissional;
+    protected $estabelecimento_id;
+    protected $estabelecimento;
+    protected $usuario;
+
+    public function __construct() {
+        parent::__construct();
+
+        // Carregar libraries e models
+        $this->load->library('auth_check');
+        $this->load->model('Profissional_model');
+        $this->load->model('Estabelecimento_model');
+
+        // Verificar autenticação
+        $this->auth_check->check_login();
+
+        // Obter dados do usuário
+        $this->usuario = $this->auth_check->get_usuario();
+
+        // Verificar se é profissional
+        if ($this->usuario->tipo !== 'profissional') {
+            $this->session->set_flashdata('erro', 'Acesso negado.');
+            redirect('login');
+        }
+
+        // Carregar dados do profissional
+        $this->profissional_id = $this->usuario->profissional_id;
+        $this->profissional = $this->Profissional_model->get($this->profissional_id);
+        $this->estabelecimento_id = $this->profissional->estabelecimento_id;
+        $this->estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+
+        // Disponibilizar para views
+        $this->load->vars([
+            'profissional_id' => $this->profissional_id,
+            'profissional' => $this->profissional,
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'estabelecimento' => $this->estabelecimento,
+            'usuario_logado' => $this->usuario
+        ]);
     }
 }

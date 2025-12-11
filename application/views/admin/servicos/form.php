@@ -4,7 +4,7 @@
         <div class="row g-2 align-items-center">
             <div class="col">
                 <div class="page-pretitle">
-                    <a href="<?= base_url('admin/servicos') ?>">Serviços</a>
+                    <a href="<?= base_url(($base_controller ?? 'admin') . '/servicos') ?>">Serviços</a>
                 </div>
                 <h2 class="page-title">
                     <?= isset($servico) ? 'Editar Serviço' : 'Novo Serviço' ?>
@@ -26,6 +26,7 @@
                             <h3 class="card-title">Dados do Serviço</h3>
                         </div>
                         <div class="card-body">
+                            <?php if (isset($estabelecimentos) && !empty($estabelecimentos)): ?>
                             <div class="mb-3">
                                 <label class="form-label required">Estabelecimento</label>
                                 <select class="form-select" name="estabelecimento_id"
@@ -40,6 +41,7 @@
                                 </select>
                                 <?= form_error('estabelecimento_id', '<div class="invalid-feedback d-block">', '</div>') ?>
                             </div>
+                            <?php endif; ?>
 
                             <div class="mb-3">
                                 <label class="form-label required">Nome do Serviço</label>
@@ -125,7 +127,7 @@
             <!-- Botões -->
             <div class="card">
                 <div class="card-footer text-end">
-                    <a href="<?= base_url('admin/servicos') ?>" class="btn btn-link">
+                    <a href="<?= base_url(($base_controller ?? 'admin') . '/servicos') ?>" class="btn btn-link">
                         Cancelar
                     </a>
                     <button type="submit" class="btn btn-primary">

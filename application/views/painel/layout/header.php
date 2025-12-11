@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <title><?= $titulo ?? 'Painel - ' . ($estabelecimento->nome_fantasia ?? 'AgendaPro') ?></title>
 
-    <!-- CSS files -->
+    <!-- CSS files --->
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet"/>
 
@@ -64,7 +64,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= base_url('admin/clientes') ?>">
+                                <a class="nav-link" href="<?= base_url('painel/clientes') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-users"></i>
                                     </span>
@@ -72,7 +72,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= base_url('admin/profissionais') ?>">
+                                <a class="nav-link" href="<?= base_url('painel/profissionais') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-user-check"></i>
                                     </span>
@@ -80,7 +80,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= base_url('admin/servicos') ?>">
+                                <a class="nav-link" href="<?= base_url('painel/servicos') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-briefcase"></i>
                                     </span>
@@ -88,7 +88,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= base_url('admin/agendamentos') ?>">
+                                <a class="nav-link" href="<?= base_url('painel/agendamentos') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-calendar"></i>
                                     </span>
