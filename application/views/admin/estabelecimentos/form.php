@@ -51,14 +51,10 @@
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-3 mb-3">
-                                    <label class="form-label">Telefone</label>
-                                    <input type="text" class="form-control" name="telefone"
-                                           value="<?= set_value('telefone', $estabelecimento->telefone ?? '') ?>">
-                                </div>
-                                <div class="col-md-3 mb-3">
                                     <label class="form-label">WhatsApp</label>
                                     <input type="text" class="form-control" name="whatsapp"
-                                           value="<?= set_value('whatsapp', $estabelecimento->whatsapp ?? '') ?>">
+                                           value="<?= set_value('whatsapp', $estabelecimento->whatsapp ?? '') ?>"
+                                           placeholder="(XX) XXXXX-XXXX">
                                 </div>
                             </div>
 

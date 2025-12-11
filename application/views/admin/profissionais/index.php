@@ -136,9 +136,6 @@
                             </td>
                             <td>
                                 <div><?= $prof->nome ?></div>
-                                <?php if ($prof->telefone): ?>
-                                <div class="text-muted small"><?= $prof->telefone ?></div>
-                                <?php endif; ?>
                             </td>
                             <td><?= $prof->estabelecimento_nome ?></td>
                             <td><?= $prof->whatsapp ?: '-' ?></td>

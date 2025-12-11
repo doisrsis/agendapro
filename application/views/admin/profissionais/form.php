@@ -50,17 +50,11 @@
                                 <?= form_error('nome', '<div class="invalid-feedback d-block">', '</div>') ?>
                             </div>
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">WhatsApp</label>
-                                    <input type="text" class="form-control" name="whatsapp"
-                                           value="<?= set_value('whatsapp', $profissional->whatsapp ?? '') ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Telefone</label>
-                                    <input type="text" class="form-control" name="telefone"
-                                           value="<?= set_value('telefone', $profissional->telefone ?? '') ?>">
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">WhatsApp</label>
+                                <input type="text" class="form-control" name="whatsapp"
+                                       value="<?= set_value('whatsapp', $profissional->whatsapp ?? '') ?>"
+                                       placeholder="(XX) XXXXX-XXXX">
                             </div>
 
                             <div class="mb-3">

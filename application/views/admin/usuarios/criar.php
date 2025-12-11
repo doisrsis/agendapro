@@ -38,8 +38,9 @@
                                     <input type="text" class="form-control" name="nome" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Telefone</label>
-                                    <input type="text" class="form-control" name="telefone">
+                                    <label class="form-label">WhatsApp</label>
+                                    <input type="text" class="form-control" name="whatsapp"
+                                           placeholder="(XX) XXXXX-XXXX">
                                 </div>
                             </div>
                             <div class="mb-3">

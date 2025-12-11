@@ -38,8 +38,10 @@
                                     <input type="text" class="form-control" name="nome" value="<?= $usuario->nome ?>" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Telefone</label>
-                                    <input type="text" class="form-control" name="telefone" value="<?= $usuario->telefone ?>">
+                                    <label class="form-label">WhatsApp</label>
+                                    <input type="text" class="form-control" name="whatsapp"
+                                           value="<?= $usuario->whatsapp ?>"
+                                           placeholder="(XX) XXXXX-XXXX">
                                 </div>
                             </div>
                             <div class="mb-3">
