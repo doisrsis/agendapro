@@ -46,7 +46,13 @@
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
-                            <a href="<?= base_url('logout') ?>" class="dropdown-item">Sair</a>
+                            <a href="<?= base_url('agenda/perfil') ?>" class="dropdown-item">
+                                <i class="ti ti-user me-2"></i>Meu Perfil
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="<?= base_url('logout') ?>" class="dropdown-item">
+                                <i class="ti ti-logout me-2"></i>Sair
+                            </a>
                         </div>
                     </div>
                 </div>

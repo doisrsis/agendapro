@@ -139,8 +139,8 @@
                                     <div>
                                         <strong><?= $usuario->nome ?></strong>
                                         <div class="small text-muted"><?= $usuario->email ?></div>
-                                        <?php if ($usuario->telefone): ?>
-                                        <div class="small text-muted"><i class="ti ti-phone"></i> <?= $usuario->telefone ?></div>
+                                        <?php if (!empty($usuario->whatsapp)): ?>
+                                        <div class="small text-muted"><i class="ti ti-brand-whatsapp"></i> <?= $usuario->whatsapp ?></div>
                                         <?php endif; ?>
                                     </div>
                                 </div>

@@ -128,7 +128,8 @@
                                 </a>
                             </li>
 
-                            <!-- Módulos de Agendamento -->
+                            <?php if ($usuario_logado->tipo != 'super_admin'): ?>
+                            <!-- Módulos de Agendamento (apenas estabelecimento) -->
                             <li class="nav-item <?= $menu_ativo == 'agendamentos' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('admin/agendamentos') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -146,8 +147,45 @@
                                     <span class="nav-link-title">Clientes</span>
                                 </a>
                             </li>
+                            <?php else: ?>
+                            <!-- Estabelecimentos (super-admin) -->
+                            <li class="nav-item <?= $menu_ativo == 'estabelecimentos' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('admin/estabelecimentos') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-building"></i>
+                                    </span>
+                                    <span class="nav-link-title">Estabelecimentos</span>
+                                </a>
+                            </li>
+                            <?php endif; ?>
 
-                            <li class="nav-item dropdown <?= in_array($menu_ativo, ['estabelecimentos', 'profissionais', 'servicos', 'planos']) ? 'active' : '' ?>">
+                            <?php if ($usuario_logado->tipo == 'super_admin'): ?>
+                            <!-- Cadastros (super-admin) -->
+                            <li class="nav-item dropdown <?= in_array($menu_ativo, ['usuarios', 'planos', 'assinaturas']) ? 'active' : '' ?>">
+                                <a class="nav-link dropdown-toggle" href="#navbar-cadastros" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-settings"></i>
+                                    </span>
+                                    <span class="nav-link-title">Sistema</span>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item <?= $menu_ativo == 'usuarios' ? 'active' : '' ?>" href="<?= base_url('admin/usuarios') ?>">
+                                        <i class="ti ti-users me-2"></i>
+                                        Usuários
+                                    </a>
+                                    <a class="dropdown-item <?= $menu_ativo == 'planos' ? 'active' : '' ?>" href="<?= base_url('admin/planos') ?>">
+                                        <i class="ti ti-package me-2"></i>
+                                        Planos
+                                    </a>
+                                    <a class="dropdown-item <?= $menu_ativo == 'assinaturas' ? 'active' : '' ?>" href="<?= base_url('admin/assinaturas') ?>">
+                                        <i class="ti ti-credit-card me-2"></i>
+                                        Assinaturas
+                                    </a>
+                                </div>
+                            </li>
+                            <?php else: ?>
+                            <!-- Cadastros (estabelecimento) -->
+                            <li class="nav-item dropdown <?= in_array($menu_ativo, ['profissionais', 'servicos']) ? 'active' : '' ?>">
                                 <a class="nav-link dropdown-toggle" href="#navbar-cadastros" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-building-store"></i>
@@ -155,10 +193,6 @@
                                     <span class="nav-link-title">Cadastros</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item <?= $menu_ativo == 'estabelecimentos' ? 'active' : '' ?>" href="<?= base_url('admin/estabelecimentos') ?>">
-                                        <i class="ti ti-building me-2"></i>
-                                        Estabelecimentos
-                                    </a>
                                     <a class="dropdown-item <?= $menu_ativo == 'profissionais' ? 'active' : '' ?>" href="<?= base_url('admin/profissionais') ?>">
                                         <i class="ti ti-users me-2"></i>
                                         Profissionais
@@ -167,12 +201,9 @@
                                         <i class="ti ti-scissors me-2"></i>
                                         Serviços
                                     </a>
-                                    <a class="dropdown-item <?= $menu_ativo == 'planos' ? 'active' : '' ?>" href="<?= base_url('admin/planos') ?>">
-                                        <i class="ti ti-package me-2"></i>
-                                        Planos
-                                    </a>
                                 </div>
                             </li>
+                            <?php endif; ?>
 
                             <li class="nav-item <?= $menu_ativo == 'pagamentos' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('admin/pagamentos') ?>">
