@@ -94,4 +94,67 @@ class Dashboard extends CI_Controller {
         $this->load->view('agenda/dashboard/index', $data);
         $this->load->view('agenda/layout/footer');
     }
+
+    /**
+     * API JSON - Retorna agendamentos para o FullCalendar
+     */
+    public function get_agendamentos_json() {
+        // Pegar parâmetros de data do FullCalendar
+        $start = $this->input->get('start');
+        $end = $this->input->get('end');
+
+        // Buscar agendamentos do profissional no período
+        $agendamentos = $this->Agendamento_model->get_all([
+            'profissional_id' => $this->profissional_id,
+            'data_inicio' => $start,
+            'data_fim' => $end
+        ]);
+
+        // Converter para formato FullCalendar
+        $eventos = [];
+        foreach ($agendamentos as $ag) {
+            // Definir cor baseado no status
+            $cor = $this->get_cor_status($ag->status);
+
+            // Combinar data e hora
+            $data_hora_inicio = $ag->data . ' ' . $ag->hora_inicio;
+            $data_hora_fim = $ag->data . ' ' . $ag->hora_fim;
+
+            $eventos[] = [
+                'id' => $ag->id,
+                'title' => $ag->cliente_nome . ' - ' . $ag->servico_nome,
+                'start' => $data_hora_inicio,
+                'end' => $data_hora_fim,
+                'backgroundColor' => $cor,
+                'borderColor' => $cor,
+                'extendedProps' => [
+                    'cliente_id' => $ag->cliente_id,
+                    'cliente_nome' => $ag->cliente_nome,
+                    'cliente_whatsapp' => $ag->cliente_whatsapp ?? '',
+                    'servico_id' => $ag->servico_id,
+                    'servico_nome' => $ag->servico_nome,
+                    'status' => $ag->status,
+                    'observacoes' => $ag->observacoes ?? ''
+                ]
+            ];
+        }
+
+        // Retornar JSON
+        header('Content-Type: application/json');
+        echo json_encode($eventos);
+    }
+
+    /**
+     * Retorna cor baseado no status
+     */
+    private function get_cor_status($status) {
+        $cores = [
+            'confirmado' => '#28a745',  // Verde
+            'pendente' => '#ffc107',    // Amarelo
+            'cancelado' => '#dc3545',   // Vermelho
+            'concluido' => '#007bff'    // Azul
+        ];
+
+        return $cores[$status] ?? '#6c757d'; // Cinza padrão
+    }
 }

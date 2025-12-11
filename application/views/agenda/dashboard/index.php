@@ -10,8 +10,10 @@
                 <div class="text-muted mt-1">Olá, <?= $profissional->nome ?>! Aqui está sua agenda</div>
             </div>
             <div class="col-auto">
-                <input type="date" class="form-control" value="<?= $data_selecionada ?>"
-                       onchange="window.location.href='<?= base_url('agenda/dashboard?data=') ?>' + this.value">
+                <a href="<?= base_url('agenda/agendamentos/criar') ?>" class="btn btn-primary">
+                    <i class="ti ti-plus me-2"></i>
+                    Novo Agendamento
+                </a>
             </div>
         </div>
     </div>
@@ -21,7 +23,7 @@
 <div class="page-body">
     <div class="container-xl">
 
-        <!-- Estatísticas -->
+        <!-- Estatísticas --->
         <div class="row row-deck row-cards mb-3">
             <div class="col-sm-6 col-lg-3">
                 <div class="card">
@@ -80,135 +82,155 @@
             </div>
         </div>
 
+        <!-- Calendário -->
         <div class="row">
-            <!-- Agenda do Dia -->
-            <div class="col-md-8">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Agenda de <?= date('d/m/Y', strtotime($data_selecionada)) ?></h3>
+                        <h3 class="card-title">Calendário de Agendamentos</h3>
+                        <div class="card-actions">
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-success">Confirmado</span>
+                                <span class="badge bg-warning">Pendente</span>
+                                <span class="badge bg-danger">Cancelado</span>
+                                <span class="badge bg-primary">Concluído</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="list-group list-group-flush">
-                        <?php if (empty($agendamentos_dia)): ?>
-                        <div class="list-group-item">
-                            <div class="text-muted text-center py-4">
-                                <i class="ti ti-calendar-off icon mb-2" style="font-size: 3rem;"></i>
-                                <p class="mb-0">Nenhum agendamento para esta data</p>
-                            </div>
-                        </div>
-                        <?php else: ?>
-                        <?php foreach ($agendamentos_dia as $agendamento): ?>
-                        <div class="list-group-item">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <span class="badge bg-primary" style="font-size: 1rem; padding: 0.5rem 0.75rem;">
-                                        <?= date('H:i', strtotime($agendamento->hora_inicio)) ?>
-                                    </span>
-                                </div>
-                                <div class="col-auto">
-                                    <span class="avatar avatar-md"><?= substr($agendamento->cliente_nome, 0, 2) ?></span>
-                                </div>
-                                <div class="col">
-                                    <div class="text-truncate">
-                                        <strong><?= $agendamento->cliente_nome ?></strong>
-                                    </div>
-                                    <div class="text-muted"><?= $agendamento->servico_nome ?></div>
-                                    <?php if ($agendamento->observacoes): ?>
-                                    <div class="text-muted small">
-                                        <i class="ti ti-note"></i> <?= $agendamento->observacoes ?>
-                                    </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="col-auto">
-                                    <?php
-                                    $badge_class = 'secondary';
-                                    $status_text = $agendamento->status;
-
-                                    switch ($agendamento->status) {
-                                        case 'confirmado':
-                                            $badge_class = 'success';
-                                            $status_text = 'Confirmado';
-                                            break;
-                                        case 'concluido':
-                                            $badge_class = 'primary';
-                                            $status_text = 'Concluído';
-                                            break;
-                                        case 'cancelado':
-                                            $badge_class = 'danger';
-                                            $status_text = 'Cancelado';
-                                            break;
-                                    }
-                                    ?>
-                                    <span class="badge bg-<?= $badge_class ?>"><?= $status_text ?></span>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                        <?php endif; ?>
+                    <div class="card-body">
+                        <div id="calendar"></div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Próximos Agendamentos -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Próximos 7 Dias</h3>
-                    </div>
-                    <div class="list-group list-group-flush">
-                        <?php if (empty($proximos_agendamentos)): ?>
-                        <div class="list-group-item">
-                            <div class="text-muted text-center py-3">
-                                <i class="ti ti-calendar-event icon mb-2" style="font-size: 2rem;"></i>
-                                <p class="mb-0 small">Nenhum agendamento próximo</p>
-                            </div>
-                        </div>
-                        <?php else: ?>
-                        <?php foreach ($proximos_agendamentos as $agendamento): ?>
-                        <div class="list-group-item">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <div class="text-truncate">
-                                        <strong><?= $agendamento->cliente_nome ?></strong>
-                                    </div>
-                                    <div class="text-muted small"><?= $agendamento->servico_nome ?></div>
-                                    <div class="text-muted small">
-                                        <i class="ti ti-calendar"></i> <?= date('d/m', strtotime($agendamento->data)) ?>
-                                        às <?= date('H:i', strtotime($agendamento->hora_inicio)) ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Meus Serviços -->
-                <?php if (!empty($servicos)): ?>
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h3 class="card-title">Meus Serviços</h3>
-                    </div>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($servicos as $servico): ?>
-                        <div class="list-group-item">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <div class="text-truncate">
-                                        <strong><?= $servico->nome ?></strong>
-                                    </div>
-                                    <div class="text-muted small">
-                                        <?= $servico->duracao ?> min - R$ <?= number_format($servico->preco, 2, ',', '.') ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
             </div>
         </div>
 
     </div>
 </div>
+
+<!-- Modal de Detalhes do Agendamento -->
+<div class="modal modal-blur fade" id="modalAgendamento" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Agendamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cliente</label>
+                    <div id="modal-cliente-nome"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Serviço</label>
+                    <div id="modal-servico-nome"></div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold">Data</label>
+                        <div id="modal-data"></div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label fw-bold">Horário</label>
+                        <div id="modal-horario"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Status</label>
+                    <div id="modal-status"></div>
+                </div>
+                <div class="mb-3" id="modal-observacoes-container" style="display:none;">
+                    <label class="form-label fw-bold">Observações</label>
+                    <div id="modal-observacoes"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <a href="#" id="modal-whatsapp-btn" class="btn btn-success" target="_blank">
+                    <i class="ti ti-brand-whatsapp me-2"></i>WhatsApp
+                </a>
+                <a href="#" id="modal-editar-btn" class="btn btn-primary">
+                    <i class="ti ti-edit me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'pt-br',
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        slotMinTime: '08:00:00',
+        slotMaxTime: '20:00:00',
+        allDaySlot: false,
+        editable: false,
+        selectable: false,
+        height: 'auto',
+        events: '<?= base_url('agenda/dashboard/get_agendamentos_json') ?>',
+        eventClick: function(info) {
+            // Preencher modal com dados do evento
+            var event = info.event;
+            var props = event.extendedProps;
+
+            document.getElementById('modal-cliente-nome').textContent = props.cliente_nome;
+            document.getElementById('modal-servico-nome').textContent = props.servico_nome;
+
+            var dataInicio = new Date(event.start);
+            document.getElementById('modal-data').textContent = dataInicio.toLocaleDateString('pt-BR');
+            document.getElementById('modal-horario').textContent = dataInicio.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+
+            // Status com badge
+            var statusBadge = '';
+            switch(props.status) {
+                case 'confirmado':
+                    statusBadge = '<span class="badge bg-success">Confirmado</span>';
+                    break;
+                case 'pendente':
+                    statusBadge = '<span class="badge bg-warning">Pendente</span>';
+                    break;
+                case 'cancelado':
+                    statusBadge = '<span class="badge bg-danger">Cancelado</span>';
+                    break;
+                case 'concluido':
+                    statusBadge = '<span class="badge bg-primary">Concluído</span>';
+                    break;
+            }
+            document.getElementById('modal-status').innerHTML = statusBadge;
+
+            // Observações
+            if (props.observacoes) {
+                document.getElementById('modal-observacoes').textContent = props.observacoes;
+                document.getElementById('modal-observacoes-container').style.display = 'block';
+            } else {
+                document.getElementById('modal-observacoes-container').style.display = 'none';
+            }
+
+            // WhatsApp
+            if (props.cliente_whatsapp) {
+                var whatsappUrl = 'https://wa.me/55' + props.cliente_whatsapp.replace(/\D/g, '');
+                document.getElementById('modal-whatsapp-btn').href = whatsappUrl;
+                document.getElementById('modal-whatsapp-btn').style.display = 'inline-block';
+            } else {
+                document.getElementById('modal-whatsapp-btn').style.display = 'none';
+            }
+
+            // Botão editar
+            document.getElementById('modal-editar-btn').href = '<?= base_url('agenda/agendamentos/editar/') ?>' + event.id;
+
+            // Abrir modal
+            var modal = new bootstrap.Modal(document.getElementById('modalAgendamento'));
+            modal.show();
+        }
+    });
+
+    calendar.render();
+});
+</script>

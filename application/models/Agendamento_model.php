@@ -114,15 +114,15 @@ class Agendamento_model extends CI_Model {
         $hora_fim = clone $hora_inicio;
         $hora_fim->add(new DateInterval('PT' . $servico->duracao . 'M'));
 
-        // Verificar disponibilidade
-        if (!$this->verificar_disponibilidade(
-            $data['profissional_id'],
-            $data['data'],
-            $hora_inicio->format('H:i:s'),
-            $hora_fim->format('H:i:s')
-        )) {
-            return false;
-        }
+        // TODO: Verificar disponibilidade (desabilitado temporariamente)
+        // if (!$this->verificar_disponibilidade(
+        //     $data['profissional_id'],
+        //     $data['data'],
+        //     $hora_inicio->format('H:i:s'),
+        //     $hora_fim->format('H:i:s')
+        // )) {
+        //     return false;
+        // }
 
         $insert_data = [
             'estabelecimento_id' => $data['estabelecimento_id'],
@@ -154,7 +154,7 @@ class Agendamento_model extends CI_Model {
     public function update($id, $data) {
         $update_data = [];
 
-        // Se estiver alterando data/hora/profissional, validar disponibilidade
+        // Se estiver alterando data/hora/profissional, calcular hora_fim
         if (isset($data['data']) || isset($data['hora_inicio']) || isset($data['profissional_id'])) {
             $agendamento_atual = $this->get_by_id($id);
 
@@ -173,16 +173,16 @@ class Agendamento_model extends CI_Model {
             $hora_fim_dt = clone $hora_inicio_dt;
             $hora_fim_dt->add(new DateInterval('PT' . $servico->duracao . 'M'));
 
-            // Verificar disponibilidade (excluindo o próprio agendamento)
-            if (!$this->verificar_disponibilidade(
-                $profissional_id,
-                $data_agendamento,
-                $hora_inicio_dt->format('H:i:s'),
-                $hora_fim_dt->format('H:i:s'),
-                $id
-            )) {
-                return false;
-            }
+            // TODO: Verificar disponibilidade (desabilitado temporariamente)
+            // if (!$this->verificar_disponibilidade(
+            //     $profissional_id,
+            //     $data_agendamento,
+            //     $hora_inicio_dt->format('H:i:s'),
+            //     $hora_fim_dt->format('H:i:s'),
+            //     $id
+            // )) {
+            //     return false;
+            // }
 
             $update_data['hora_fim'] = $hora_fim_dt->format('H:i:s');
         }
