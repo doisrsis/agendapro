@@ -69,6 +69,16 @@
                                        value="<?= set_value('email', $profissional->email ?? '') ?>">
                                 <?= form_error('email', '<div class="invalid-feedback d-block">', '</div>') ?>
                             </div>
+
+                            <?php if (!isset($profissional)): ?>
+                            <div class="mb-3">
+                                <label class="form-label required">Senha</label>
+                                <input type="password" class="form-control" name="senha"
+                                       placeholder="Senha de acesso do profissional" required>
+                                <?= form_error('senha', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                <small class="text-muted">Mínimo 6 caracteres</small>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
 

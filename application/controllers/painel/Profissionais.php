@@ -38,13 +38,18 @@ class Profissionais extends Painel_Controller {
      */
     public function criar() {
         if ($this->input->method() === 'post') {
+            log_message('debug', 'Painel/Profissionais/criar - POST recebido');
+
             $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
             $this->form_validation->set_rules('email', 'E-mail', 'required|valid_email');
             $this->form_validation->set_rules('senha', 'Senha', 'required|min_length[6]');
 
             if ($this->form_validation->run()) {
+                log_message('debug', 'Painel/Profissionais/criar - Validação OK');
+
                 // Verificar se email já existe
                 if ($this->Usuario_model->email_existe($this->input->post('email'))) {
+                    log_message('debug', 'Painel/Profissionais/criar - Email já existe');
                     $this->session->set_flashdata('erro', 'Este e-mail já está cadastrado.');
                     redirect('painel/profissionais/criar');
                     return;
@@ -58,9 +63,21 @@ class Profissionais extends Painel_Controller {
                     'status' => 'ativo',
                 ];
 
+                log_message('debug', 'Painel/Profissionais/criar - Dados: ' . json_encode($dados_profissional));
+
                 $profissional_id = $this->Profissional_model->criar($dados_profissional);
+                log_message('debug', 'Painel/Profissionais/criar - ID retornado: ' . $profissional_id);
 
                 if ($profissional_id) {
+                    // Vincular serviços ao profissional
+                    $servicos = $this->input->post('servicos');
+                    log_message('debug', 'Painel/Profissionais/criar - Serviços: ' . json_encode($servicos));
+
+                    if (!empty($servicos) && is_array($servicos)) {
+                        $this->Profissional_model->vincular_servicos($profissional_id, $servicos);
+                        log_message('debug', 'Painel/Profissionais/criar - Serviços vinculados');
+                    }
+
                     // Criar usuário automaticamente
                     $dados_usuario = [
                         'nome' => $this->input->post('nome'),
@@ -73,18 +90,27 @@ class Profissionais extends Painel_Controller {
                         'ativo' => 1
                     ];
 
-                    $this->Usuario_model->criar($dados_usuario);
+                    $usuario_id = $this->Usuario_model->criar($dados_usuario);
+                    log_message('debug', 'Painel/Profissionais/criar - Usuário criado: ' . $usuario_id);
 
                     $this->session->set_flashdata('sucesso', 'Profissional criado com sucesso!');
                     redirect('painel/profissionais');
                 } else {
+                    log_message('error', 'Painel/Profissionais/criar - Falha ao criar profissional');
                     $this->session->set_flashdata('erro', 'Erro ao criar profissional.');
                 }
+            } else {
+                log_message('debug', 'Painel/Profissionais/criar - Validação falhou: ' . validation_errors());
             }
         }
 
         $data['titulo'] = 'Novo Profissional';
         $data['menu_ativo'] = 'profissionais';
+
+        // Carregar serviços do estabelecimento
+        $this->load->model('Servico_model');
+        $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
+        $data['servicos_vinculados'] = [];
 
         $this->load->view('painel/layout/header', $data);
         $this->load->view('admin/profissionais/form', $data);
@@ -113,6 +139,15 @@ class Profissionais extends Painel_Controller {
                 ];
 
                 if ($this->Profissional_model->atualizar($id, $dados)) {
+                    // Atualizar serviços vinculados
+                    $servicos = $this->input->post('servicos');
+                    if (is_array($servicos)) {
+                        $this->Profissional_model->vincular_servicos($id, $servicos);
+                    } else {
+                        // Se nenhum serviço foi selecionado, remover todos
+                        $this->Profissional_model->vincular_servicos($id, []);
+                    }
+
                     $this->session->set_flashdata('sucesso', 'Profissional atualizado com sucesso!');
                     redirect('painel/profissionais');
                 } else {
@@ -124,6 +159,14 @@ class Profissionais extends Painel_Controller {
         $data['titulo'] = 'Editar Profissional';
         $data['menu_ativo'] = 'profissionais';
         $data['profissional'] = $profissional;
+
+        // Carregar serviços do estabelecimento
+        $this->load->model('Servico_model');
+        $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
+
+        // Carregar serviços vinculados ao profissional (extrair apenas IDs)
+        $servicos_obj = $this->Profissional_model->get_servicos($id);
+        $data['servicos_vinculados'] = array_column($servicos_obj, 'id');
 
         $this->load->view('painel/layout/header', $data);
         $this->load->view('admin/profissionais/form', $data);
