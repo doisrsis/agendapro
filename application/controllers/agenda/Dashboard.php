@@ -163,13 +163,22 @@ class Dashboard extends CI_Controller {
             } else {
                 // Bloqueio de dia ou período (dia inteiro)
                 $start_datetime = $bloqueio->data_inicio;
-                $end_datetime = $bloqueio->data_fim ?: $bloqueio->data_inicio;
 
-                // Para bloqueios de dia inteiro, adicionar 1 dia ao fim (FullCalendar exclusive end)
-                if ($bloqueio->tipo == 'dia' || $bloqueio->tipo == 'periodo') {
-                    $end_datetime = date('Y-m-d', strtotime($end_datetime . ' +1 day'));
+                // Para bloqueio de dia específico (data_fim NULL), usar data_inicio + 1 dia
+                if ($bloqueio->tipo == 'dia' || $bloqueio->data_fim === null) {
+                    $end_datetime = date('Y-m-d', strtotime($bloqueio->data_inicio . ' +1 day'));
+                } else {
+                    // Para bloqueio de período, usar data_fim + 1 dia (FullCalendar exclusive end)
+                    $end_datetime = date('Y-m-d', strtotime($bloqueio->data_fim . ' +1 day'));
                 }
             }
+
+            // Log temporário para debug
+            log_message('debug', 'Bloqueio ID ' . $bloqueio->id . ': tipo=' . $bloqueio->tipo .
+                ', data_inicio=' . $bloqueio->data_inicio .
+                ', data_fim=' . ($bloqueio->data_fim ?? 'NULL') .
+                ', start=' . $start_datetime .
+                ', end=' . $end_datetime);
 
             $eventos[] = [
                 'id' => 'bloqueio_' . $bloqueio->id,

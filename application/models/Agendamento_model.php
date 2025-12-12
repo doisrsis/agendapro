@@ -114,15 +114,15 @@ class Agendamento_model extends CI_Model {
         $hora_fim = clone $hora_inicio;
         $hora_fim->add(new DateInterval('PT' . $servico->duracao . 'M'));
 
-        // TODO: Verificar disponibilidade (desabilitado temporariamente)
-        // if (!$this->verificar_disponibilidade(
-        //     $data['profissional_id'],
-        //     $data['data'],
-        //     $hora_inicio->format('H:i:s'),
-        //     $hora_fim->format('H:i:s')
-        // )) {
-        //     return false;
-        // }
+        // Verificar disponibilidade
+        if (!$this->verificar_disponibilidade(
+            $data['profissional_id'],
+            $data['data'],
+            $hora_inicio->format('H:i:s'),
+            $hora_fim->format('H:i:s')
+        )) {
+            return false;
+        }
 
         $insert_data = [
             'estabelecimento_id' => $data['estabelecimento_id'],
@@ -173,16 +173,16 @@ class Agendamento_model extends CI_Model {
             $hora_fim_dt = clone $hora_inicio_dt;
             $hora_fim_dt->add(new DateInterval('PT' . $servico->duracao . 'M'));
 
-            // TODO: Verificar disponibilidade (desabilitado temporariamente)
-            // if (!$this->verificar_disponibilidade(
-            //     $profissional_id,
-            //     $data_agendamento,
-            //     $hora_inicio_dt->format('H:i:s'),
-            //     $hora_fim_dt->format('H:i:s'),
-            //     $id
-            // )) {
-            //     return false;
-            // }
+            // Verificar disponibilidade
+            if (!$this->verificar_disponibilidade(
+                $profissional_id,
+                $data_agendamento,
+                $hora_inicio_dt->format('H:i:s'),
+                $hora_fim_dt->format('H:i:s'),
+                $id
+            )) {
+                return false;
+            }
 
             $update_data['hora_fim'] = $hora_fim_dt->format('H:i:s');
         }
@@ -224,7 +224,38 @@ class Agendamento_model extends CI_Model {
      * Verificar disponibilidade do profissional
      */
     public function verificar_disponibilidade($profissional_id, $data, $hora_inicio, $hora_fim, $excluir_agendamento_id = null) {
-        // 1. Verificar se há conflito com outros agendamentos
+        // 1. Verificar horário do estabelecimento
+        $dia_semana = date('w', strtotime($data));
+
+        // Buscar estabelecimento do profissional
+        $this->db->select('estabelecimento_id');
+        $this->db->where('id', $profissional_id);
+        $profissional = $this->db->get('profissionais')->row();
+
+        if (!$profissional) {
+            $this->erro_disponibilidade = 'Profissional não encontrado.';
+            return false;
+        }
+
+        // Verificar se estabelecimento está aberto neste dia/horário
+        $this->load->model('Horario_estabelecimento_model');
+        $horario_estab = $this->Horario_estabelecimento_model->get_by_dia($profissional->estabelecimento_id, $dia_semana);
+
+        if (!$horario_estab || !$horario_estab->ativo) {
+            $dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            $this->erro_disponibilidade = 'Estabelecimento fechado em ' . $dias[$dia_semana] . '.';
+            return false;
+        }
+
+        // Verificar se horário está dentro do expediente
+        if ($hora_inicio < $horario_estab->hora_inicio || $hora_fim > $horario_estab->hora_fim) {
+            $this->erro_disponibilidade = 'Horário fora do expediente. Funcionamento: ' .
+                substr($horario_estab->hora_inicio, 0, 5) . ' às ' .
+                substr($horario_estab->hora_fim, 0, 5) . '.';
+            return false;
+        }
+
+        // 2. Verificar conflito com outros agendamentos
         $this->db->where('profissional_id', $profissional_id);
         $this->db->where('data', $data);
         $this->db->where('status !=', 'cancelado');
@@ -242,37 +273,16 @@ class Agendamento_model extends CI_Model {
         $conflitos = $this->db->get($this->table)->num_rows();
 
         if ($conflitos > 0) {
+            $this->erro_disponibilidade = 'Já existe um agendamento neste horário.';
             return false;
         }
 
-        // 2. Verificar bloqueios
-        $this->db->where('profissional_id', $profissional_id);
-        $this->db->where('data', $data);
-        $this->db->group_start();
-        $this->db->where('dia_todo', 1);
-        $this->db->or_group_start();
-        $this->db->where('hora_inicio <', $hora_fim);
-        $this->db->where('hora_fim >', $hora_inicio);
-        $this->db->group_end();
-        $this->db->group_end();
+        // 3. Verificar bloqueios
+        $this->load->model('Bloqueio_model');
+        $bloqueio = $this->Bloqueio_model->verificar_bloqueio($profissional_id, $data, $hora_inicio, $hora_fim);
 
-        $bloqueios = $this->db->get('bloqueios')->num_rows();
-
-        if ($bloqueios > 0) {
-            return false;
-        }
-
-        // 3. Verificar disponibilidade configurada
-        $dia_semana = date('w', strtotime($data)); // 0=Domingo, 6=Sábado
-
-        $this->db->where('profissional_id', $profissional_id);
-        $this->db->where('dia_semana', $dia_semana);
-        $this->db->where('hora_inicio <=', $hora_inicio);
-        $this->db->where('hora_fim >=', $hora_fim);
-
-        $disponibilidade = $this->db->get('disponibilidade')->num_rows();
-
-        if ($disponibilidade == 0) {
+        if ($bloqueio) {
+            $this->erro_disponibilidade = 'Horário bloqueado pelo profissional.';
             return false;
         }
 

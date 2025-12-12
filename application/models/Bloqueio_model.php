@@ -27,7 +27,19 @@ class Bloqueio_model extends CI_Model {
         }
 
         if (!empty($filtros['data_inicio'])) {
+            // Incluir bloqueios que afetam o período solicitado
+            $this->db->group_start();
+            // Bloqueios com data_fim preenchida
+            $this->db->group_start();
+            $this->db->where('b.data_fim IS NOT NULL', null, false);
             $this->db->where('b.data_fim >=', $filtros['data_inicio']);
+            $this->db->group_end();
+            // OU bloqueios de dia (data_fim NULL) dentro do período
+            $this->db->or_group_start();
+            $this->db->where('b.data_fim IS NULL', null, false);
+            $this->db->where('b.data_inicio >=', $filtros['data_inicio']);
+            $this->db->group_end();
+            $this->db->group_end();
         }
 
         if (!empty($filtros['data_fim'])) {
@@ -96,16 +108,37 @@ class Bloqueio_model extends CI_Model {
      */
     public function tem_bloqueio($profissional_id, $data, $hora_inicio = null, $hora_fim = null) {
         $this->db->where('profissional_id', $profissional_id);
+
+        // Verificar bloqueios que afetam esta data
+        $this->db->group_start();
+
+        // Bloqueio de dia específico (data_fim é NULL ou igual a data_inicio)
+        $this->db->group_start();
+        $this->db->where('data_inicio', $data);
+        $this->db->group_start();
+        $this->db->where('data_fim IS NULL', null, false);
+        $this->db->or_where('data_fim', $data);
+        $this->db->group_end();
+        $this->db->group_end();
+
+        // OU bloqueio de período (data está entre data_inicio e data_fim)
+        $this->db->or_group_start();
         $this->db->where('data_inicio <=', $data);
         $this->db->where('data_fim >=', $data);
+        $this->db->where('data_fim IS NOT NULL', null, false);
+        $this->db->group_end();
 
-        // Se for bloqueio de horário específico
+        $this->db->group_end();
+
+        // Se for verificação de horário específico
         if ($hora_inicio && $hora_fim) {
             $this->db->group_start();
-            $this->db->where('hora_inicio IS NULL'); // Bloqueio de dia inteiro
+            // Bloqueio de dia inteiro (hora_inicio e hora_fim são NULL)
+            $this->db->where('hora_inicio IS NULL', null, false);
+            // OU bloqueio de horário que sobrepõe
             $this->db->or_group_start();
-            $this->db->where('hora_inicio <=', $hora_fim);
-            $this->db->where('hora_fim >=', $hora_inicio);
+            $this->db->where('hora_inicio <', $hora_fim);
+            $this->db->where('hora_fim >', $hora_inicio);
             $this->db->group_end();
             $this->db->group_end();
         }
@@ -113,6 +146,13 @@ class Bloqueio_model extends CI_Model {
         $bloqueio = $this->db->get($this->table)->row();
 
         return $bloqueio ? true : false;
+    }
+
+    /**
+     * Alias para tem_bloqueio (compatibilidade)
+     */
+    public function verificar_bloqueio($profissional_id, $data, $hora_inicio = null, $hora_fim = null) {
+        return $this->tem_bloqueio($profissional_id, $data, $hora_inicio, $hora_fim);
     }
 
     /**

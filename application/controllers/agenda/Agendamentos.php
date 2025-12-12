@@ -58,8 +58,10 @@ class Agendamentos extends Agenda_Controller {
                     redirect('agenda/dashboard');
                 } else {
                     log_message('error', 'Agenda/Agendamentos/criar - Falha ao criar agendamento');
-                    log_message('error', 'Agenda/Agendamentos/criar - DB Error: ' . $this->db->error()['message']);
-                    $this->session->set_flashdata('erro', 'Erro ao criar agendamento.');
+
+                    // Verificar se há mensagem de erro específica
+                    $erro_msg = $this->Agendamento_model->erro_disponibilidade ?? 'Erro ao criar agendamento.';
+                    $this->session->set_flashdata('erro', $erro_msg);
                 }
             } else {
                 log_message('debug', 'Agenda/Agendamentos/criar - Validação falhou: ' . validation_errors());
@@ -120,8 +122,10 @@ class Agendamentos extends Agenda_Controller {
                     redirect('agenda/dashboard');
                 } else {
                     log_message('error', 'Agenda/Agendamentos/editar - Falha ao atualizar agendamento');
-                    log_message('error', 'Agenda/Agendamentos/editar - DB Error: ' . $this->db->error()['message']);
-                    $this->session->set_flashdata('erro', 'Erro ao atualizar agendamento.');
+
+                    // Verificar se há mensagem de erro específica
+                    $erro_msg = $this->Agendamento_model->erro_disponibilidade ?? 'Erro ao atualizar agendamento.';
+                    $this->session->set_flashdata('erro', $erro_msg);
                 }
             } else {
                 log_message('debug', 'Agenda/Agendamentos/editar - Validação falhou: ' . validation_errors());
