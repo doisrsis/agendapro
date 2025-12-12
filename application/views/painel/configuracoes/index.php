@@ -128,6 +128,59 @@
                         <form method="post">
                             <input type="hidden" name="aba" value="agendamento">
 
+                            <h3 class="mb-3">Horários de Funcionamento</h3>
+                            <p class="text-muted">Defina os horários de funcionamento do estabelecimento por dia da semana</p>
+
+                            <div class="table-responsive mb-4">
+                                <table class="table table-vcenter">
+                                    <thead>
+                                        <tr>
+                                            <th>Dia da Semana</th>
+                                            <th class="text-center" width="100">Ativo</th>
+                                            <th width="150">Abertura</th>
+                                            <th width="150">Fechamento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        // Converter array de horários para facilitar acesso
+                                        $horarios_array = [];
+                                        foreach ($horarios as $h) {
+                                            $horarios_array[$h->dia_semana] = $h;
+                                        }
+
+                                        foreach ($dias_semana as $dia => $nome):
+                                            $horario = $horarios_array[$dia] ?? null;
+                                        ?>
+                                        <tr>
+                                            <td><strong><?= $nome ?></strong></td>
+                                            <td class="text-center">
+                                                <label class="form-check form-switch mb-0">
+                                                    <input type="checkbox" class="form-check-input"
+                                                           name="dia_<?= $dia ?>_ativo" value="1"
+                                                           <?= ($horario && $horario->ativo) ? 'checked' : '' ?>>
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <input type="time" class="form-control"
+                                                       name="dia_<?= $dia ?>_inicio"
+                                                       value="<?= $horario ? substr($horario->hora_inicio, 0, 5) : '08:00' ?>">
+                                            </td>
+                                            <td>
+                                                <input type="time" class="form-control"
+                                                       name="dia_<?= $dia ?>_fim"
+                                                       value="<?= $horario ? substr($horario->hora_fim, 0, 5) : '18:00' ?>">
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h3 class="mb-3">Configurações de Agendamento</h3>
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Tempo Mínimo para Agendamento</label>
@@ -143,19 +196,6 @@
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Horário de Abertura</label>
-                                    <input type="time" class="form-control" name="horario_abertura"
-                                           value="<?= $estabelecimento->horario_abertura ?? '08:00' ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Horário de Fechamento</label>
-                                    <input type="time" class="form-control" name="horario_fechamento"
-                                           value="<?= $estabelecimento->horario_fechamento ?? '18:00' ?>">
-                                </div>
-                            </div>
-
                             <div class="mb-3">
                                 <label class="form-check">
                                     <input type="checkbox" class="form-check-input" name="confirmacao_automatica"
@@ -167,11 +207,20 @@
 
                             <div class="mb-3">
                                 <label class="form-check">
-                                    <input type="checkbox" class="form-check-input" name="permite_reagendamento"
+                                    <input type="checkbox" class="form-check-input" name="permite_reagendamento" id="permite_reagendamento"
                                            <?= ($estabelecimento->permite_reagendamento ?? 1) ? 'checked' : '' ?>>
                                     <span class="form-check-label">Permitir Reagendamento</span>
                                 </label>
                                 <small class="text-muted d-block">Clientes podem reagendar seus próprios agendamentos</small>
+                            </div>
+
+                            <div class="row" id="limite_reagendamentos_container" style="display: <?= ($estabelecimento->permite_reagendamento ?? 1) ? 'block' : 'none' ?>">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Limite de Reagendamentos</label>
+                                    <input type="number" class="form-control" name="limite_reagendamentos"
+                                           value="<?= $estabelecimento->limite_reagendamentos ?? 3 ?>" min="1" max="10">
+                                    <small class="text-muted">Quantidade máxima de vezes que o cliente pode reagendar</small>
+                                </div>
                             </div>
 
                             <div class="text-end">
@@ -182,6 +231,13 @@
                             </div>
                         </form>
                     </div>
+
+                    <script>
+                        // Mostrar/ocultar limite de reagendamentos
+                        document.getElementById('permite_reagendamento').addEventListener('change', function() {
+                            document.getElementById('limite_reagendamentos_container').style.display = this.checked ? 'block' : 'none';
+                        });
+                    </script>
                     <?php endif; ?>
 
                     <!-- Aba WhatsApp -->

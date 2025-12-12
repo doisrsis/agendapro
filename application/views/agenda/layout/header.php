@@ -72,6 +72,14 @@
                                     <span class="nav-link-title">Minha Agenda</span>
                                 </a>
                             </li>
+                            <li class="nav-item <?= $menu_ativo == 'bloqueios' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('agenda/bloqueios') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-calendar-off"></i>
+                                    </span>
+                                    <span class="nav-link-title">Bloqueios</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>

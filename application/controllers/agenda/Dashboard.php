@@ -96,7 +96,7 @@ class Dashboard extends CI_Controller {
     }
 
     /**
-     * API JSON - Retorna agendamentos para o FullCalendar
+     * API JSON - Retorna agendamentos e bloqueios para o FullCalendar
      */
     public function get_agendamentos_json() {
         // Pegar parâmetros de data do FullCalendar
@@ -110,7 +110,15 @@ class Dashboard extends CI_Controller {
             'data_fim' => $end
         ]);
 
-        // Converter para formato FullCalendar
+        // Buscar bloqueios do profissional no período
+        $this->load->model('Bloqueio_model');
+        $bloqueios = $this->Bloqueio_model->get_all([
+            'profissional_id' => $this->profissional_id,
+            'data_inicio' => $start,
+            'data_fim' => $end
+        ]);
+
+        // Converter agendamentos para formato FullCalendar
         $eventos = [];
         foreach ($agendamentos as $ag) {
             // Definir cor baseado no status
@@ -121,13 +129,14 @@ class Dashboard extends CI_Controller {
             $data_hora_fim = $ag->data . ' ' . $ag->hora_fim;
 
             $eventos[] = [
-                'id' => $ag->id,
+                'id' => 'agendamento_' . $ag->id,
                 'title' => $ag->cliente_nome . ' - ' . $ag->servico_nome,
                 'start' => $data_hora_inicio,
                 'end' => $data_hora_fim,
                 'backgroundColor' => $cor,
                 'borderColor' => $cor,
                 'extendedProps' => [
+                    'tipo' => 'agendamento',
                     'cliente_id' => $ag->cliente_id,
                     'cliente_nome' => $ag->cliente_nome,
                     'cliente_whatsapp' => $ag->cliente_whatsapp ?? '',
@@ -135,6 +144,45 @@ class Dashboard extends CI_Controller {
                     'servico_nome' => $ag->servico_nome,
                     'status' => $ag->status,
                     'observacoes' => $ag->observacoes ?? ''
+                ]
+            ];
+        }
+
+        // Adicionar bloqueios ao calendário
+        foreach ($bloqueios as $bloqueio) {
+            $titulo = '🚫 Bloqueado';
+            if ($bloqueio->motivo) {
+                $titulo .= ': ' . $bloqueio->motivo;
+            }
+
+            // Definir data/hora baseado no tipo
+            if ($bloqueio->tipo == 'horario') {
+                // Bloqueio de horário específico
+                $start_datetime = $bloqueio->data_inicio . ' ' . $bloqueio->hora_inicio;
+                $end_datetime = $bloqueio->data_inicio . ' ' . $bloqueio->hora_fim;
+            } else {
+                // Bloqueio de dia ou período (dia inteiro)
+                $start_datetime = $bloqueio->data_inicio;
+                $end_datetime = $bloqueio->data_fim ?: $bloqueio->data_inicio;
+
+                // Para bloqueios de dia inteiro, adicionar 1 dia ao fim (FullCalendar exclusive end)
+                if ($bloqueio->tipo == 'dia' || $bloqueio->tipo == 'periodo') {
+                    $end_datetime = date('Y-m-d', strtotime($end_datetime . ' +1 day'));
+                }
+            }
+
+            $eventos[] = [
+                'id' => 'bloqueio_' . $bloqueio->id,
+                'title' => $titulo,
+                'start' => $start_datetime,
+                'end' => $end_datetime,
+                'backgroundColor' => '#6c757d',
+                'borderColor' => '#6c757d',
+                'display' => 'background',
+                'extendedProps' => [
+                    'tipo' => 'bloqueio',
+                    'bloqueio_tipo' => $bloqueio->tipo,
+                    'motivo' => $bloqueio->motivo ?? ''
                 ]
             ];
         }

@@ -20,6 +20,7 @@ class Configuracoes extends CI_Controller {
 
         // Carregar models
         $this->load->model('Estabelecimento_model');
+        $this->load->model('Horario_estabelecimento_model');
 
         // Obter dados do estabelecimento
         $this->estabelecimento_id = $this->auth_check->get_estabelecimento_id();
@@ -55,6 +56,8 @@ class Configuracoes extends CI_Controller {
         $data['menu_ativo'] = 'configuracoes';
         $data['estabelecimento'] = $this->estabelecimento;
         $data['aba_ativa'] = $aba;
+        $data['horarios'] = $this->Horario_estabelecimento_model->get_by_estabelecimento($this->estabelecimento_id);
+        $data['dias_semana'] = $this->Horario_estabelecimento_model->get_dias_semana();
 
         $this->load->view('painel/layout/header', $data);
         $this->load->view('painel/configuracoes/index', $data);
@@ -96,12 +99,24 @@ class Configuracoes extends CI_Controller {
      * Salvar configurações de agendamento
      */
     private function salvar_configuracoes_agendamento() {
+        // Salvar horários por dia da semana
+        $horarios = [];
+        for ($dia = 0; $dia <= 6; $dia++) {
+            $horarios[$dia] = [
+                'ativo' => $this->input->post("dia_{$dia}_ativo") ? 1 : 0,
+                'hora_inicio' => $this->input->post("dia_{$dia}_inicio") ?? '08:00:00',
+                'hora_fim' => $this->input->post("dia_{$dia}_fim") ?? '18:00:00'
+            ];
+        }
+
+        $this->Horario_estabelecimento_model->salvar_semana($this->estabelecimento_id, $horarios);
+
+        // Salvar outras configurações
         $dados = [
             'tempo_minimo_agendamento' => $this->input->post('tempo_minimo_agendamento') ?? 60,
             'confirmacao_automatica' => $this->input->post('confirmacao_automatica') ? 1 : 0,
             'permite_reagendamento' => $this->input->post('permite_reagendamento') ? 1 : 0,
-            'horario_abertura' => $this->input->post('horario_abertura'),
-            'horario_fechamento' => $this->input->post('horario_fechamento')
+            'limite_reagendamentos' => $this->input->post('limite_reagendamentos') ?? 3
         ];
 
         if ($this->Estabelecimento_model->update($this->estabelecimento_id, $dados)) {
