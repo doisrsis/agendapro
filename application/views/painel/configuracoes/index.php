@@ -1,0 +1,285 @@
+<!-- Page header -->
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    <i class="ti ti-settings me-2"></i>
+                    Configurações
+                </h2>
+                <div class="text-muted mt-1">Gerencie as configurações do seu estabelecimento</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Page body -->
+<div class="page-body">
+    <div class="container-xl">
+
+        <!-- Abas -->
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs">
+                    <li class="nav-item">
+                        <a href="?aba=geral" class="nav-link <?= $aba_ativa == 'geral' ? 'active' : '' ?>">
+                            <i class="ti ti-building me-2"></i>
+                            Dados Gerais
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="?aba=agendamento" class="nav-link <?= $aba_ativa == 'agendamento' ? 'active' : '' ?>">
+                            <i class="ti ti-calendar me-2"></i>
+                            Agendamento
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="?aba=whatsapp" class="nav-link <?= $aba_ativa == 'whatsapp' ? 'active' : '' ?>">
+                            <i class="ti ti-brand-whatsapp me-2"></i>
+                            WhatsApp
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="?aba=mercadopago" class="nav-link <?= $aba_ativa == 'mercadopago' ? 'active' : '' ?>">
+                            <i class="ti ti-credit-card me-2"></i>
+                            Mercado Pago
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body">
+                <div class="tab-content">
+
+                    <!-- Aba Dados Gerais -->
+                    <?php if ($aba_ativa == 'geral'): ?>
+                    <div class="tab-pane active">
+                        <form method="post">
+                            <input type="hidden" name="aba" value="geral">
+
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label required">Nome do Estabelecimento</label>
+                                    <input type="text" class="form-control" name="nome"
+                                           value="<?= set_value('nome', $estabelecimento->nome) ?>" required>
+                                    <?= form_error('nome', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">CNPJ/CPF</label>
+                                    <input type="text" class="form-control" name="cnpj_cpf"
+                                           value="<?= set_value('cnpj_cpf', $estabelecimento->cnpj_cpf ?? '') ?>"
+                                           placeholder="00.000.000/0000-00">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">WhatsApp</label>
+                                    <input type="text" class="form-control" name="whatsapp"
+                                           value="<?= set_value('whatsapp', $estabelecimento->whatsapp ?? '') ?>"
+                                           placeholder="(XX) XXXXX-XXXX">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required">E-mail</label>
+                                    <input type="email" class="form-control" name="email"
+                                           value="<?= set_value('email', $estabelecimento->email) ?>" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Endereço</label>
+                                <input type="text" class="form-control" name="endereco"
+                                       value="<?= set_value('endereco', $estabelecimento->endereco ?? '') ?>">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Cidade</label>
+                                    <input type="text" class="form-control" name="cidade"
+                                           value="<?= set_value('cidade', $estabelecimento->cidade ?? '') ?>">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Estado</label>
+                                    <input type="text" class="form-control" name="estado"
+                                           value="<?= set_value('estado', $estabelecimento->estado ?? '') ?>"
+                                           maxlength="2" placeholder="SP">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">CEP</label>
+                                    <input type="text" class="form-control" name="cep"
+                                           value="<?= set_value('cep', $estabelecimento->cep ?? '') ?>"
+                                           placeholder="00000-000">
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-device-floppy me-2"></i>
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Aba Agendamento -->
+                    <?php if ($aba_ativa == 'agendamento'): ?>
+                    <div class="tab-pane active">
+                        <form method="post">
+                            <input type="hidden" name="aba" value="agendamento">
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tempo Mínimo para Agendamento</label>
+                                    <select class="form-select" name="tempo_minimo_agendamento">
+                                        <option value="0" <?= ($estabelecimento->tempo_minimo_agendamento ?? 60) == 0 ? 'selected' : '' ?>>Imediato</option>
+                                        <option value="30" <?= ($estabelecimento->tempo_minimo_agendamento ?? 60) == 30 ? 'selected' : '' ?>>30 minutos</option>
+                                        <option value="60" <?= ($estabelecimento->tempo_minimo_agendamento ?? 60) == 60 ? 'selected' : '' ?>>1 hora</option>
+                                        <option value="120" <?= ($estabelecimento->tempo_minimo_agendamento ?? 60) == 120 ? 'selected' : '' ?>>2 horas</option>
+                                        <option value="240" <?= ($estabelecimento->tempo_minimo_agendamento ?? 60) == 240 ? 'selected' : '' ?>>4 horas</option>
+                                        <option value="1440" <?= ($estabelecimento->tempo_minimo_agendamento ?? 60) == 1440 ? 'selected' : '' ?>>1 dia</option>
+                                    </select>
+                                    <small class="text-muted">Antecedência mínima para cliente agendar</small>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Horário de Abertura</label>
+                                    <input type="time" class="form-control" name="horario_abertura"
+                                           value="<?= $estabelecimento->horario_abertura ?? '08:00' ?>">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Horário de Fechamento</label>
+                                    <input type="time" class="form-control" name="horario_fechamento"
+                                           value="<?= $estabelecimento->horario_fechamento ?? '18:00' ?>">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="confirmacao_automatica"
+                                           <?= ($estabelecimento->confirmacao_automatica ?? 0) ? 'checked' : '' ?>>
+                                    <span class="form-check-label">Confirmação Automática de Agendamentos</span>
+                                </label>
+                                <small class="text-muted d-block">Agendamentos serão confirmados automaticamente sem necessidade de aprovação manual</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="permite_reagendamento"
+                                           <?= ($estabelecimento->permite_reagendamento ?? 1) ? 'checked' : '' ?>>
+                                    <span class="form-check-label">Permitir Reagendamento</span>
+                                </label>
+                                <small class="text-muted d-block">Clientes podem reagendar seus próprios agendamentos</small>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-device-floppy me-2"></i>
+                                    Salvar Configurações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Aba WhatsApp -->
+                    <?php if ($aba_ativa == 'whatsapp'): ?>
+                    <div class="tab-pane active">
+                        <form method="post">
+                            <input type="hidden" name="aba" value="whatsapp">
+
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>Evolution API:</strong> Configure a integração com WhatsApp para enviar notificações automáticas aos clientes.
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">URL da API</label>
+                                <input type="url" class="form-control" name="whatsapp_api_url"
+                                       value="<?= set_value('whatsapp_api_url', $estabelecimento->whatsapp_api_url ?? '') ?>"
+                                       placeholder="https://api.evolution.com.br">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Token da API</label>
+                                <input type="text" class="form-control" name="whatsapp_api_token"
+                                       value="<?= set_value('whatsapp_api_token', $estabelecimento->whatsapp_api_token ?? '') ?>">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Número do WhatsApp</label>
+                                <input type="text" class="form-control" name="whatsapp_numero"
+                                       value="<?= set_value('whatsapp_numero', $estabelecimento->whatsapp_numero ?? '') ?>"
+                                       placeholder="5511999999999">
+                                <small class="text-muted">Número com código do país (55) + DDD + número</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" name="whatsapp_ativo"
+                                           <?= ($estabelecimento->whatsapp_ativo ?? 0) ? 'checked' : '' ?>>
+                                    <span class="form-check-label">Integração Ativa</span>
+                                </label>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-device-floppy me-2"></i>
+                                    Salvar Integração
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Aba Mercado Pago -->
+                    <?php if ($aba_ativa == 'mercadopago'): ?>
+                    <div class="tab-pane active">
+                        <form method="post">
+                            <input type="hidden" name="aba" value="mercadopago">
+
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>Mercado Pago:</strong> Configure a integração para receber pagamentos online.
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Public Key</label>
+                                <input type="text" class="form-control" name="mp_public_key"
+                                       value="<?= set_value('mp_public_key', $estabelecimento->mp_public_key ?? '') ?>"
+                                       placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Access Token</label>
+                                <input type="text" class="form-control" name="mp_access_token"
+                                       value="<?= set_value('mp_access_token', $estabelecimento->mp_access_token ?? '') ?>"
+                                       placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" name="mp_ativo"
+                                           <?= ($estabelecimento->mp_ativo ?? 0) ? 'checked' : '' ?>>
+                                    <span class="form-check-label">Integração Ativa</span>
+                                </label>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-device-floppy me-2"></i>
+                                    Salvar Integração
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <?php endif; ?>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

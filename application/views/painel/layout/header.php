@@ -43,7 +43,13 @@
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
-                            <a href="<?= base_url('logout') ?>" class="dropdown-item">Sair</a>
+                            <a href="<?= base_url('painel/configuracoes') ?>" class="dropdown-item">
+                                <i class="ti ti-settings me-2"></i>Configurações
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="<?= base_url('logout') ?>" class="dropdown-item">
+                                <i class="ti ti-logout me-2"></i>Sair
+                            </a>
                         </div>
                     </div>
                 </div>

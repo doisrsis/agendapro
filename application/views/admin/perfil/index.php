@@ -50,13 +50,17 @@
                             </div>
                             <h3 class="mb-1"><?= $usuario->nome ?></h3>
                             <div class="text-muted mb-2"><?= $usuario->email ?></div>
-                            <?php if ($usuario->nivel == 'admin'): ?>
+                            <?php if ($usuario->tipo == 'super_admin'): ?>
                             <span class="badge bg-red">
-                                <i class="ti ti-shield-check me-1"></i>Administrador
+                                <i class="ti ti-shield-check me-1"></i>Super Admin
+                            </span>
+                            <?php elseif ($usuario->tipo == 'estabelecimento'): ?>
+                            <span class="badge bg-blue">
+                                <i class="ti ti-building me-1"></i>Estabelecimento
                             </span>
                             <?php else: ?>
-                            <span class="badge bg-blue">
-                                <i class="ti ti-user me-1"></i>Usuário
+                            <span class="badge bg-green">
+                                <i class="ti ti-user me-1"></i>Profissional
                             </span>
                             <?php endif; ?>
                         </div>
@@ -64,15 +68,15 @@
                         <hr>
 
                         <div class="list-group list-group-flush">
-                            <?php if ($usuario->telefone): ?>
+                            <?php if (!empty($usuario->whatsapp)): ?>
                             <div class="list-group-item">
                                 <div class="row align-items-center">
                                     <div class="col-auto">
-                                        <i class="ti ti-phone text-muted"></i>
+                                        <i class="ti ti-brand-whatsapp text-muted"></i>
                                     </div>
                                     <div class="col">
-                                        <small class="text-muted d-block">Telefone</small>
-                                        <?= $usuario->telefone ?>
+                                        <small class="text-muted d-block">WhatsApp</small>
+                                        <?= $usuario->whatsapp ?>
                                     </div>
                                 </div>
                             </div>
@@ -177,7 +181,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Status da Conta</label>
                                     <div>
-                                        <?php if ($usuario->status == 'ativo'): ?>
+                                        <?php if ($usuario->ativo == 1): ?>
                                         <span class="badge bg-success-lt fs-4">
                                             <i class="ti ti-check me-1"></i>Ativa
                                         </span>
@@ -193,13 +197,17 @@
                                 <div class="mb-3">
                                     <label class="form-label">Nível de Acesso</label>
                                     <div>
-                                        <?php if ($usuario->nivel == 'admin'): ?>
+                                        <?php if ($usuario->tipo == 'super_admin'): ?>
                                         <span class="badge bg-red-lt fs-4">
-                                            <i class="ti ti-shield-check me-1"></i>Administrador
+                                            <i class="ti ti-shield-check me-1"></i>Super Admin
+                                        </span>
+                                        <?php elseif ($usuario->tipo == 'estabelecimento'): ?>
+                                        <span class="badge bg-blue-lt fs-4">
+                                            <i class="ti ti-building me-1"></i>Estabelecimento
                                         </span>
                                         <?php else: ?>
-                                        <span class="badge bg-blue-lt fs-4">
-                                            <i class="ti ti-user me-1"></i>Usuário
+                                        <span class="badge bg-green-lt fs-4">
+                                            <i class="ti ti-user me-1"></i>Profissional
                                         </span>
                                         <?php endif; ?>
                                     </div>
