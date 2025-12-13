@@ -26,46 +26,31 @@
                             <h3 class="card-title">Dados do Agendamento</h3>
                         </div>
                         <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label required">Estabelecimento</label>
-                                <select class="form-select" name="estabelecimento_id" id="estabelecimento_id"
-                                        <?= isset($agendamento) ? 'disabled' : '' ?> required>
-                                    <option value="">Selecione...</option>
-                                    <?php foreach ($estabelecimentos as $est): ?>
-                                    <option value="<?= $est->id ?>"
-                                            <?= set_select('estabelecimento_id', $est->id, ($agendamento->estabelecimento_id ?? '') == $est->id) ?>>
-                                        <?= $est->nome ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?= form_error('estabelecimento_id', '<div class="invalid-feedback d-block">', '</div>') ?>
-                            </div>
-
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required">Cliente</label>
-                                    <select class="form-select" name="cliente_id" id="cliente_id"
-                                            <?= isset($agendamento) ? 'disabled' : '' ?> required>
-                                        <option value="">Selecione o estabelecimento primeiro</option>
-                                        <?php if (isset($agendamento)): ?>
-                                        <option value="<?= $agendamento->cliente_id ?>" selected>
-                                            <?= $agendamento->cliente_nome ?>
+                                    <select class="form-select" name="cliente_id" id="cliente_id" required>
+                                        <option value="">Selecione...</option>
+                                        <?php foreach ($clientes as $cliente): ?>
+                                        <option value="<?= $cliente->id ?>"
+                                                <?= set_select('cliente_id', $cliente->id, ($agendamento->cliente_id ?? '') == $cliente->id) ?>>
+                                            <?= $cliente->nome ?>
                                         </option>
-                                        <?php endif; ?>
+                                        <?php endforeach; ?>
                                     </select>
                                     <?= form_error('cliente_id', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required">Serviço</label>
-                                    <select class="form-select" name="servico_id" id="servico_id"
-                                            <?= isset($agendamento) ? 'disabled' : '' ?> required>
-                                        <option value="">Selecione o estabelecimento primeiro</option>
-                                        <?php if (isset($agendamento)): ?>
-                                        <option value="<?= $agendamento->servico_id ?>" selected>
-                                            <?= $agendamento->servico_nome ?>
+                                    <select class="form-select" name="servico_id" id="servico_id" required>
+                                        <option value="">Selecione...</option>
+                                        <?php foreach ($servicos as $servico): ?>
+                                        <option value="<?= $servico->id ?>" data-preco="<?= $servico->preco ?>"
+                                                <?= set_select('servico_id', $servico->id, ($agendamento->servico_id ?? '') == $servico->id) ?>>
+                                            <?= $servico->nome ?> - R$ <?= number_format($servico->preco, 2, ',', '.') ?>
                                         </option>
-                                        <?php endif; ?>
+                                        <?php endforeach; ?>
                                     </select>
                                     <?= form_error('servico_id', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
@@ -73,14 +58,14 @@
 
                             <div class="mb-3">
                                 <label class="form-label required">Profissional</label>
-                                <select class="form-select" name="profissional_id" id="profissional_id"
-                                        <?= isset($agendamento) ? 'disabled' : '' ?> required>
-                                    <option value="">Selecione o estabelecimento primeiro</option>
-                                    <?php if (isset($agendamento)): ?>
-                                    <option value="<?= $agendamento->profissional_id ?>" selected>
-                                        <?= $agendamento->profissional_nome ?>
+                                <select class="form-select" name="profissional_id" id="profissional_id" required>
+                                    <option value="">Selecione...</option>
+                                    <?php foreach ($profissionais as $prof): ?>
+                                    <option value="<?= $prof->id ?>"
+                                            <?= set_select('profissional_id', $prof->id, ($agendamento->profissional_id ?? '') == $prof->id) ?>>
+                                        <?= $prof->nome ?>
                                     </option>
-                                    <?php endif; ?>
+                                    <?php endforeach; ?>
                                 </select>
                                 <?= form_error('profissional_id', '<div class="invalid-feedback d-block">', '</div>') ?>
                             </div>
@@ -183,49 +168,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const estabelecimentoSelect = document.getElementById('estabelecimento_id');
     const clienteSelect = document.getElementById('cliente_id');
     const servicoSelect = document.getElementById('servico_id');
     const profissionalSelect = document.getElementById('profissional_id');
     const dataInput = document.getElementById('data');
     const horaSelect = document.getElementById('hora_inicio');
-
-    // Carregar dados ao mudar estabelecimento
-    estabelecimentoSelect?.addEventListener('change', function() {
-        const estabelecimentoId = this.value;
-
-        if (estabelecimentoId) {
-            // Carregar clientes
-            fetch(`<?= base_url('admin/agendamentos/get_clientes/') ?>${estabelecimentoId}`)
-                .then(r => r.json())
-                .then(data => {
-                    clienteSelect.innerHTML = '<option value="">Selecione...</option>';
-                    data.forEach(c => {
-                        clienteSelect.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
-                    });
-                });
-
-            // Carregar serviços
-            fetch(`<?= base_url('admin/agendamentos/get_servicos/') ?>${estabelecimentoId}`)
-                .then(r => r.json())
-                .then(data => {
-                    servicoSelect.innerHTML = '<option value="">Selecione...</option>';
-                    data.forEach(s => {
-                        servicoSelect.innerHTML += `<option value="${s.id}" data-preco="${s.preco}">${s.nome} - R$ ${parseFloat(s.preco).toFixed(2).replace('.', ',')}</option>`;
-                    });
-                });
-
-            // Carregar profissionais
-            fetch(`<?= base_url('admin/agendamentos/get_profissionais/') ?>${estabelecimentoId}`)
-                .then(r => r.json())
-                .then(data => {
-                    profissionalSelect.innerHTML = '<option value="">Selecione...</option>';
-                    data.forEach(p => {
-                        profissionalSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
-                    });
-                });
-        }
-    });
 
     // Carregar horários disponíveis
     function carregarHorarios() {
@@ -234,13 +181,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const servicoId = servicoSelect.value;
 
         if (profissionalId && data && servicoId) {
-            fetch(`<?= base_url('admin/agendamentos/get_horarios_disponiveis') ?>?profissional_id=${profissionalId}&data=${data}&servico_id=${servicoId}`)
+            fetch(`<?= base_url('painel/agendamentos/get_horarios_disponiveis') ?>?profissional_id=${profissionalId}&data=${data}&servico_id=${servicoId}`)
                 .then(r => r.json())
                 .then(horarios => {
                     horaSelect.innerHTML = '<option value="">Selecione...</option>';
                     horarios.forEach(h => {
                         horaSelect.innerHTML += `<option value="${h}">${h}</option>`;
                     });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar horários:', error);
+                    horaSelect.innerHTML = '<option value="">Erro ao carregar horários</option>';
                 });
         }
     }

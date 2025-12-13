@@ -9,11 +9,23 @@
                 </h2>
                 <div class="text-muted mt-1">Olá, <?= $profissional->nome ?>! Aqui está sua agenda</div>
             </div>
-            <div class="col-auto">
-                <a href="<?= base_url('agenda/agendamentos/criar') ?>" class="btn btn-primary">
-                    <i class="ti ti-plus me-2"></i>
-                    Novo Agendamento
-                </a>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <!-- Toggle Visualização -->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary <?= $view == 'calendario' ? 'active' : '' ?>" id="btn-calendario">
+                            <i class="ti ti-calendar"></i> Calendário
+                        </button>
+                        <button type="button" class="btn btn-outline-primary <?= $view == 'lista' ? 'active' : '' ?>" id="btn-lista">
+                            <i class="ti ti-list"></i> Lista
+                        </button>
+                    </div>
+
+                    <a href="<?= base_url('agenda/agendamentos/criar') ?>" class="btn btn-primary">
+                        <i class="ti ti-plus me-2"></i>
+                        Novo Agendamento
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -82,30 +94,64 @@
             </div>
         </div>
 
-        <!-- Calendário -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Calendário de Agendamentos</h3>
-                        <div class="card-actions">
-                            <div class="d-flex gap-2">
-                                <span class="badge bg-success">Confirmado</span>
-                                <span class="badge bg-warning">Pendente</span>
-                                <span class="badge bg-danger">Cancelado</span>
-                                <span class="badge bg-primary">Concluído</span>
+        <!-- Visualização Calendário -->
+        <div id="view-calendario" style="display: <?= $view == 'calendario' ? 'block' : 'none' ?>;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Calendário de Agendamentos</h3>
+                            <div class="card-actions">
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-success">Confirmado</span>
+                                    <span class="badge bg-warning">Pendente</span>
+                                    <span class="badge bg-danger">Cancelado</span>
+                                    <span class="badge bg-primary">Concluído</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="calendar"></div>
+                        <div class="card-body">
+                            <div id="calendar"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Visualização Lista -->
+        <div id="view-lista" style="display: <?= $view == 'lista' ? 'block' : 'none' ?>;">
+            <?php $this->load->view('agenda/dashboard/_lista'); ?>
+        </div>
+
     </div>
 </div>
+
+<script>
+// Toggle entre visualizações
+document.getElementById('btn-calendario').addEventListener('click', function() {
+    document.getElementById('view-calendario').style.display = 'block';
+    document.getElementById('view-lista').style.display = 'none';
+    this.classList.add('active');
+    document.getElementById('btn-lista').classList.remove('active');
+    localStorage.setItem('agenda_view', 'calendario');
+});
+
+document.getElementById('btn-lista').addEventListener('click', function() {
+    document.getElementById('view-calendario').style.display = 'none';
+    document.getElementById('view-lista').style.display = 'block';
+    this.classList.add('active');
+    document.getElementById('btn-calendario').classList.remove('active');
+    localStorage.setItem('agenda_view', 'lista');
+});
+
+// Restaurar visualização salva
+window.addEventListener('DOMContentLoaded', function() {
+    const savedView = localStorage.getItem('agenda_view');
+    if (savedView === 'lista') {
+        document.getElementById('btn-lista').click();
+    }
+});
+</script>
 
 <!-- Modal de Detalhes do Agendamento -->
 <div class="modal modal-blur fade" id="modalAgendamento" tabindex="-1" role="dialog" aria-hidden="true">
@@ -167,6 +213,12 @@ document.addEventListener('DOMContentLoaded', function() {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        buttonText: {
+            today: 'Hoje',
+            month: 'Mês',
+            week: 'Semana',
+            day: 'Dia'
         },
         slotMinTime: '08:00:00',
         slotMaxTime: '20:00:00',

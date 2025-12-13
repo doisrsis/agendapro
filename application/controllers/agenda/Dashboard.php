@@ -49,6 +49,7 @@ class Dashboard extends CI_Controller {
         // Data selecionada (padrão: hoje)
         $data_selecionada = $this->input->get('data') ?: date('Y-m-d');
         $data['data_selecionada'] = $data_selecionada;
+        $data['view'] = $this->input->get('view') ?? 'calendario';
 
         // Agendamentos do dia
         $data['agendamentos_dia'] = $this->Agendamento_model->get_all([
@@ -56,11 +57,20 @@ class Dashboard extends CI_Controller {
             'data' => $data_selecionada
         ]);
 
-        // Estatísticas do profissional
-        $data['total_agendamentos_hoje'] = $this->Agendamento_model->count([
-            'profissional_id' => $this->profissional_id,
-            'data' => date('Y-m-d')
-        ]);
+        // Estatísticas simples
+        $data['total_agendamentos_hoje'] = count($data['agendamentos_dia']);
+
+        $pendentes = 0;
+        $confirmados = 0;
+        $concluidos = 0;
+        foreach ($data['agendamentos_dia'] as $ag) {
+            if ($ag->status == 'pendente') $pendentes++;
+            if ($ag->status == 'confirmado') $confirmados++;
+            if ($ag->status == 'concluido') $concluidos++;
+        }
+        $data['agendamentos_pendentes'] = $pendentes;
+        $data['agendamentos_confirmados'] = $confirmados;
+        $data['agendamentos_concluidos'] = $concluidos;
 
         $data['total_agendamentos_mes'] = $this->Agendamento_model->count([
             'profissional_id' => $this->profissional_id,
@@ -68,24 +78,20 @@ class Dashboard extends CI_Controller {
             'data_fim' => date('Y-m-t')
         ]);
 
-        $data['agendamentos_confirmados'] = $this->Agendamento_model->count([
-            'profissional_id' => $this->profissional_id,
-            'data' => date('Y-m-d'),
-            'status' => 'confirmado'
-        ]);
+        // Próximos agendamentos (para lista)
+        $filtros = ['profissional_id' => $this->profissional_id];
+        if ($this->input->get('status')) {
+            $filtros['status'] = $this->input->get('status');
+        }
+        if ($this->input->get('data')) {
+            $filtros['data'] = $this->input->get('data');
+        } else {
+            $filtros['data_inicio'] = date('Y-m-d');
+            $filtros['data_fim'] = date('Y-m-d', strtotime('+7 days'));
+        }
 
-        $data['agendamentos_concluidos'] = $this->Agendamento_model->count([
-            'profissional_id' => $this->profissional_id,
-            'data' => date('Y-m-d'),
-            'status' => 'concluido'
-        ]);
-
-        // Próximos agendamentos (próximos 7 dias)
-        $data['proximos_agendamentos'] = $this->Agendamento_model->get_all([
-            'profissional_id' => $this->profissional_id,
-            'data_inicio' => date('Y-m-d'),
-            'data_fim' => date('Y-m-d', strtotime('+7 days'))
-        ], 10);
+        $data['agendamentos'] = $this->Agendamento_model->get_all($filtros, 50);
+        $data['filtros'] = $filtros;
 
         // Serviços do profissional
         $data['servicos'] = $this->Profissional_model->get_servicos($this->profissional_id);

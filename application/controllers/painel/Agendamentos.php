@@ -25,6 +25,7 @@ class Agendamentos extends Painel_Controller {
     public function index() {
         $data['titulo'] = 'Agendamentos';
         $data['menu_ativo'] = 'agendamentos';
+        $data['view'] = $this->input->get('view') ?? 'lista';
 
         $filtros = ['estabelecimento_id' => $this->estabelecimento_id];
 
@@ -45,6 +46,7 @@ class Agendamentos extends Painel_Controller {
         $data['filtros'] = $filtros;
         $data['pagination'] = '';
         $data['profissionais'] = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
+        $data['estatisticas'] = $this->get_estatisticas();
 
         $this->load->view('painel/layout/header', $data);
         $this->load->view('admin/agendamentos/index', $data);
@@ -182,5 +184,209 @@ class Agendamentos extends Painel_Controller {
         $this->load->view('painel/layout/header', $data);
         $this->load->view('admin/agendamentos/visualizar', $data);
         $this->load->view('painel/layout/footer');
+    }
+
+    /**
+     * API JSON - Retorna agendamentos para o FullCalendar
+     */
+    public function get_agendamentos_json() {
+        $start = $this->input->get('start');
+        $end = $this->input->get('end');
+
+        $agendamentos = $this->Agendamento_model->get_all([
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'data_inicio' => $start,
+            'data_fim' => $end
+        ]);
+
+        $eventos = [];
+        foreach ($agendamentos as $ag) {
+            $cor = $this->get_cor_status($ag->status);
+
+            $data_hora_inicio = $ag->data . ' ' . $ag->hora_inicio;
+            $data_hora_fim = $ag->data . ' ' . $ag->hora_fim;
+
+            $eventos[] = [
+                'id' => 'agendamento_' . $ag->id,
+                'title' => $ag->cliente_nome . ' - ' . $ag->servico_nome . ' (' . $ag->profissional_nome . ')',
+                'start' => $data_hora_inicio,
+                'end' => $data_hora_fim,
+                'backgroundColor' => $cor,
+                'borderColor' => $cor,
+                'extendedProps' => [
+                    'agendamento_id' => $ag->id,
+                    'cliente_nome' => $ag->cliente_nome,
+                    'profissional_nome' => $ag->profissional_nome,
+                    'servico_nome' => $ag->servico_nome,
+                    'status' => $ag->status
+                ]
+            ];
+        }
+
+        // Buscar bloqueios dos profissionais do estabelecimento
+        $this->load->model('Bloqueio_model');
+
+        // Buscar IDs dos profissionais do estabelecimento
+        $profissionais = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
+        $profissional_ids = array_column($profissionais, 'id');
+
+        $bloqueios = [];
+        foreach ($profissional_ids as $prof_id) {
+            $bloqueios_prof = $this->Bloqueio_model->get_all([
+                'profissional_id' => $prof_id,
+                'data_inicio' => $start,
+                'data_fim' => $end
+            ]);
+            $bloqueios = array_merge($bloqueios, $bloqueios_prof);
+        }
+
+        // Adicionar bloqueios ao calendário
+        foreach ($bloqueios as $bloqueio) {
+            $titulo = '🚫 Bloqueado';
+            if ($bloqueio->motivo) {
+                $titulo .= ': ' . $bloqueio->motivo;
+            }
+
+            // Definir data/hora baseado no tipo
+            if ($bloqueio->tipo == 'horario') {
+                // Bloqueio de horário específico
+                $start_datetime = $bloqueio->data_inicio . ' ' . $bloqueio->hora_inicio;
+                $end_datetime = $bloqueio->data_inicio . ' ' . $bloqueio->hora_fim;
+            } else {
+                // Bloqueio de dia ou período (dia inteiro)
+                $start_datetime = $bloqueio->data_inicio;
+
+                // Para bloqueio de dia específico (data_fim NULL), usar data_inicio + 1 dia
+                if ($bloqueio->tipo == 'dia' || $bloqueio->data_fim === null) {
+                    $end_datetime = date('Y-m-d', strtotime($bloqueio->data_inicio . ' +1 day'));
+                } else {
+                    // Para bloqueio de período, usar data_fim + 1 dia (FullCalendar exclusive end)
+                    $end_datetime = date('Y-m-d', strtotime($bloqueio->data_fim . ' +1 day'));
+                }
+            }
+
+            $eventos[] = [
+                'id' => 'bloqueio_' . $bloqueio->id,
+                'title' => $titulo,
+                'start' => $start_datetime,
+                'end' => $end_datetime,
+                'backgroundColor' => '#6c757d',
+                'borderColor' => '#6c757d',
+                'display' => 'background',
+                'extendedProps' => [
+                    'tipo' => 'bloqueio',
+                    'bloqueio_tipo' => $bloqueio->tipo,
+                    'motivo' => $bloqueio->motivo ?? ''
+                ]
+            ];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($eventos);
+    }
+
+    /**
+     * Obter estatísticas de agendamentos
+     */
+    public function get_estatisticas() {
+        $hoje = date('Y-m-d');
+
+        $stats = [
+            'total_hoje' => 0,
+            'confirmados' => 0,
+            'pendentes' => 0,
+            'cancelados' => 0
+        ];
+
+        $agendamentos_hoje = $this->Agendamento_model->get_all([
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'data' => $hoje
+        ]);
+
+        $stats['total_hoje'] = count($agendamentos_hoje);
+
+        foreach ($agendamentos_hoje as $ag) {
+            if ($ag->status == 'confirmado') $stats['confirmados']++;
+            if ($ag->status == 'pendente') $stats['pendentes']++;
+            if ($ag->status == 'cancelado') $stats['cancelados']++;
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Definir cor baseado no status
+     */
+    private function get_cor_status($status) {
+        $cores = [
+            'pendente' => '#ffc107',
+            'confirmado' => '#28a745',
+            'concluido' => '#17a2b8',
+            'cancelado' => '#dc3545'
+        ];
+        return $cores[$status] ?? '#6c757d';
+    }
+
+    /**
+     * API: Retorna horários disponíveis para agendamento
+     */
+    public function get_horarios_disponiveis() {
+        $profissional_id = $this->input->get('profissional_id');
+        $data = $this->input->get('data');
+        $servico_id = $this->input->get('servico_id');
+
+        if (!$profissional_id || !$data || !$servico_id) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+
+        // Buscar serviço para pegar duração
+        $servico = $this->Servico_model->get_by_id($servico_id);
+        if (!$servico) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+
+        // Buscar horário do estabelecimento para este dia
+        $this->load->model('Horario_estabelecimento_model');
+        $dia_semana = date('w', strtotime($data));
+        $horario_estab = $this->Horario_estabelecimento_model->get_by_dia($this->estabelecimento_id, $dia_semana);
+
+        if (!$horario_estab || !$horario_estab->ativo) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+
+        // Gerar horários disponíveis (a cada 30 minutos)
+        $horarios = [];
+        $hora_atual = new DateTime($horario_estab->hora_inicio);
+        $hora_fim_estab = new DateTime($horario_estab->hora_fim);
+
+        while ($hora_atual < $hora_fim_estab) {
+            $hora_inicio_str = $hora_atual->format('H:i:s');
+            $hora_fim_temp = clone $hora_atual;
+            $hora_fim_temp->add(new DateInterval('PT' . $servico->duracao . 'M'));
+            $hora_fim_str = $hora_fim_temp->format('H:i:s');
+
+            // Verificar se horário está disponível
+            if ($hora_fim_temp <= $hora_fim_estab) {
+                if ($this->Agendamento_model->verificar_disponibilidade(
+                    $profissional_id,
+                    $data,
+                    $hora_inicio_str,
+                    $hora_fim_str
+                )) {
+                    $horarios[] = $hora_atual->format('H:i');
+                }
+            }
+
+            $hora_atual->add(new DateInterval('PT30M'));
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($horarios);
     }
 }
