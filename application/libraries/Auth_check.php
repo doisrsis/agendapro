@@ -236,7 +236,7 @@ class Auth_check {
         // Verificar assinatura
         if (!$this->CI->Assinatura_model->esta_ativa($estabelecimento_id)) {
             $this->CI->session->set_flashdata('erro', 'Sua assinatura expirou. Renove para continuar usando o sistema.');
-            redirect('painel/assinatura-expirada');
+            redirect('painel/assinatura_expirada');
             return false;
         }
 

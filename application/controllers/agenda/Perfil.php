@@ -52,7 +52,7 @@ class Perfil extends CI_Controller {
                         'email' => $this->input->post('email')
                     ];
 
-                    $this->Usuario_model->update($this->session->userdata('usuario_id'), $dados_usuario);
+                    $this->Usuario_model->atualizar($this->session->userdata('usuario_id'), $dados_usuario);
 
                     $this->session->set_flashdata('sucesso', 'Perfil atualizado com sucesso!');
                     redirect('agenda/perfil');
@@ -82,13 +82,13 @@ class Perfil extends CI_Controller {
 
             if ($this->form_validation->run()) {
                 $usuario_id = $this->session->userdata('usuario_id');
-                $usuario = $this->Usuario_model->get_by_id($usuario_id);
+                $usuario = $this->Usuario_model->get($usuario_id);
 
                 // Verificar senha atual
                 if (password_verify($this->input->post('senha_atual'), $usuario->senha)) {
                     $nova_senha = password_hash($this->input->post('senha_nova'), PASSWORD_DEFAULT);
 
-                    if ($this->Usuario_model->update($usuario_id, ['senha' => $nova_senha])) {
+                    if ($this->Usuario_model->atualizar($usuario_id, ['senha' => $nova_senha])) {
                         $this->session->set_flashdata('sucesso', 'Senha alterada com sucesso!');
                         redirect('agenda/perfil');
                     } else {

@@ -61,7 +61,9 @@ class Bloqueios extends CI_Controller {
                     'tipo' => $tipo,
                     'data_inicio' => $this->input->post('data_inicio'),
                     'motivo' => $this->input->post('motivo'),
-                    'criado_por' => 'profissional'
+                    'servico_id' => $this->input->post('servico_id') ?: null,
+                    'criado_por_tipo' => 'profissional',
+                    'criado_por_id' => $this->session->userdata('usuario_id')
                 ];
 
                 // Campos específicos por tipo
@@ -90,6 +92,10 @@ class Bloqueios extends CI_Controller {
             'periodo' => 'Período (vários dias)',
             'horario' => 'Horário Específico'
         ];
+
+        // Carregar serviços do profissional
+        $this->load->model('Profissional_model');
+        $data['servicos'] = $this->Profissional_model->get_servicos($this->profissional_id);
 
         $this->load->view('agenda/layout/header', $data);
         $this->load->view('agenda/bloqueios/form', $data);
@@ -154,6 +160,10 @@ class Bloqueios extends CI_Controller {
             'periodo' => 'Período (vários dias)',
             'horario' => 'Horário Específico'
         ];
+
+        // Carregar serviços do profissional
+        $this->load->model('Profissional_model');
+        $data['servicos'] = $this->Profissional_model->get_servicos($this->profissional_id);
 
         $this->load->view('agenda/layout/header', $data);
         $this->load->view('agenda/bloqueios/form', $data);

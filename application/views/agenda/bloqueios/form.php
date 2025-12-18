@@ -44,6 +44,24 @@
                                 </small>
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label">Serviço (Opcional)</label>
+                                <select class="form-select" name="servico_id" id="servico_id">
+                                    <option value="">Bloquear todos os serviços</option>
+                                    <?php if (!empty($servicos)): ?>
+                                        <?php foreach ($servicos as $servico): ?>
+                                        <option value="<?= $servico->id ?>"
+                                                <?= (isset($bloqueio) && $bloqueio->servico_id == $servico->id) ? 'selected' : '' ?>>
+                                            <?= $servico->nome ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <small class="text-muted">
+                                    Deixe em branco para bloquear todos os serviços, ou selecione um serviço específico
+                                </small>
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required">Data Início</label>

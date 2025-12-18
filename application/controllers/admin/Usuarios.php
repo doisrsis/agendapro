@@ -276,7 +276,7 @@ class Usuarios extends Admin_Controller {
                 $this->session->set_flashdata('erro', validation_errors());
             } else {
                 // O model já faz o hash
-                if ($this->Usuario_model->update($id, ['senha' => $this->input->post('senha')])) {
+                if ($this->Usuario_model->atualizar($id, ['senha' => $this->input->post('senha')])) {
                     // Registrar log
                     $this->registrar_log('alterar_senha', 'usuarios', $id);
 

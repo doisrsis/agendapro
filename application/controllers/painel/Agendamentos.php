@@ -242,9 +242,28 @@ class Agendamentos extends Painel_Controller {
 
         // Adicionar bloqueios ao calendário
         foreach ($bloqueios as $bloqueio) {
-            $titulo = '🚫 Bloqueado';
+            // Definir título e cor baseado no tipo de bloqueio
+            $cor = '#6c757d'; // Cinza padrão
+            $titulo = '🚫 ';
+
+            if (!empty($bloqueio->profissional_nome) && !empty($bloqueio->servico_nome)) {
+                // Bloqueio específico (profissional + serviço)
+                $titulo .= $bloqueio->profissional_nome . ' - ' . $bloqueio->servico_nome;
+                $cor = '#dc3545'; // Vermelho
+            } elseif (!empty($bloqueio->servico_nome)) {
+                // Bloqueio de serviço (todos profissionais)
+                $titulo .= $bloqueio->servico_nome . ' - Indisponível';
+                $cor = '#fd7e14'; // Laranja
+            } elseif (!empty($bloqueio->profissional_nome)) {
+                // Bloqueio de profissional (todos serviços)
+                $titulo .= $bloqueio->profissional_nome . ' - Bloqueado';
+                $cor = '#6c757d'; // Cinza
+            } else {
+                $titulo .= 'Bloqueado';
+            }
+
             if ($bloqueio->motivo) {
-                $titulo .= ': ' . $bloqueio->motivo;
+                $titulo .= ' (' . $bloqueio->motivo . ')';
             }
 
             // Definir data/hora baseado no tipo
@@ -270,12 +289,14 @@ class Agendamentos extends Painel_Controller {
                 'title' => $titulo,
                 'start' => $start_datetime,
                 'end' => $end_datetime,
-                'backgroundColor' => '#6c757d',
-                'borderColor' => '#6c757d',
+                'backgroundColor' => $cor,
+                'borderColor' => $cor,
                 'display' => 'background',
                 'extendedProps' => [
                     'tipo' => 'bloqueio',
                     'bloqueio_tipo' => $bloqueio->tipo,
+                    'profissional' => $bloqueio->profissional_nome ?? '',
+                    'servico' => $bloqueio->servico_nome ?? '',
                     'motivo' => $bloqueio->motivo ?? ''
                 ]
             ];

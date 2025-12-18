@@ -17,13 +17,22 @@ class Bloqueio_model extends CI_Model {
      * Buscar todos os bloqueios
      */
     public function get_all($filtros = [], $limit = null, $offset = null) {
-        $this->db->select('b.*, p.nome as profissional_nome, e.nome as estabelecimento_nome');
+        $this->db->select('b.*, p.nome as profissional_nome, e.nome as estabelecimento_nome, s.nome as servico_nome');
         $this->db->from($this->table . ' b');
-        $this->db->join('profissionais p', 'p.id = b.profissional_id');
-        $this->db->join('estabelecimentos e', 'e.id = p.estabelecimento_id');
+        $this->db->join('profissionais p', 'p.id = b.profissional_id', 'left');
+        $this->db->join('estabelecimentos e', 'e.id = p.estabelecimento_id', 'left');
+        $this->db->join('servicos s', 's.id = b.servico_id', 'left');
 
         if (!empty($filtros['profissional_id'])) {
             $this->db->where('b.profissional_id', $filtros['profissional_id']);
+        }
+
+        if (!empty($filtros['servico_id'])) {
+            $this->db->where('b.servico_id', $filtros['servico_id']);
+        }
+
+        if (!empty($filtros['estabelecimento_id'])) {
+            $this->db->where('p.estabelecimento_id', $filtros['estabelecimento_id']);
         }
 
         if (!empty($filtros['data_inicio'])) {
@@ -105,9 +114,30 @@ class Bloqueio_model extends CI_Model {
 
     /**
      * Verificar se há bloqueio em um período
+     *
+     * @param int $profissional_id
+     * @param string $data
+     * @param string $hora_inicio
+     * @param string $hora_fim
+     * @param int $servico_id (opcional) - se fornecido, verifica bloqueios específicos do serviço
+     * @return bool
      */
-    public function tem_bloqueio($profissional_id, $data, $hora_inicio = null, $hora_fim = null) {
+    public function tem_bloqueio($profissional_id, $data, $hora_inicio = null, $hora_fim = null, $servico_id = null) {
+        // Verificar bloqueios do profissional
         $this->db->where('profissional_id', $profissional_id);
+
+        // Se servico_id foi fornecido, verificar apenas bloqueios que afetam este serviço
+        if ($servico_id) {
+            $this->db->group_start();
+            // Bloqueio geral do profissional (servico_id NULL = todos os serviços)
+            $this->db->where('servico_id IS NULL', null, false);
+            // OU bloqueio específico deste serviço
+            $this->db->or_where('servico_id', $servico_id);
+            $this->db->group_end();
+        } else {
+            // Se não foi fornecido servico_id, considerar apenas bloqueios gerais (sem serviço específico)
+            $this->db->where('servico_id IS NULL', null, false);
+        }
 
         // Verificar bloqueios que afetam esta data
         $this->db->group_start();
@@ -151,8 +181,8 @@ class Bloqueio_model extends CI_Model {
     /**
      * Alias para tem_bloqueio (compatibilidade)
      */
-    public function verificar_bloqueio($profissional_id, $data, $hora_inicio = null, $hora_fim = null) {
-        return $this->tem_bloqueio($profissional_id, $data, $hora_inicio, $hora_fim);
+    public function verificar_bloqueio($profissional_id, $data, $hora_inicio = null, $hora_fim = null, $servico_id = null) {
+        return $this->tem_bloqueio($profissional_id, $data, $hora_inicio, $hora_fim, $servico_id);
     }
 
     /**
@@ -232,5 +262,104 @@ class Bloqueio_model extends CI_Model {
      */
     public function excluir($id) {
         return $this->delete($id);
+    }
+
+    /**
+     * Verificar se existe bloqueio de serviço
+     *
+     * @param int $servico_id
+     * @param string $data
+     * @param string $hora_inicio
+     * @param string $hora_fim
+     * @return bool
+     */
+    public function tem_bloqueio_servico($servico_id, $data, $hora_inicio = null, $hora_fim = null) {
+        $this->db->where('servico_id', $servico_id);
+        $this->db->where('profissional_id IS NULL', null, false); // Bloqueio geral de serviço
+
+        // Verificar bloqueios que afetam esta data
+        $this->db->group_start();
+
+        // Bloqueio de dia específico (data_fim é NULL ou igual a data_inicio)
+        $this->db->group_start();
+        $this->db->where('data_inicio', $data);
+        $this->db->group_start();
+        $this->db->where('data_fim IS NULL', null, false);
+        $this->db->or_where('data_fim', $data);
+        $this->db->group_end();
+        $this->db->group_end();
+
+        // OU bloqueio de período (data está entre data_inicio e data_fim)
+        $this->db->or_group_start();
+        $this->db->where('data_inicio <=', $data);
+        $this->db->where('data_fim >=', $data);
+        $this->db->where('data_fim IS NOT NULL', null, false);
+        $this->db->group_end();
+
+        $this->db->group_end();
+
+        // Se for verificação de horário específico
+        if ($hora_inicio && $hora_fim) {
+            $this->db->group_start();
+            // Bloqueio de dia inteiro (hora_inicio e hora_fim são NULL)
+            $this->db->where('hora_inicio IS NULL', null, false);
+            // OU bloqueio de horário que sobrepõe
+            $this->db->or_group_start();
+            $this->db->where('hora_inicio <', $hora_fim);
+            $this->db->where('hora_fim >', $hora_inicio);
+            $this->db->group_end();
+            $this->db->group_end();
+        }
+
+        return $this->db->count_all_results($this->table) > 0;
+    }
+
+    /**
+     * Verificar se existe bloqueio específico (profissional + serviço)
+     *
+     * @param int $profissional_id
+     * @param int $servico_id
+     * @param string $data
+     * @param string $hora_inicio
+     * @param string $hora_fim
+     * @return bool
+     */
+    public function tem_bloqueio_especifico($profissional_id, $servico_id, $data, $hora_inicio = null, $hora_fim = null) {
+        $this->db->where('profissional_id', $profissional_id);
+        $this->db->where('servico_id', $servico_id);
+
+        // Verificar bloqueios que afetam esta data
+        $this->db->group_start();
+
+        // Bloqueio de dia específico
+        $this->db->group_start();
+        $this->db->where('data_inicio', $data);
+        $this->db->group_start();
+        $this->db->where('data_fim IS NULL', null, false);
+        $this->db->or_where('data_fim', $data);
+        $this->db->group_end();
+        $this->db->group_end();
+
+        // OU bloqueio de período
+        $this->db->or_group_start();
+        $this->db->where('data_inicio <=', $data);
+        $this->db->where('data_fim >=', $data);
+        $this->db->where('data_fim IS NOT NULL', null, false);
+        $this->db->group_end();
+
+        $this->db->group_end();
+
+        // Se for verificação de horário específico
+        if ($hora_inicio && $hora_fim) {
+            $this->db->group_start();
+            $this->db->where('hora_inicio IS NULL', null, false);
+            $this->db->or_group_start();
+            $this->db->where('hora_inicio <', $hora_fim);
+            $this->db->where('hora_fim >', $hora_inicio);
+            $this->db->group_end();
+            $this->db->group_end();
+        }
+
+        return $this->db->count_all_results($this->table) > 0;
     }
 }

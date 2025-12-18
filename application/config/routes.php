@@ -81,12 +81,21 @@ $route['admin/(:any)'] = 'admin/$1';
 
 $route['painel'] = 'painel/dashboard';
 $route['painel/dashboard'] = 'painel/dashboard';
+
+// Rotas de Checkout (ANTES da rota genérica)
+$route['painel/checkout/gerar-pix'] = 'painel/checkout/gerar_pix';
+$route['painel/checkout/status/(:any)'] = 'painel/checkout/status/$1';
+$route['painel/checkout/sucesso'] = 'painel/checkout/sucesso';
+$route['painel/checkout/falha'] = 'painel/checkout/falha';
+$route['painel/checkout/processar'] = 'painel/checkout/processar';
+$route['painel/checkout/(:any)'] = 'painel/checkout/index/$1';
+
 $route['painel/(:any)'] = 'painel/$1';
+
 
 // Páginas especiais do painel
 $route['painel/suspenso'] = 'painel/suspenso';
 $route['painel/cancelado'] = 'painel/cancelado';
-$route['painel/assinatura-expirada'] = 'painel/assinatura_expirada';
 
 // =========================================================================
 // ROTAS AGENDA (Profissional)

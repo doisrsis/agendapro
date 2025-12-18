@@ -119,7 +119,8 @@ class Agendamento_model extends CI_Model {
             $data['profissional_id'],
             $data['data'],
             $hora_inicio->format('H:i:s'),
-            $hora_fim->format('H:i:s')
+            $hora_fim->format('H:i:s'),
+            $data['servico_id']
         )) {
             return false;
         }
@@ -173,12 +174,15 @@ class Agendamento_model extends CI_Model {
             $hora_fim_dt = clone $hora_inicio_dt;
             $hora_fim_dt->add(new DateInterval('PT' . $servico->duracao . 'M'));
 
+            $servico_id = $data['servico_id'] ?? $agendamento_atual->servico_id;
+
             // Verificar disponibilidade
             if (!$this->verificar_disponibilidade(
                 $profissional_id,
                 $data_agendamento,
                 $hora_inicio_dt->format('H:i:s'),
                 $hora_fim_dt->format('H:i:s'),
+                $servico_id,
                 $id
             )) {
                 return false;
@@ -223,7 +227,7 @@ class Agendamento_model extends CI_Model {
     /**
      * Verificar disponibilidade do profissional
      */
-    public function verificar_disponibilidade($profissional_id, $data, $hora_inicio, $hora_fim, $excluir_agendamento_id = null) {
+    public function verificar_disponibilidade($profissional_id, $data, $hora_inicio, $hora_fim, $servico_id = null, $excluir_agendamento_id = null) {
         // 1. Verificar horário do estabelecimento
         $dia_semana = date('w', strtotime($data));
 
@@ -279,11 +283,25 @@ class Agendamento_model extends CI_Model {
 
         // 3. Verificar bloqueios
         $this->load->model('Bloqueio_model');
-        $bloqueio = $this->Bloqueio_model->verificar_bloqueio($profissional_id, $data, $hora_inicio, $hora_fim);
 
-        if ($bloqueio) {
-            $this->erro_disponibilidade = 'Horário bloqueado pelo profissional.';
+        // 3.1. Bloqueio de profissional (geral ou específico do serviço)
+        // Este método já verifica:
+        // - Bloqueios gerais do profissional (servico_id NULL)
+        // - Bloqueios específicos do profissional para este serviço
+        $bloqueio_prof = $this->Bloqueio_model->verificar_bloqueio($profissional_id, $data, $hora_inicio, $hora_fim, $servico_id);
+        if ($bloqueio_prof) {
+            $this->erro_disponibilidade = 'Horário bloqueado para este serviço.';
             return false;
+        }
+
+        // 3.2. Bloqueio geral de serviço (sem profissional específico)
+        // Verifica se o serviço está bloqueado para TODOS os profissionais
+        if ($servico_id) {
+            $bloqueio_servico = $this->Bloqueio_model->tem_bloqueio_servico($servico_id, $data, $hora_inicio, $hora_fim);
+            if ($bloqueio_servico) {
+                $this->erro_disponibilidade = 'Serviço indisponível neste horário.';
+                return false;
+            }
         }
 
         return true;

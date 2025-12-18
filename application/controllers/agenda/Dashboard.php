@@ -156,9 +156,22 @@ class Dashboard extends CI_Controller {
 
         // Adicionar bloqueios ao calendário
         foreach ($bloqueios as $bloqueio) {
-            $titulo = '🚫 Bloqueado';
+            // Definir título e cor baseado no tipo de bloqueio
+            $cor = '#6c757d'; // Cinza padrão
+            $titulo = '🚫 ';
+
+            if (!empty($bloqueio->servico_nome)) {
+                // Bloqueio de serviço específico
+                $titulo .= $bloqueio->servico_nome . ' - Bloqueado';
+                $cor = '#fd7e14'; // Laranja
+            } else {
+                // Bloqueio geral (todos serviços)
+                $titulo .= 'Bloqueado';
+                $cor = '#6c757d'; // Cinza
+            }
+
             if ($bloqueio->motivo) {
-                $titulo .= ': ' . $bloqueio->motivo;
+                $titulo .= ' (' . $bloqueio->motivo . ')';
             }
 
             // Definir data/hora baseado no tipo
@@ -179,24 +192,18 @@ class Dashboard extends CI_Controller {
                 }
             }
 
-            // Log temporário para debug
-            log_message('debug', 'Bloqueio ID ' . $bloqueio->id . ': tipo=' . $bloqueio->tipo .
-                ', data_inicio=' . $bloqueio->data_inicio .
-                ', data_fim=' . ($bloqueio->data_fim ?? 'NULL') .
-                ', start=' . $start_datetime .
-                ', end=' . $end_datetime);
-
             $eventos[] = [
                 'id' => 'bloqueio_' . $bloqueio->id,
                 'title' => $titulo,
                 'start' => $start_datetime,
                 'end' => $end_datetime,
-                'backgroundColor' => '#6c757d',
-                'borderColor' => '#6c757d',
+                'backgroundColor' => $cor,
+                'borderColor' => $cor,
                 'display' => 'background',
                 'extendedProps' => [
                     'tipo' => 'bloqueio',
                     'bloqueio_tipo' => $bloqueio->tipo,
+                    'servico' => $bloqueio->servico_nome ?? '',
                     'motivo' => $bloqueio->motivo ?? ''
                 ]
             ];

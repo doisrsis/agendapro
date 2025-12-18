@@ -69,9 +69,14 @@ class Mercadopago_lib {
                     'number' => $dados['cpf'] ?? ''
                 ]
             ],
-            'notification_url' => $dados['notification_url'] ?? base_url('webhook/mercadopago'),
             'external_reference' => $dados['external_reference'] ?? null,
         ];
+
+        // Adicionar notification_url apenas se não for localhost
+        $notification_url = $dados['notification_url'] ?? base_url('webhook/mercadopago');
+        if (strpos($notification_url, 'localhost') === false && strpos($notification_url, '127.0.0.1') === false) {
+            $payload['notification_url'] = $notification_url;
+        }
 
         return $this->make_request('POST', '/v1/payments', $payload);
     }
