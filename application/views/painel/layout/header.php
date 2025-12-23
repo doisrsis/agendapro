@@ -96,13 +96,23 @@
                                     <span class="nav-link-title">Serviços</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="<?= base_url('painel/agendamentos') ?>">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#navbar-agendamentos" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-calendar"></i>
                                     </span>
                                     <span class="nav-link-title">Agendamentos</span>
                                 </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="<?= base_url('painel/agendamentos') ?>">
+                                        <i class="ti ti-list me-2"></i>
+                                        Ver Agendamentos
+                                    </a>
+                                    <a class="dropdown-item" href="<?= base_url('painel/bloqueios') ?>">
+                                        <i class="ti ti-lock me-2"></i>
+                                        Bloqueios
+                                    </a>
+                                </div>
                             </li>
                         </ul>
                     </div>

@@ -142,6 +142,70 @@ class Agendamentos extends Agenda_Controller {
     }
 
     /**
+     * API: Retorna horários disponíveis para agendamento
+     */
+    public function get_horarios_disponiveis() {
+        $servico_id = $this->input->get('servico_id');
+        $data = $this->input->get('data');
+
+        if (!$servico_id || !$data) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+
+        // Buscar serviço para pegar duração
+        $servico = $this->Servico_model->get_by_id($servico_id);
+        if (!$servico) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+
+        // Buscar horário do estabelecimento para este dia
+        $this->load->model('Horario_estabelecimento_model');
+        $dia_semana = date('w', strtotime($data));
+        $horario_estab = $this->Horario_estabelecimento_model->get_by_dia($this->estabelecimento_id, $dia_semana);
+
+        if (!$horario_estab || !$horario_estab->ativo) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+
+        // Gerar horários disponíveis (a cada 30 minutos)
+        $horarios = [];
+        $hora_atual = new DateTime($horario_estab->hora_inicio);
+        $hora_fim_estab = new DateTime($horario_estab->hora_fim);
+
+        while ($hora_atual < $hora_fim_estab) {
+            $hora_inicio_str = $hora_atual->format('H:i:s');
+            $hora_fim_temp = clone $hora_atual;
+            $hora_fim_temp->add(new DateInterval('PT' . $servico->duracao . 'M'));
+            $hora_fim_str = $hora_fim_temp->format('H:i:s');
+
+            // Verificar se horário está disponível
+            if ($hora_fim_temp <= $hora_fim_estab) {
+                if ($this->Agendamento_model->verificar_disponibilidade(
+                    $this->profissional_id,
+                    $data,
+                    $hora_inicio_str,
+                    $hora_fim_str,
+                    $servico_id
+                )) {
+                    $horarios[] = $hora_atual->format('H:i');
+                }
+            }
+
+            // Avançar 30 minutos
+            $hora_atual->add(new DateInterval('PT30M'));
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($horarios);
+    }
+
+    /**
      * Cancelar agendamento
      */
     public function cancelar($id) {

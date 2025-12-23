@@ -43,10 +43,10 @@
 
                             <div class="mb-3">
                                 <label class="form-label required">Serviço</label>
-                                <select class="form-select" name="servico_id" required>
+                                <select class="form-select" name="servico_id" id="servico_id" required>
                                     <option value="">Selecione o serviço...</option>
                                     <?php foreach ($servicos as $servico): ?>
-                                    <option value="<?= $servico->id ?>">
+                                    <option value="<?= $servico->id ?>" data-duracao="<?= $servico->duracao ?>">
                                         <?= $servico->nome ?> - <?= $servico->duracao ?> min - R$ <?= number_format($servico->preco, 2, ',', '.') ?>
                                     </option>
                                     <?php endforeach; ?>
@@ -57,14 +57,16 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required">Data</label>
-                                    <input type="date" class="form-control" name="data"
-                                           value="<?= set_value('data', date('Y-m-d')) ?>" required>
+                                    <input type="date" class="form-control" name="data" id="data"
+                                           value="<?= set_value('data', date('Y-m-d')) ?>"
+                                           min="<?= date('Y-m-d') ?>" required>
                                     <?= form_error('data', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required">Horário</label>
-                                    <input type="time" class="form-control" name="hora_inicio"
-                                           value="<?= set_value('hora_inicio') ?>" required>
+                                    <select class="form-select" name="hora_inicio" id="hora_inicio" required>
+                                        <option value="">Selecione data e serviço primeiro</option>
+                                    </select>
                                     <?= form_error('hora_inicio', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
                             </div>
@@ -112,3 +114,5 @@
 
     </div>
 </div>
+
+<?php $this->load->view('agenda/agendamentos/_horarios_script'); ?>

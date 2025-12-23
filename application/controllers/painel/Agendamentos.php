@@ -91,7 +91,7 @@ class Agendamentos extends Painel_Controller {
         $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
 
         $this->load->view('painel/layout/header', $data);
-        $this->load->view('admin/agendamentos/form', $data);
+        $this->load->view('painel/agendamentos/form', $data);
         $this->load->view('painel/layout/footer');
     }
 
@@ -126,9 +126,12 @@ class Agendamentos extends Painel_Controller {
         $data['titulo'] = 'Editar Agendamento';
         $data['menu_ativo'] = 'agendamentos';
         $data['agendamento'] = $agendamento;
+        $data['clientes'] = $this->Cliente_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
+        $data['profissionais'] = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
+        $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
 
         $this->load->view('painel/layout/header', $data);
-        $this->load->view('admin/agendamentos/form', $data);
+        $this->load->view('painel/agendamentos/form', $data);
         $this->load->view('painel/layout/footer');
     }
 
@@ -182,7 +185,7 @@ class Agendamentos extends Painel_Controller {
         $data['agendamento'] = $agendamento;
 
         $this->load->view('painel/layout/header', $data);
-        $this->load->view('admin/agendamentos/visualizar', $data);
+        $this->load->view('painel/agendamentos/visualizar', $data);
         $this->load->view('painel/layout/footer');
     }
 
