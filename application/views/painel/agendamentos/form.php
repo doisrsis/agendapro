@@ -75,7 +75,9 @@
                                     <label class="form-label required">Data</label>
                                     <input type="date" class="form-control" name="data" id="data"
                                            value="<?= set_value('data', $agendamento->data ?? '') ?>"
-                                           min="<?= date('Y-m-d') ?>" required>
+                                           min="<?= date('Y-m-d') ?>"
+                                           <?= isset($data_maxima) && $data_maxima ? 'max="' . $data_maxima . '"' : '' ?>
+                                           required>
                                     <?= form_error('data', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
 
@@ -181,17 +183,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const servicoId = servicoSelect.value;
 
         if (profissionalId && data && servicoId) {
+            // Mostrar loading
+            horaSelect.innerHTML = '<option value="">🔄 Carregando horários...</option>';
+            horaSelect.disabled = true;
+
             fetch(`<?= base_url('painel/agendamentos/get_horarios_disponiveis') ?>?profissional_id=${profissionalId}&data=${data}&servico_id=${servicoId}`)
                 .then(r => r.json())
                 .then(horarios => {
-                    horaSelect.innerHTML = '<option value="">Selecione...</option>';
-                    horarios.forEach(h => {
-                        horaSelect.innerHTML += `<option value="${h}">${h}</option>`;
-                    });
+                    horaSelect.disabled = false;
+
+                    if (horarios.length > 0) {
+                        horaSelect.innerHTML = '<option value="">Selecione...</option>';
+                        horarios.forEach(h => {
+                            horaSelect.innerHTML += `<option value="${h}">${h}</option>`;
+                        });
+                    } else {
+                        horaSelect.innerHTML = '<option value="">❌ Nenhum horário disponível</option>';
+                    }
                 })
                 .catch(error => {
                     console.error('Erro ao carregar horários:', error);
-                    horaSelect.innerHTML = '<option value="">Erro ao carregar horários</option>';
+                    horaSelect.disabled = false;
+                    horaSelect.innerHTML = '<option value="">⚠️ Erro ao carregar horários</option>';
                 });
         }
     }

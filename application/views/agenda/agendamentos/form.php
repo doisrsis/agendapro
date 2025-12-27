@@ -59,7 +59,9 @@
                                     <label class="form-label required">Data</label>
                                     <input type="date" class="form-control" name="data" id="data"
                                            value="<?= set_value('data', date('Y-m-d')) ?>"
-                                           min="<?= date('Y-m-d') ?>" required>
+                                           min="<?= date('Y-m-d') ?>"
+                                           <?= isset($data_maxima) && $data_maxima ? 'max="' . $data_maxima . '"' : '' ?>
+                                           required>
                                     <?= form_error('data', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
                                 <div class="col-md-6 mb-3">

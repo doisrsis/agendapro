@@ -92,6 +92,15 @@ class Agendamentos extends Painel_Controller {
         $data['profissionais'] = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
         $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
 
+        // Calcular data máxima baseada no período de abertura
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+        $dias_antecedencia = $estabelecimento->dias_antecedencia_agenda ?? 30;
+        $this->load->model('Horario_estabelecimento_model');
+        $data['data_maxima'] = $dias_antecedencia > 0
+            ? $this->calcular_data_maxima_dias_uteis($this->estabelecimento_id, $dias_antecedencia)
+            : null;
+
         $this->load->view('painel/layout/header', $data);
         $this->load->view('painel/agendamentos/form', $data);
         $this->load->view('painel/layout/footer');
@@ -131,6 +140,15 @@ class Agendamentos extends Painel_Controller {
         $data['clientes'] = $this->Cliente_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
         $data['profissionais'] = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
         $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
+
+        // Calcular data máxima baseada no período de abertura
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+        $dias_antecedencia = $estabelecimento->dias_antecedencia_agenda ?? 30;
+        $this->load->model('Horario_estabelecimento_model');
+        $data['data_maxima'] = $dias_antecedencia > 0
+            ? $this->calcular_data_maxima_dias_uteis($this->estabelecimento_id, $dias_antecedencia)
+            : null;
 
         $this->load->view('painel/layout/header', $data);
         $this->load->view('painel/agendamentos/form', $data);
@@ -461,5 +479,42 @@ class Agendamentos extends Painel_Controller {
 
         header('Content-Type: application/json');
         echo json_encode($horarios);
+    }
+
+    /**
+     * Calcular data máxima considerando apenas dias úteis (dias ativos do estabelecimento)
+     */
+    private function calcular_data_maxima_dias_uteis($estabelecimento_id, $dias_necessarios) {
+        // Buscar horários do estabelecimento
+        $horarios = $this->Horario_estabelecimento_model->get_by_estabelecimento($estabelecimento_id);
+
+        // Criar array de dias ativos (0=domingo, 1=segunda, ..., 6=sábado)
+        $dias_ativos = [];
+        foreach ($horarios as $horario) {
+            if ($horario->ativo) {
+                $dias_ativos[] = (int)$horario->dia_semana;
+            }
+        }
+
+        // Se não há dias ativos, retornar null
+        if (empty($dias_ativos)) {
+            return null;
+        }
+
+        // Calcular data máxima pulando dias inativos
+        $data_atual = new DateTime();
+        $dias_contados = 0;
+
+        while ($dias_contados < $dias_necessarios) {
+            $data_atual->add(new DateInterval('P1D')); // Adicionar 1 dia
+            $dia_semana = (int)$data_atual->format('w'); // 0=domingo, 6=sábado
+
+            // Contar apenas se o dia está ativo
+            if (in_array($dia_semana, $dias_ativos)) {
+                $dias_contados++;
+            }
+        }
+
+        return $data_atual->format('Y-m-d');
     }
 }
