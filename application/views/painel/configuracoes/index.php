@@ -196,6 +196,51 @@
                                 </div>
                             </div>
 
+                            <!-- Intervalo de Horários -->
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <!-- Hidden field para garantir que sempre envie um valor -->
+                                    <input type="hidden" name="usar_intervalo_fixo" value="0">
+                                    <label class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="usar_intervalo_fixo"
+                                               id="usar_intervalo_fixo"
+                                               value="1"
+                                               <?= ($estabelecimento->usar_intervalo_fixo ?? 1) ? 'checked' : '' ?>>
+                                        <span class="form-check-label">
+                                            <strong>Usar Intervalo Fixo</strong>
+                                        </span>
+                                    </label>
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="ti ti-info-circle me-1"></i>
+                                        <strong>Ativado:</strong> Todos os serviços usarão o mesmo intervalo configurado abaixo.<br>
+                                        <i class="ti ti-info-circle me-1"></i>
+                                        <strong>Desativado:</strong> O intervalo será calculado automaticamente baseado na duração de cada serviço.
+                                    </small>
+                                </div>
+
+                                <div class="col-md-6 mb-3" id="campo-intervalo">
+                                    <label class="form-label">Intervalo de Horários</label>
+                                    <select class="form-select" name="intervalo_agendamento">
+                                        <option value="5" <?= ($estabelecimento->intervalo_agendamento ?? 30) == 5 ? 'selected' : '' ?>>
+                                            5 minutos
+                                        </option>
+                                        <option value="10" <?= ($estabelecimento->intervalo_agendamento ?? 30) == 10 ? 'selected' : '' ?>>
+                                            10 minutos
+                                        </option>
+                                        <option value="15" <?= ($estabelecimento->intervalo_agendamento ?? 30) == 15 ? 'selected' : '' ?>>
+                                            15 minutos
+                                        </option>
+                                        <option value="30" <?= ($estabelecimento->intervalo_agendamento ?? 30) == 30 ? 'selected' : '' ?>>
+                                            30 minutos (padrão)
+                                        </option>
+                                    </select>
+                                    <small class="text-muted">
+                                        Intervalo entre horários disponíveis para agendamento
+                                    </small>
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-check">
                                     <input type="checkbox" class="form-check-input" name="confirmacao_automatica"
@@ -339,3 +384,24 @@
 
     </div>
 </div>
+
+<script>
+// Mostrar/ocultar campo de intervalo baseado no switch
+document.addEventListener('DOMContentLoaded', function() {
+    const switchIntervalo = document.getElementById('usar_intervalo_fixo');
+    const campoIntervalo = document.getElementById('campo-intervalo');
+
+    if (switchIntervalo && campoIntervalo) {
+        function toggleCampoIntervalo() {
+            if (switchIntervalo.checked) {
+                campoIntervalo.style.display = 'block';
+            } else {
+                campoIntervalo.style.display = 'none';
+            }
+        }
+
+        switchIntervalo.addEventListener('change', toggleCampoIntervalo);
+        toggleCampoIntervalo(); // Executar ao carregar
+    }
+});
+</script>

@@ -173,10 +173,44 @@ class Agendamentos extends Agenda_Controller {
             return;
         }
 
-        // Gerar horários disponíveis (a cada 30 minutos)
+        // Buscar configuração de tempo mínimo e intervalo
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento_config = $this->Estabelecimento_model->get($this->estabelecimento_id);
+        $tempo_minimo = $estabelecimento_config->tempo_minimo_agendamento ?? 60;
+        $usar_intervalo_fixo = $estabelecimento_config->usar_intervalo_fixo ?? 1;
+
+        // ✅ LÓGICA HÍBRIDA: Determinar intervalo
+        if ($usar_intervalo_fixo) {
+            // Modo 1: Intervalo Fixo Configurável
+            $intervalo = $estabelecimento_config->intervalo_agendamento ?? 30;
+        } else {
+            // Modo 2: Intervalo Dinâmico (baseado na duração do serviço)
+            $intervalo = $servico->duracao;
+        }
+
+        // Calcular horário mínimo permitido
+        $agora = new DateTime();
+        $horario_minimo = clone $agora;
+        $horario_minimo->add(new DateInterval('PT' . $tempo_minimo . 'M'));
+
+        // Gerar horários disponíveis
         $horarios = [];
         $hora_atual = new DateTime($horario_estab->hora_inicio);
         $hora_fim_estab = new DateTime($horario_estab->hora_fim);
+
+        // Se a data selecionada for hoje, ajustar hora inicial
+        if ($data == date('Y-m-d')) {
+            if ($hora_atual < $horario_minimo) {
+                $hora_atual = clone $horario_minimo;
+                // Arredondar para próximo intervalo
+                $minutos = (int)$hora_atual->format('i');
+                $resto = $minutos % $intervalo;
+                if ($resto > 0) {
+                    $ajuste = $intervalo - $resto;
+                    $hora_atual->add(new DateInterval('PT' . $ajuste . 'M'));
+                }
+            }
+        }
 
         while ($hora_atual < $hora_fim_estab) {
             $hora_inicio_str = $hora_atual->format('H:i:s');
@@ -197,8 +231,8 @@ class Agendamentos extends Agenda_Controller {
                 }
             }
 
-            // Avançar 30 minutos
-            $hora_atual->add(new DateInterval('PT30M'));
+            // ✅ Avançar com intervalo (fixo ou dinâmico)
+            $hora_atual->add(new DateInterval('PT' . $intervalo . 'M'));
         }
 
         header('Content-Type: application/json');

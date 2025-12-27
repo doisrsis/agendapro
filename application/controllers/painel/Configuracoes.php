@@ -114,14 +114,22 @@ class Configuracoes extends CI_Controller {
         // Salvar outras configurações
         $dados = [
             'tempo_minimo_agendamento' => $this->input->post('tempo_minimo_agendamento') ?? 60,
+            'usar_intervalo_fixo' => (int)$this->input->post('usar_intervalo_fixo'),
+            'intervalo_agendamento' => $this->input->post('intervalo_agendamento') ?? 30,
             'confirmacao_automatica' => $this->input->post('confirmacao_automatica') ? 1 : 0,
             'permite_reagendamento' => $this->input->post('permite_reagendamento') ? 1 : 0,
             'limite_reagendamentos' => $this->input->post('limite_reagendamentos') ?? 3
         ];
 
+        // DEBUG: Log dos dados que serão salvos
+        log_message('debug', 'Configuracoes/salvar_agendamento - Dados POST: ' . json_encode($_POST));
+        log_message('debug', 'Configuracoes/salvar_agendamento - Dados para salvar: ' . json_encode($dados));
+
         if ($this->Estabelecimento_model->update($this->estabelecimento_id, $dados)) {
+            log_message('debug', 'Configuracoes/salvar_agendamento - Salvo com sucesso');
             $this->session->set_flashdata('sucesso', 'Configurações de agendamento atualizadas!');
         } else {
+            log_message('error', 'Configuracoes/salvar_agendamento - Erro ao salvar');
             $this->session->set_flashdata('erro', 'Erro ao atualizar configurações.');
         }
 

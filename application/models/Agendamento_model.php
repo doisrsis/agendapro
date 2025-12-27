@@ -259,7 +259,39 @@ class Agendamento_model extends CI_Model {
             return false;
         }
 
-        // 2. Verificar conflito com outros agendamentos
+        // 2. Verificar tempo mínimo para agendamento
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get($profissional->estabelecimento_id);
+
+        if ($estabelecimento && $estabelecimento->tempo_minimo_agendamento > 0) {
+            // Calcular data/hora do agendamento
+            $data_hora_agendamento = new DateTime($data . ' ' . $hora_inicio);
+            $agora = new DateTime();
+
+            // Calcular diferença em minutos
+            $diferenca_minutos = ($data_hora_agendamento->getTimestamp() - $agora->getTimestamp()) / 60;
+
+            // Verificar se respeita o tempo mínimo
+            if ($diferenca_minutos < $estabelecimento->tempo_minimo_agendamento) {
+                $horas = floor($estabelecimento->tempo_minimo_agendamento / 60);
+                $minutos = $estabelecimento->tempo_minimo_agendamento % 60;
+
+                $tempo_texto = '';
+                if ($horas > 0) {
+                    $tempo_texto = $horas . ' hora' . ($horas > 1 ? 's' : '');
+                    if ($minutos > 0) {
+                        $tempo_texto .= ' e ' . $minutos . ' minutos';
+                    }
+                } else {
+                    $tempo_texto = $minutos . ' minutos';
+                }
+
+                $this->erro_disponibilidade = 'Agendamento deve ser feito com antecedência mínima de ' . $tempo_texto . '.';
+                return false;
+            }
+        }
+
+        // 3. Verificar conflito com outros agendamentos
         $this->db->where('profissional_id', $profissional_id);
         $this->db->where('data', $data);
         $this->db->where('status !=', 'cancelado');

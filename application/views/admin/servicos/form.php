@@ -63,7 +63,7 @@
                                     <div class="input-group">
                                         <input type="number" class="form-control" name="duracao"
                                                value="<?= set_value('duracao', $servico->duracao ?? '') ?>"
-                                               min="1" step="5" required>
+                                               min="1" step="1" required>
                                         <span class="input-group-text">minutos</span>
                                     </div>
                                     <?= form_error('duracao', '<div class="invalid-feedback d-block">', '</div>') ?>
