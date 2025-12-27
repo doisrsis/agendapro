@@ -136,9 +136,12 @@
                                     <thead>
                                         <tr>
                                             <th>Dia da Semana</th>
-                                            <th class="text-center" width="100">Ativo</th>
-                                            <th width="150">Abertura</th>
-                                            <th width="150">Fechamento</th>
+                                            <th class="text-center" width="80">Ativo</th>
+                                            <th width="120">Abertura</th>
+                                            <th width="120">Fechamento</th>
+                                            <th class="text-center" width="80">Almoço</th>
+                                            <th width="120">Início Almoço</th>
+                                            <th width="120">Fim Almoço</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -171,6 +174,24 @@
                                                        name="dia_<?= $dia ?>_fim"
                                                        value="<?= $horario ? substr($horario->hora_fim, 0, 5) : '18:00' ?>">
                                             </td>
+                                            <td class="text-center">
+                                                <input type="hidden" name="dia_<?= $dia ?>_almoco_ativo" value="0">
+                                                <label class="form-check form-switch mb-0">
+                                                    <input type="checkbox" class="form-check-input"
+                                                           name="dia_<?= $dia ?>_almoco_ativo" value="1"
+                                                           <?= ($horario && $horario->almoco_ativo) ? 'checked' : '' ?>>
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <input type="time" class="form-control form-control-sm"
+                                                       name="dia_<?= $dia ?>_almoco_inicio"
+                                                       value="<?= $horario && $horario->almoco_inicio ? substr($horario->almoco_inicio, 0, 5) : '12:00' ?>">
+                                            </td>
+                                            <td>
+                                                <input type="time" class="form-control form-control-sm"
+                                                       name="dia_<?= $dia ?>_almoco_fim"
+                                                       value="<?= $horario && $horario->almoco_fim ? substr($horario->almoco_fim, 0, 5) : '13:00' ?>">
+                                            </td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -193,6 +214,31 @@
                                         <option value="1440" <?= ($estabelecimento->tempo_minimo_agendamento ?? 60) == 1440 ? 'selected' : '' ?>>1 dia</option>
                                     </select>
                                     <small class="text-muted">Antecedência mínima para cliente agendar</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Período de Abertura da Agenda</label>
+                                    <select class="form-select" name="dias_antecedencia_agenda">
+                                        <option value="0" <?= ($estabelecimento->dias_antecedencia_agenda ?? 30) == 0 ? 'selected' : '' ?>>
+                                            Sem limite
+                                        </option>
+                                        <option value="7" <?= ($estabelecimento->dias_antecedencia_agenda ?? 30) == 7 ? 'selected' : '' ?>>
+                                            1 semana (7 dias)
+                                        </option>
+                                        <option value="15" <?= ($estabelecimento->dias_antecedencia_agenda ?? 30) == 15 ? 'selected' : '' ?>>
+                                            Quinzenal (15 dias)
+                                        </option>
+                                        <option value="30" <?= ($estabelecimento->dias_antecedencia_agenda ?? 30) == 30 ? 'selected' : '' ?>>
+                                            Mensal (30 dias)
+                                        </option>
+                                        <option value="60" <?= ($estabelecimento->dias_antecedencia_agenda ?? 30) == 60 ? 'selected' : '' ?>>
+                                            Bimestral (60 dias)
+                                        </option>
+                                        <option value="90" <?= ($estabelecimento->dias_antecedencia_agenda ?? 30) == 90 ? 'selected' : '' ?>>
+                                            Trimestral (90 dias)
+                                        </option>
+                                    </select>
+                                    <small class="text-muted">Quantos dias para frente o cliente pode agendar</small>
                                 </div>
                             </div>
 

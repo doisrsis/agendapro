@@ -193,6 +193,18 @@ class Agendamentos extends Agenda_Controller {
         $horario_minimo = clone $agora;
         $horario_minimo->add(new DateInterval('PT' . $tempo_minimo . 'M'));
 
+        // Verificar período de abertura da agenda
+        $dias_antecedencia = $estabelecimento_config->dias_antecedencia_agenda ?? 30;
+        if ($dias_antecedencia > 0) {
+            $data_maxima = date('Y-m-d', strtotime("+{$dias_antecedencia} days"));
+
+            if ($data > $data_maxima) {
+                header('Content-Type: application/json');
+                echo json_encode([]);
+                return;
+            }
+        }
+
         // Gerar horários disponíveis
         $horarios = [];
         $hora_atual = new DateTime($horario_estab->hora_inicio);

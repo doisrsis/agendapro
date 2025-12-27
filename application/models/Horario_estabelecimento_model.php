@@ -47,7 +47,10 @@ class Horario_estabelecimento_model extends CI_Model {
                 'dia_semana' => $dia,
                 'ativo' => $horario['ativo'] ?? 0,
                 'hora_inicio' => $horario['hora_inicio'] ?? '08:00:00',
-                'hora_fim' => $horario['hora_fim'] ?? '18:00:00'
+                'hora_fim' => $horario['hora_fim'] ?? '18:00:00',
+                'almoco_ativo' => $horario['almoco_ativo'] ?? 0,
+                'almoco_inicio' => $horario['almoco_inicio'] ?? null,
+                'almoco_fim' => $horario['almoco_fim'] ?? null
             ];
         }
 
@@ -69,6 +72,20 @@ class Horario_estabelecimento_model extends CI_Model {
         $this->db->where('hora_fim >=', $hora);
 
         return $this->db->get($this->table)->num_rows() > 0;
+    }
+
+    /**
+     * Verificar se horário está no intervalo de almoço
+     */
+    public function verificar_horario_almoco($estabelecimento_id, $dia_semana, $hora) {
+        $horario = $this->get_by_dia($estabelecimento_id, $dia_semana);
+
+        if (!$horario || !$horario->almoco_ativo) {
+            return false; // Não tem almoço configurado
+        }
+
+        // Verificar se hora está no intervalo de almoço
+        return ($hora >= $horario->almoco_inicio && $hora < $horario->almoco_fim);
     }
 
     /**

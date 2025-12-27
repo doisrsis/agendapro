@@ -259,6 +259,16 @@ class Agendamento_model extends CI_Model {
             return false;
         }
 
+        // 1.5. Verificar intervalo de almoço
+        if ($this->Horario_estabelecimento_model->verificar_horario_almoco(
+            $profissional->estabelecimento_id,
+            $dia_semana,
+            $hora_inicio
+        )) {
+            $this->erro_disponibilidade = 'Horário de almoço. Estabelecimento fechado.';
+            return false;
+        }
+
         // 2. Verificar tempo mínimo para agendamento
         $this->load->model('Estabelecimento_model');
         $estabelecimento = $this->Estabelecimento_model->get($profissional->estabelecimento_id);

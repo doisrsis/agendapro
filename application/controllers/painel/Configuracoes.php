@@ -105,7 +105,10 @@ class Configuracoes extends CI_Controller {
             $horarios[$dia] = [
                 'ativo' => $this->input->post("dia_{$dia}_ativo") ? 1 : 0,
                 'hora_inicio' => $this->input->post("dia_{$dia}_inicio") ?? '08:00:00',
-                'hora_fim' => $this->input->post("dia_{$dia}_fim") ?? '18:00:00'
+                'hora_fim' => $this->input->post("dia_{$dia}_fim") ?? '18:00:00',
+                'almoco_ativo' => (int)$this->input->post("dia_{$dia}_almoco_ativo"),
+                'almoco_inicio' => $this->input->post("dia_{$dia}_almoco_inicio") ?? null,
+                'almoco_fim' => $this->input->post("dia_{$dia}_almoco_fim") ?? null
             ];
         }
 
@@ -116,6 +119,7 @@ class Configuracoes extends CI_Controller {
             'tempo_minimo_agendamento' => $this->input->post('tempo_minimo_agendamento') ?? 60,
             'usar_intervalo_fixo' => (int)$this->input->post('usar_intervalo_fixo'),
             'intervalo_agendamento' => $this->input->post('intervalo_agendamento') ?? 30,
+            'dias_antecedencia_agenda' => $this->input->post('dias_antecedencia_agenda') ?? 30,
             'confirmacao_automatica' => $this->input->post('confirmacao_automatica') ? 1 : 0,
             'permite_reagendamento' => $this->input->post('permite_reagendamento') ? 1 : 0,
             'limite_reagendamentos' => $this->input->post('limite_reagendamentos') ?? 3

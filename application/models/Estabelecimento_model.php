@@ -113,6 +113,7 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['tempo_minimo_agendamento'])) $update_data['tempo_minimo_agendamento'] = $data['tempo_minimo_agendamento'];
         if (isset($data['usar_intervalo_fixo'])) $update_data['usar_intervalo_fixo'] = $data['usar_intervalo_fixo'];
         if (isset($data['intervalo_agendamento'])) $update_data['intervalo_agendamento'] = $data['intervalo_agendamento'];
+        if (isset($data['dias_antecedencia_agenda'])) $update_data['dias_antecedencia_agenda'] = $data['dias_antecedencia_agenda'];
 
         if (empty($update_data)) {
             return false;
