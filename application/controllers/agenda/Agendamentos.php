@@ -301,6 +301,9 @@ class Agendamentos extends Agenda_Controller {
             return null;
         }
 
+        // Carregar model de feriados
+        $this->load->model('Feriado_model');
+
         // Calcular data máxima pulando dias inativos
         $data_atual = new DateTime();
         $dias_contados = 0;
@@ -308,11 +311,13 @@ class Agendamentos extends Agenda_Controller {
         while ($dias_contados < $dias_necessarios) {
             $data_atual->add(new DateInterval('P1D')); // Adicionar 1 dia
             $dia_semana = (int)$data_atual->format('w'); // 0=domingo, 6=sábado
+            $data_str = $data_atual->format('Y-m-d');
 
             // Contar apenas se o dia está ativo
-            if (in_array($dia_semana, $dias_ativos)) {
-                $dias_contados++;
-            }
+            if (in_array($dia_semana, $dias_ativos) &&
+    !$this->Feriado_model->is_feriado($data_str, $estabelecimento_id)) {
+        $dias_contados++;
+    }
         }
 
         return $data_atual->format('Y-m-d');

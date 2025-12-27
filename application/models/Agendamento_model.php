@@ -269,6 +269,14 @@ class Agendamento_model extends CI_Model {
             return false;
         }
 
+        // 1.6. Verificar se a data é feriado
+        $this->load->model('Feriado_model');
+        if ($this->Feriado_model->is_feriado($data, $profissional->estabelecimento_id)) {
+            $feriado = $this->Feriado_model->get_by_data($data, $profissional->estabelecimento_id);
+            $this->erro_disponibilidade = 'Feriado: ' . $feriado->nome . '. Estabelecimento fechado.';
+            return false;
+        }
+
         // 2. Verificar tempo mínimo para agendamento
         $this->load->model('Estabelecimento_model');
         $estabelecimento = $this->Estabelecimento_model->get($profissional->estabelecimento_id);
