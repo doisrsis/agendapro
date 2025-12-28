@@ -42,32 +42,35 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Serviço</label>
-                                    <select class="form-select" name="servico_id" id="servico_id" required>
+                                    <label class="form-label required">Profissional</label>
+                                    <select class="form-select" name="profissional_id" id="profissional_id" required>
                                         <option value="">Selecione...</option>
-                                        <?php foreach ($servicos as $servico): ?>
-                                        <option value="<?= $servico->id ?>" data-preco="<?= $servico->preco ?>"
-                                                <?= set_select('servico_id', $servico->id, ($agendamento->servico_id ?? '') == $servico->id) ?>>
-                                            <?= $servico->nome ?> - R$ <?= number_format($servico->preco, 2, ',', '.') ?>
+                                        <?php foreach ($profissionais as $prof): ?>
+                                        <option value="<?= $prof->id ?>"
+                                                <?= set_select('profissional_id', $prof->id, ($agendamento->profissional_id ?? '') == $prof->id) ?>>
+                                            <?= $prof->nome ?>
                                         </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <?= form_error('servico_id', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                    <?= form_error('profissional_id', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label required">Profissional</label>
-                                <select class="form-select" name="profissional_id" id="profissional_id" required>
-                                    <option value="">Selecione...</option>
-                                    <?php foreach ($profissionais as $prof): ?>
-                                    <option value="<?= $prof->id ?>"
-                                            <?= set_select('profissional_id', $prof->id, ($agendamento->profissional_id ?? '') == $prof->id) ?>>
-                                        <?= $prof->nome ?>
+                                <label class="form-label required">Serviço</label>
+                                <select class="form-select" name="servico_id" id="servico_id" required>
+                                    <option value="">Selecione o profissional primeiro...</option>
+                                    <?php foreach ($servicos as $servico): ?>
+                                    <option value="<?= $servico->id ?>"
+                                            data-preco="<?= $servico->preco ?>"
+                                            data-profissionais="<?= isset($servico->profissionais) ? $servico->profissionais : '' ?>"
+                                            style="display:none;"
+                                            <?= set_select('servico_id', $servico->id, ($agendamento->servico_id ?? '') == $servico->id) ?>>
+                                        <?= $servico->nome ?> - R$ <?= number_format($servico->preco, 2, ',', '.') ?>
                                     </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <?= form_error('profissional_id', '<div class="invalid-feedback d-block">', '</div>') ?>
+                                <?= form_error('servico_id', '<div class="invalid-feedback d-block">', '</div>') ?>
                             </div>
 
                             <div class="row">
@@ -175,6 +178,44 @@ document.addEventListener('DOMContentLoaded', function() {
     const profissionalSelect = document.getElementById('profissional_id');
     const dataInput = document.getElementById('data');
     const horaSelect = document.getElementById('hora_inicio');
+
+    // Carregar serviços quando profissional for selecionado
+    profissionalSelect.addEventListener('change', function() {
+        const profissionalId = this.value;
+
+        if (!profissionalId) {
+            servicoSelect.innerHTML = '<option value="">Selecione o profissional primeiro...</option>';
+            return;
+        }
+
+        // Carregar serviços do profissional
+        servicoSelect.innerHTML = '<option value="">🔄 Carregando serviços...</option>';
+
+        fetch('<?= base_url('painel/agendamentos/get_servicos_profissional/') ?>' + profissionalId)
+            .then(r => r.json())
+            .then(servicos => {
+                servicoSelect.innerHTML = '<option value="">Selecione...</option>';
+
+                if (servicos && servicos.length > 0) {
+                    servicos.forEach(servico => {
+                        const option = document.createElement('option');
+                        option.value = servico.id;
+                        option.dataset.preco = servico.preco;
+                        option.textContent = `${servico.nome} - R$ ${parseFloat(servico.preco).toFixed(2).replace('.', ',')}`;
+                        servicoSelect.appendChild(option);
+                    });
+                } else {
+                    servicoSelect.innerHTML = '<option value="">Nenhum serviço ativo para este profissional</option>';
+                }
+
+                // Limpar horários
+                horaSelect.innerHTML = '<option value="">Selecione data e serviço primeiro</option>';
+            })
+            .catch(error => {
+                console.error('Erro ao carregar serviços:', error);
+                servicoSelect.innerHTML = '<option value="">Erro ao carregar serviços</option>';
+            });
+    });
 
     // Carregar horários disponíveis
     function carregarHorarios() {

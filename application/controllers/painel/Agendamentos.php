@@ -72,10 +72,108 @@ class Agendamentos extends Painel_Controller {
                     'servico_id' => $this->input->post('servico_id'),
                     'data' => $this->input->post('data'),
                     'hora_inicio' => $this->input->post('hora_inicio'),
-                    'status' => 'pendente',
+                    'observacoes' => $this->input->post('observacoes')
                 ];
 
-                if ($this->Agendamento_model->criar($dados)) {
+                log_message('error', 'DEBUG: Antes de criar agendamento');
+                $agendamento_id = $this->Agendamento_model->criar($dados);
+                log_message('error', 'DEBUG: ID retornado: ' . ($agendamento_id ?: 'FALSE'));
+
+                if ($agendamento_id) {
+                    // Verificar se requer pagamento
+                    $this->load->model('Estabelecimento_model');
+                    $estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+
+                    if ($estabelecimento->agendamento_requer_pagamento != 'nao') {
+                        // Calcular valor
+                        $valor = 0;
+                        if ($estabelecimento->agendamento_requer_pagamento == 'valor_total') {
+                            $servico = $this->Servico_model->get($dados['servico_id']);
+                            $valor = $servico->preco;
+                        } else if ($estabelecimento->agendamento_requer_pagamento == 'taxa_fixa') {
+                            $valor = $estabelecimento->agendamento_taxa_fixa;
+                        }
+
+                        // Gerar PIX
+                        $this->load->library('mercadopago_lib');
+                        $this->load->model('Pagamento_model');
+
+                        // Usar credenciais do estabelecimento
+                        $access_token = $estabelecimento->mp_sandbox
+                            ? $estabelecimento->mp_access_token_test
+                            : $estabelecimento->mp_access_token_prod;
+                        $public_key = $estabelecimento->mp_sandbox
+                            ? $estabelecimento->mp_public_key_test
+                            : $estabelecimento->mp_public_key_prod;
+
+                        $this->mercadopago_lib->set_credentials($access_token, $public_key);
+
+                        $cliente = $this->Cliente_model->get($dados['cliente_id']);
+
+                        log_message('error', 'DEBUG: Cliente = ' . ($cliente ? $cliente->nome : 'NULL'));
+
+                        log_message('error', 'DEBUG: Chamando criar_pix_agendamento...');
+
+                        $pix_result = $this->mercadopago_lib->criar_pix_agendamento(
+                            $agendamento_id,
+                            $valor,
+                            [
+                                'nome' => $cliente->nome,
+                                'email' => $cliente->email ?: 'cliente@agendapro.com',
+                                'cpf' => $cliente->cpf ?: ''
+                            ],
+                            $estabelecimento->id
+                        );
+
+                        log_message('error', 'DEBUG: PIX retornou - Status: ' . ($pix_result['status'] ?? 'NULL'));
+                        log_message('error', 'DEBUG: PIX retornou - Response existe: ' . (isset($pix_result['response']) ? 'SIM' : 'NÃO'));
+
+                        if ($pix_result && isset($pix_result['response']) && in_array($pix_result['status'], [200, 201])) {
+                            log_message('error', 'DEBUG: Entrou no IF de sucesso!');
+
+                            $pix_data = $pix_result['response'];
+
+                            log_message('error', 'DEBUG: PIX ID = ' . $pix_data['id']);
+
+                            // Salvar dados do PIX no agendamento
+                            $this->Agendamento_model->atualizar($agendamento_id, [
+                                'pagamento_status' => 'pendente',
+                                'pagamento_valor' => $valor,
+                                'pagamento_pix_qrcode' => $pix_data['point_of_interaction']['transaction_data']['qr_code_base64'] ?? null,
+                                'pagamento_pix_copia_cola' => $pix_data['point_of_interaction']['transaction_data']['qr_code'] ?? null,
+                                'pagamento_expira_em' => date('Y-m-d H:i:s', strtotime("+{$estabelecimento->agendamento_tempo_expiracao_pix} minutes"))
+                            ]);
+
+                            // Criar registro de pagamento
+                            $this->Pagamento_model->criar_agendamento([
+                                'estabelecimento_id' => $estabelecimento->id,
+                                'agendamento_id' => $agendamento_id,
+                                'valor' => $valor,
+                                'mercadopago_id' => $pix_data['id'],
+                                'payment_data' => $pix_data
+                            ]);
+
+                            // Redirecionar para página de pagamento
+                            $this->session->set_flashdata('sucesso', 'Agendamento criado! Complete o pagamento para confirmar.');
+                            redirect('painel/agendamentos/pagamento/' . $agendamento_id);
+                            return;
+                        } else {
+                            // Erro ao gerar PIX
+                            log_message('error', 'Erro ao gerar PIX: ' . json_encode($pix_result));
+                            $this->session->set_flashdata('erro', 'Erro ao gerar PIX. Verifique as configurações do Mercado Pago.');
+                        }
+                    } else {
+                        // NÃO requer pagamento - confirmar automaticamente
+                        $this->Agendamento_model->atualizar($agendamento_id, [
+                            'status' => 'confirmado'
+                        ]);
+
+                        $this->session->set_flashdata('sucesso', 'Agendamento criado com sucesso!');
+                        redirect('painel/agendamentos');
+                        return;
+                    }
+
+                    // Agendamento sem pagamento
                     $this->session->set_flashdata('sucesso', 'Agendamento criado com sucesso!');
                     redirect('painel/agendamentos');
                 } else {
@@ -90,7 +188,10 @@ class Agendamentos extends Painel_Controller {
         $data['menu_ativo'] = 'agendamentos';
         $data['clientes'] = $this->Cliente_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
         $data['profissionais'] = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
-        $data['servicos'] = $this->Servico_model->get_all(['estabelecimento_id' => $this->estabelecimento_id]);
+        $data['servicos'] = $this->Servico_model->get_all([
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'ativo' => 1  // Apenas serviços ativos
+        ]);
 
         // Calcular data máxima baseada no período de abertura
         $this->load->model('Estabelecimento_model');
@@ -581,9 +682,93 @@ class Agendamentos extends Painel_Controller {
             }
         }
 
+        // /Se ainda está pendente, verificar no Mercado Pago
+        if ($agendamento->pagamento_status == 'pendente') {
+            log_message('error', '=== POLLING: Agendamento #' . $id . ' está pendente, consultando MP...');
+
+            $this->load->model('Pagamento_model');
+            $this->load->model('Estabelecimento_model');
+            $this->load->library('mercadopago_lib');
+
+            // Buscar pagamento
+            $pagamento = $this->Pagamento_model->get_by_agendamento($id);
+
+            log_message('error', '=== POLLING: Pagamento encontrado? ' . ($pagamento ? 'SIM (MP ID: ' . $pagamento->mercadopago_id . ')' : 'NÃO'));
+
+            if ($pagamento && $pagamento->mercadopago_id) {
+                // Buscar estabelecimento para credenciais
+                $estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+
+                // Configurar credenciais
+                $access_token = $estabelecimento->mp_sandbox
+                    ? $estabelecimento->mp_access_token_test
+                    : $estabelecimento->mp_access_token_prod;
+                $public_key = $estabelecimento->mp_sandbox
+                    ? $estabelecimento->mp_public_key_test
+                    : $estabelecimento->mp_public_key_prod;
+
+                $this->mercadopago_lib->set_credentials($access_token, $public_key);
+
+                log_message('error', '=== POLLING: Consultando MP Payment ID: ' . $pagamento->mercadopago_id);
+
+                // Consultar status no MP
+                $mp_payment = $this->mercadopago_lib->get_pagamento($pagamento->mercadopago_id);
+
+                log_message('error', '=== POLLING: Resposta MP: ' . json_encode($mp_payment));
+
+                // CORREÇÃO: A biblioteca retorna em 'response', não em 'data'
+                if ($mp_payment && isset($mp_payment['response'])) {
+                    $mp_status = $mp_payment['response']['status'];
+
+                    log_message('error', '=== POLLING: Status MP = ' . $mp_status);
+
+                    // Se foi aprovado, confirmar
+                    if ($mp_status === 'approved') {
+                        log_message('error', '=== POLLING: APROVADO! Confirmando...');
+
+                        $this->Pagamento_model->confirmar_agendamento($id);
+
+                        echo json_encode([
+                            'status' => 'pago',
+                            'valor' => $agendamento->pagamento_valor,
+                            'redirect' => base_url('painel/agendamentos')
+                        ]);
+                        return;
+                    }
+
+                    // Se foi cancelado/rejeitado
+                    if (in_array($mp_status, ['cancelled', 'rejected'])) {
+                        $this->Agendamento_model->atualizar($id, [
+                            'pagamento_status' => 'cancelado'
+                        ]);
+
+                        echo json_encode([
+                            'status' => 'cancelado',
+                            'valor' => $agendamento->pagamento_valor
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
         echo json_encode([
             'status' => $agendamento->pagamento_status,
             'valor' => $agendamento->pagamento_valor
         ]);
+    }
+
+    /**
+     * Buscar serviços de um profissional (AJAX)
+     *
+     * @param int $profissional_id ID do profissional
+     */
+    public function get_servicos_profissional($profissional_id) {
+        header('Content-Type: application/json');
+
+        $this->load->model('Profissional_model');
+        $servicos = $this->Profissional_model->get_servicos($profissional_id);
+
+        echo json_encode($servicos);
     }
 }

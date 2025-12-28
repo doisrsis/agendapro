@@ -7,7 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Gerencia os agendamentos do sistema com validação de disponibilidade
  *
  * @author Rafael Dias - doisr.com.br
- * @date 05/12/2024
+ * @date 05/12//2024
  */
 class Agendamento_model extends CI_Model {
 
@@ -198,6 +198,13 @@ class Agendamento_model extends CI_Model {
         if (isset($data['cancelado_por'])) $update_data['cancelado_por'] = $data['cancelado_por'];
         if (isset($data['motivo_cancelamento'])) $update_data['motivo_cancelamento'] = $data['motivo_cancelamento'];
 
+        // Campos de pagamento
+        if (isset($data['pagamento_status'])) $update_data['pagamento_status'] = $data['pagamento_status'];
+        if (isset($data['pagamento_valor'])) $update_data['pagamento_valor'] = $data['pagamento_valor'];
+        if (isset($data['pagamento_pix_qrcode'])) $update_data['pagamento_pix_qrcode'] = $data['pagamento_pix_qrcode'];
+        if (isset($data['pagamento_pix_copia_cola'])) $update_data['pagamento_pix_copia_cola'] = $data['pagamento_pix_copia_cola'];
+        if (isset($data['pagamento_expira_em'])) $update_data['pagamento_expira_em'] = $data['pagamento_expira_em'];
+
         if (empty($update_data)) {
             return false;
         }
@@ -269,7 +276,7 @@ class Agendamento_model extends CI_Model {
             return false;
         }
 
-        // 1.6. Verificar se a data é feriado
+        /// 1.6. Verificar se a data é feriado
         $this->load->model('Feriado_model');
         if ($this->Feriado_model->is_feriado($data, $profissional->estabelecimento_id)) {
             $feriado = $this->Feriado_model->get_by_data($data, $profissional->estabelecimento_id);

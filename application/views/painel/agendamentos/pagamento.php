@@ -6,7 +6,7 @@
  * Verifica status automaticamente via polling
  *
  * @author Rafael Dias - doisr.com.br
- * @date 27/12/2024
+ * @date 27//12/2024
  */
 $this->load->view('painel/layout/header');
 ?>
@@ -169,6 +169,8 @@ const intervaloPagamento = setInterval(() => {
     fetch('<?= base_url("painel/agendamentos/verificar_pagamento/{$agendamento->id}") ?>')
         .then(r => r.json())
         .then(data => {
+            console.log('Polling response:', data); // DEBUG
+
             if (data.status === 'pago') {
                 clearInterval(intervaloPagamento);
                 clearInterval(intervaloTempo);
