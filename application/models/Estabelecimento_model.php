@@ -115,6 +115,19 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['intervalo_agendamento'])) $update_data['intervalo_agendamento'] = $data['intervalo_agendamento'];
         if (isset($data['dias_antecedencia_agenda'])) $update_data['dias_antecedencia_agenda'] = $data['dias_antecedencia_agenda'];
 
+        // Campos de pagamento de agendamentos
+        if (isset($data['agendamento_requer_pagamento'])) $update_data['agendamento_requer_pagamento'] = $data['agendamento_requer_pagamento'];
+        if (isset($data['agendamento_taxa_fixa'])) $update_data['agendamento_taxa_fixa'] = $data['agendamento_taxa_fixa'];
+        if (isset($data['agendamento_tempo_expiracao_pix'])) $update_data['agendamento_tempo_expiracao_pix'] = $data['agendamento_tempo_expiracao_pix'];
+
+        // Campos de Mercado Pago
+        if (isset($data['mp_access_token_test'])) $update_data['mp_access_token_test'] = $data['mp_access_token_test'];
+        if (isset($data['mp_public_key_test'])) $update_data['mp_public_key_test'] = $data['mp_public_key_test'];
+        if (isset($data['mp_access_token_prod'])) $update_data['mp_access_token_prod'] = $data['mp_access_token_prod'];
+        if (isset($data['mp_public_key_prod'])) $update_data['mp_public_key_prod'] = $data['mp_public_key_prod'];
+        if (isset($data['mp_sandbox'])) $update_data['mp_sandbox'] = $data['mp_sandbox'];
+
+
         if (empty($update_data)) {
             return false;
         }

@@ -314,6 +314,73 @@
                                 </div>
                             </div>
 
+                            <hr class="my-4">
+
+                            <!-- Pagamento de Agendamentos -->
+                            <h3 class="mb-3">Pagamento de Agendamentos</h3>
+
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>Importante:</strong> Configure suas credenciais do Mercado Pago na aba "Mercado Pago" antes de ativar o pagamento de agendamentos.
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Exigir Pagamento para Confirmar Agendamento</label>
+                                <select class="form-select" name="agendamento_requer_pagamento" id="agendamento_requer_pagamento">
+                                    <option value="nao" <?= ($estabelecimento->agendamento_requer_pagamento ?? 'nao') == 'nao' ? 'selected' : '' ?>>
+                                        Não exigir pagamento
+                                    </option>
+                                    <option value="valor_total" <?= ($estabelecimento->agendamento_requer_pagamento ?? 'nao') == 'valor_total' ? 'selected' : '' ?>>
+                                        Valor total do serviço
+                                    </option>
+                                    <option value="taxa_fixa" <?= ($estabelecimento->agendamento_requer_pagamento ?? 'nao') == 'taxa_fixa' ? 'selected' : '' ?>>
+                                        Taxa fixa de agendamento
+                                    </option>
+                                </select>
+                                <small class="text-muted">
+                                    Escolha se deseja cobrar via PIX para confirmar agendamentos
+                                </small>
+                            </div>
+
+                            <div class="mb-3" id="taxa-fixa-container" style="display: none;">
+                                <label class="form-label">Valor da Taxa de Agendamento</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" name="agendamento_taxa_fixa"
+                                           value="<?= $estabelecimento->agendamento_taxa_fixa ?? '10.00' ?>"
+                                           step="0.01" min="0" placeholder="10.00">
+                                </div>
+                                <small class="text-muted">
+                                    Valor fixo que será cobrado para reservar o horário
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tempo de Expiração do PIX</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="agendamento_tempo_expiracao_pix"
+                                           value="<?= $estabelecimento->agendamento_tempo_expiracao_pix ?? 30 ?>"
+                                           min="5" max="60">
+                                    <span class="input-group-text">minutos</span>
+                                </div>
+                                <small class="text-muted">
+                                    Tempo que o cliente tem para pagar o PIX antes de expirar
+                                </small>
+                            </div>
+
+                            <script>
+                            // Mostrar/ocultar campo de taxa fixa
+                            document.getElementById('agendamento_requer_pagamento').addEventListener('change', function() {
+                                document.getElementById('taxa-fixa-container').style.display =
+                                    this.value === 'taxa_fixa' ? 'block' : 'none';
+                            });
+
+                            // Executar ao carregar a página
+                            if (document.getElementById('agendamento_requer_pagamento').value === 'taxa_fixa') {
+                                document.getElementById('taxa-fixa-container').style.display = 'block';
+                            }
+                            </script>
+
                             <div class="text-end">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="ti ti-device-floppy me-2"></i>
@@ -392,26 +459,51 @@
                                 <strong>Mercado Pago:</strong> Configure a integração para receber pagamentos online.
                             </div>
 
+                            <h4 class="mb-3">Credenciais de Teste (Sandbox)</h4>
+
                             <div class="mb-3">
-                                <label class="form-label">Public Key</label>
-                                <input type="text" class="form-control" name="mp_public_key"
-                                       value="<?= set_value('mp_public_key', $estabelecimento->mp_public_key ?? '') ?>"
+                                <label class="form-label">Public Key (Teste)</label>
+                                <input type="text" class="form-control" name="mp_public_key_test"
+                                       value="<?= set_value('mp_public_key_test', $estabelecimento->mp_public_key_test ?? '') ?>"
                                        placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Access Token</label>
-                                <input type="text" class="form-control" name="mp_access_token"
-                                       value="<?= set_value('mp_access_token', $estabelecimento->mp_access_token ?? '') ?>"
+                                <label class="form-label">Access Token (Teste)</label>
+                                <input type="text" class="form-control" name="mp_access_token_test"
+                                       value="<?= set_value('mp_access_token_test', $estabelecimento->mp_access_token_test ?? '') ?>"
                                        placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
                             </div>
+
+                            <hr class="my-4">
+
+                            <h4 class="mb-3">Credenciais de Produção</h4>
+
+                            <div class="mb-3">
+                                <label class="form-label">Public Key (Produção)</label>
+                                <input type="text" class="form-control" name="mp_public_key_prod"
+                                       value="<?= set_value('mp_public_key_prod', $estabelecimento->mp_public_key_prod ?? '') ?>"
+                                       placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Access Token (Produção)</label>
+                                <input type="text" class="form-control" name="mp_access_token_prod"
+                                       value="<?= set_value('mp_access_token_prod', $estabelecimento->mp_access_token_prod ?? '') ?>"
+                                       placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            </div>
+
+                            <hr class="my-4">
 
                             <div class="mb-3">
                                 <label class="form-check form-switch">
-                                    <input type="checkbox" class="form-check-input" name="mp_ativo"
-                                           <?= ($estabelecimento->mp_ativo ?? 0) ? 'checked' : '' ?>>
-                                    <span class="form-check-label">Integração Ativa</span>
+                                    <input type="checkbox" class="form-check-input" name="mp_sandbox" value="1"
+                                           <?= ($estabelecimento->mp_sandbox ?? 0) ? 'checked' : '' ?>>
+                                    <span class="form-check-label">Modo Sandbox (Teste)</span>
                                 </label>
+                                <small class="text-muted d-block mt-1">
+                                    Ative para usar as credenciais de teste. Desative para usar produção.
+                                </small>
                             </div>
 
                             <div class="text-end">

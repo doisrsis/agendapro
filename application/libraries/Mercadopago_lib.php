@@ -54,6 +54,45 @@ class Mercadopago_lib {
     }
 
     /**
+     * Definir credenciais manualmente (para estabelecimentos)
+     *
+     * @param string $access_token Token de acesso do estabelecimento
+     * @param string $public_key Chave pública do estabelecimento (opcional)
+     */
+    public function set_credentials($access_token, $public_key = null) {
+        if ($access_token) {
+            $this->access_token = $access_token;
+        }
+
+        if ($public_key) {
+            $this->public_key = $public_key;
+        }
+    }
+
+    /**
+     * Criar pagamento PIX para agendamento
+     *
+     * @param int $agendamento_id ID do agendamento
+     * @param float $valor Valor a ser pago
+     * @param array $cliente_dados Dados do cliente (nome, email, cpf)
+     * @param int $estabelecimento_id ID do estabelecimento
+     * @return array|false Resposta da API ou false em caso de erro
+     */
+    public function criar_pix_agendamento($agendamento_id, $valor, $cliente_dados, $estabelecimento_id) {
+        $dados = [
+            'valor' => $valor,
+            'descricao' => "Agendamento #{$agendamento_id}",
+            'email' => $cliente_dados['email'],
+            'nome' => $cliente_dados['nome'],
+            'cpf' => $cliente_dados['cpf'] ?? '',
+            'external_reference' => "agendamento_{$agendamento_id}",
+            'notification_url' => base_url("webhook/mercadopago/agendamento/{$estabelecimento_id}")
+        ];
+
+        return $this->criar_pagamento_pix($dados);
+    }
+
+    /**
      * Criar pagamento PIX
      */
     public function criar_pagamento_pix($dados) {

@@ -120,9 +120,10 @@ class Configuracoes extends CI_Controller {
             'usar_intervalo_fixo' => (int)$this->input->post('usar_intervalo_fixo'),
             'intervalo_agendamento' => $this->input->post('intervalo_agendamento') ?? 30,
             'dias_antecedencia_agenda' => $this->input->post('dias_antecedencia_agenda') ?? 30,
-            'confirmacao_automatica' => $this->input->post('confirmacao_automatica') ? 1 : 0,
-            'permite_reagendamento' => $this->input->post('permite_reagendamento') ? 1 : 0,
-            'limite_reagendamentos' => $this->input->post('limite_reagendamentos') ?? 3
+            // Pagamento de agendamentos
+            'agendamento_requer_pagamento' => $this->input->post('agendamento_requer_pagamento') ?? 'nao',
+            'agendamento_taxa_fixa' => $this->input->post('agendamento_taxa_fixa') ?? 0.00,
+            'agendamento_tempo_expiracao_pix' => $this->input->post('agendamento_tempo_expiracao_pix') ?? 30
         ];
 
         // DEBUG: Log dos dados que serão salvos
@@ -165,14 +166,22 @@ class Configuracoes extends CI_Controller {
      */
     private function salvar_integracao_mercadopago() {
         $dados = [
-            'mp_public_key' => $this->input->post('mp_public_key'),
-            'mp_access_token' => $this->input->post('mp_access_token'),
-            'mp_ativo' => $this->input->post('mp_ativo') ? 1 : 0
+            'mp_public_key_test' => $this->input->post('mp_public_key_test'),
+            'mp_access_token_test' => $this->input->post('mp_access_token_test'),
+            'mp_public_key_prod' => $this->input->post('mp_public_key_prod'),
+            'mp_access_token_prod' => $this->input->post('mp_access_token_prod'),
+            'mp_sandbox' => $this->input->post('mp_sandbox') ? 1 : 0
         ];
 
+        // DEBUG: Log dos dados
+        log_message('debug', 'Configuracoes/salvar_mercadopago - Dados POST: ' . json_encode($_POST));
+        log_message('debug', 'Configuracoes/salvar_mercadopago - Dados para salvar: ' . json_encode($dados));
+
         if ($this->Estabelecimento_model->update($this->estabelecimento_id, $dados)) {
+            log_message('debug', 'Configuracoes/salvar_mercadopago - Salvo com sucesso');
             $this->session->set_flashdata('sucesso', 'Integração Mercado Pago atualizada!');
         } else {
+            log_message('error', 'Configuracoes/salvar_mercadopago - Erro ao salvar');
             $this->session->set_flashdata('erro', 'Erro ao atualizar integração.');
         }
 

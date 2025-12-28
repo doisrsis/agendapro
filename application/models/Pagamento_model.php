@@ -198,4 +198,68 @@ class Pagamento_model extends CI_Model {
             ->where('id', $id)
             ->delete($this->table);
     }
+
+    /**
+     * Criar pagamento de agendamento
+     *
+     * @param array $dados Dados do pagamento
+     * @return int|false ID do pagamento criado ou false
+     */
+    public function criar_agendamento($dados) {
+        $pagamento = [
+            'estabelecimento_id' => $dados['estabelecimento_id'],
+            'agendamento_id' => $dados['agendamento_id'],
+            'plano_id' => 0, // Não é assinatura
+            'tipo' => 'agendamento',
+            'valor' => $dados['valor'],
+            'mercadopago_id' => $dados['mercadopago_id'] ?? null,
+            'status' => 'pending',
+            'payment_data' => json_encode($dados['payment_data'] ?? [])
+        ];
+
+        return $this->criar($pagamento);
+    }
+
+    /**
+     * Buscar pagamento por agendamento
+     *
+     * @param int $agendamento_id ID do agendamento
+     * @return object|null Dados do pagamento
+     */
+    public function get_by_agendamento($agendamento_id) {
+        return $this->db
+            ->where('agendamento_id', $agendamento_id)
+            ->where('tipo', 'agendamento')
+            ->order_by('criado_em', 'DESC')
+            ->limit(1)
+            ->get($this->table)
+            ->row();
+    }
+
+    /**
+     * Confirmar pagamento de agendamento
+     *
+     * @param int $agendamento_id ID do agendamento
+     * @return bool Sucesso da operação
+     */
+    public function confirmar_agendamento($agendamento_id) {
+        // Atualizar pagamento
+        $this->db
+            ->where('agendamento_id', $agendamento_id)
+            ->where('tipo', 'agendamento')
+            ->update($this->table, [
+                'status' => 'approved',
+                'atualizado_em' => date('Y-m-d H:i:s')
+            ]);
+
+        // Atualizar agendamento
+        $this->db
+            ->where('id', $agendamento_id)
+            ->update('agendamentos', [
+                'pagamento_status' => 'pago',
+                'status' => 'confirmado'
+            ]);
+
+        return true;
+    }
 }

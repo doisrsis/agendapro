@@ -521,4 +521,69 @@ class Agendamentos extends Painel_Controller {
         }  // ← Fechar o while
         return $data_atual->format('Y-m-d');
     }
+
+    /**
+     * Exibir página de pagamento PIX
+     *
+     * @param int $id ID do agendamento
+     */
+    public function pagamento($id) {
+        $agendamento = $this->Agendamento_model->get($id);
+
+        // Verificar permissão
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            show_404();
+        }
+
+        // Verificar se tem pagamento pendente
+        if ($agendamento->pagamento_status != 'pendente') {
+            $this->session->set_flashdata('warning', 'Este agendamento não possui pagamento pendente.');
+            redirect('painel/agendamentos');
+            return;
+        }
+
+        $data['titulo'] = 'Pagamento do Agendamento';
+        $data['menu_ativo'] = 'agendamentos';
+        $data['agendamento'] = $agendamento;
+
+        $this->load->view('painel/agendamentos/pagamento', $data);
+    }
+
+    /**
+     * Verificar status do pagamento (AJAX)
+     *
+     * @param int $id ID do agendamento
+     */
+    public function verificar_pagamento($id) {
+        header('Content-Type: application/json');
+
+        $agendamento = $this->Agendamento_model->get($id);
+
+        // Verificar permissão
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            echo json_encode(['error' => 'Not found']);
+            return;
+        }
+
+        // Verificar se expirou
+        if ($agendamento->pagamento_expira_em && strtotime($agendamento->pagamento_expira_em) < time()) {
+            // Marcar como expirado se ainda estiver pendente
+            if ($agendamento->pagamento_status == 'pendente') {
+                $this->Agendamento_model->atualizar($id, [
+                    'pagamento_status' => 'expirado'
+                ]);
+
+                echo json_encode([
+                    'status' => 'expirado',
+                    'valor' => $agendamento->pagamento_valor
+                ]);
+                return;
+            }
+        }
+
+        echo json_encode([
+            'status' => $agendamento->pagamento_status,
+            'valor' => $agendamento->pagamento_valor
+        ]);
+    }
 }
