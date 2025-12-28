@@ -187,7 +187,13 @@ class Agendamentos extends Admin_Controller {
                 if ($this->Agendamento_model->update($id, $dados)) {
                     // Verificar se houve mudança de data/hora (reagendamento)
                     if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
+                        // Notificar cliente
                         $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
+                            'data_anterior' => $data_anterior,
+                            'hora_anterior' => $hora_anterior
+                        ]);
+                        // Notificar profissional/estabelecimento
+                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_reagendamento', [
                             'data_anterior' => $data_anterior,
                             'hora_anterior' => $hora_anterior
                         ]);

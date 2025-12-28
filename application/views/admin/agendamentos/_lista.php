@@ -27,8 +27,9 @@
                         <option value="">Todos</option>
                         <option value="pendente" <?= ($filtros['status'] ?? '') == 'pendente' ? 'selected' : '' ?>>Pendente</option>
                         <option value="confirmado" <?= ($filtros['status'] ?? '') == 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
+                        <option value="em_atendimento" <?= ($filtros['status'] ?? '') == 'em_atendimento' ? 'selected' : '' ?>>Em Atendimento</option>
+                        <option value="finalizado" <?= ($filtros['status'] ?? '') == 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
                         <option value="cancelado" <?= ($filtros['status'] ?? '') == 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
-                        <option value="concluido" <?= ($filtros['status'] ?? '') == 'concluido' ? 'selected' : '' ?>>Concluído</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -100,42 +101,62 @@
                     <td>
                         <?php
                         $badge_class = 'bg-secondary';
+                        $status_texto = $ag->status;
                         switch ($ag->status) {
                             case 'pendente':
                                 $badge_class = 'bg-warning';
+                                $status_texto = 'Pendente';
                                 break;
                             case 'confirmado':
                                 $badge_class = 'bg-success';
+                                $status_texto = 'Confirmado';
+                                break;
+                            case 'em_atendimento':
+                                $badge_class = 'bg-primary';
+                                $status_texto = 'Em Atendimento';
                                 break;
                             case 'cancelado':
                                 $badge_class = 'bg-danger';
+                                $status_texto = 'Cancelado';
                                 break;
                             case 'concluido':
+                            case 'finalizado':
                                 $badge_class = 'bg-info';
+                                $status_texto = 'Finalizado';
                                 break;
                         }
                         ?>
                         <span class="badge <?= $badge_class ?>">
-                            <?= ucfirst($ag->status) ?>
+                            <?= $status_texto ?>
                         </span>
                     </td>
                     <td>
-                        <div class="btn-list flex-nowrap">
+                        <div class="btn-group btn-group-sm">
+                            <?php if (in_array($ag->status, ['confirmado', 'pendente'])): ?>
+                            <a href="<?= base_url('painel/agendamentos/iniciar/' . $ag->id) ?>"
+                               class="btn btn-success btn-icon" title="Iniciar Atendimento">
+                                <i class="ti ti-player-play"></i>
+                            </a>
+                            <?php elseif ($ag->status == 'em_atendimento'): ?>
+                            <a href="<?= base_url('painel/agendamentos/finalizar/' . $ag->id) ?>"
+                               class="btn btn-warning btn-icon" title="Finalizar Atendimento">
+                                <i class="ti ti-player-stop"></i>
+                            </a>
+                            <?php endif; ?>
+
                             <a href="<?= base_url('painel/agendamentos/visualizar/' . $ag->id) ?>"
-                               class="btn btn-sm btn-icon btn-ghost-info"
-                               title="Visualizar">
+                               class="btn btn-outline-secondary btn-icon" title="Visualizar">
                                 <i class="ti ti-eye"></i>
                             </a>
 
                             <a href="<?= base_url('painel/agendamentos/editar/' . $ag->id) ?>"
-                               class="btn btn-sm btn-icon btn-ghost-primary"
-                               title="Editar">
-                                <i class="ti ti-edit"></i>
+                               class="btn btn-outline-primary btn-icon" title="Editar">
+                                <i class="ti ti-pencil"></i>
                             </a>
 
-                            <?php if ($ag->status != 'cancelado' && $ag->status != 'concluido'): ?>
+                            <?php if (!in_array($ag->status, ['cancelado', 'concluido', 'finalizado'])): ?>
                             <button type="button"
-                                    class="btn btn-sm btn-icon btn-ghost-danger"
+                                    class="btn btn-outline-danger btn-icon"
                                     title="Cancelar"
                                     onclick="cancelarAgendamento(<?= $ag->id ?>)">
                                 <i class="ti ti-x"></i>

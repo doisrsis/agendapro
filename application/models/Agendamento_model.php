@@ -143,8 +143,20 @@ class Agendamento_model extends CI_Model {
             // Incrementar contador de agendamentos do cliente
             $this->Cliente_model->incrementar_agendamentos($data['cliente_id']);
 
-            // Enviar notificação WhatsApp de confirmação
-            $this->enviar_notificacao_whatsapp($agendamento_id, 'confirmacao');
+            // Verificar se estabelecimento requer pagamento para agendamento
+            $this->load->model('Estabelecimento_model');
+            $estabelecimento = $this->Estabelecimento_model->get_by_id($data['estabelecimento_id']);
+            $requer_pagamento = ($estabelecimento->agendamento_requer_pagamento ?? 'nao') != 'nao';
+
+            // Só enviar notificações se NÃO requer pagamento
+            // Se requer pagamento, as notificações serão enviadas após confirmação do pagamento
+            if (!$requer_pagamento) {
+                // Enviar notificação WhatsApp de confirmação para cliente
+                $this->enviar_notificacao_whatsapp($agendamento_id, 'confirmacao');
+
+                // Enviar notificação WhatsApp para profissional/estabelecimento
+                $this->enviar_notificacao_whatsapp($agendamento_id, 'profissional_novo');
+            }
 
             return $agendamento_id;
         }
@@ -227,8 +239,11 @@ class Agendamento_model extends CI_Model {
         ]);
 
         if ($resultado) {
-            // Enviar notificação WhatsApp de cancelamento
+            // Enviar notificação WhatsApp de cancelamento para cliente
             $this->enviar_notificacao_whatsapp($id, 'cancelamento', ['motivo' => $motivo]);
+
+            // Enviar notificação WhatsApp para profissional/estabelecimento
+            $this->enviar_notificacao_whatsapp($id, 'profissional_cancelamento', ['motivo' => $motivo]);
         }
 
         return $resultado;
@@ -288,8 +303,28 @@ class Agendamento_model extends CI_Model {
                     $resultado = $CI->notificacao_whatsapp_lib->enviar_reagendamento($agendamento, $data_anterior, $hora_anterior);
                     break;
 
+                case 'inicio':
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_inicio($agendamento);
+                    break;
+
                 case 'finalizacao':
                     $resultado = $CI->notificacao_whatsapp_lib->enviar_finalizacao($agendamento);
+                    break;
+
+                // Notificações para profissional/estabelecimento
+                case 'profissional_novo':
+                    $resultado = $CI->notificacao_whatsapp_lib->notificar_profissional_novo_agendamento($agendamento);
+                    break;
+
+                case 'profissional_cancelamento':
+                    $motivo = $dados_extras['motivo'] ?? null;
+                    $resultado = $CI->notificacao_whatsapp_lib->notificar_profissional_cancelamento($agendamento, $motivo);
+                    break;
+
+                case 'profissional_reagendamento':
+                    $data_anterior = $dados_extras['data_anterior'] ?? '';
+                    $hora_anterior = $dados_extras['hora_anterior'] ?? '';
+                    $resultado = $CI->notificacao_whatsapp_lib->notificar_profissional_reagendamento($agendamento, $data_anterior, $hora_anterior);
                     break;
 
                 default:

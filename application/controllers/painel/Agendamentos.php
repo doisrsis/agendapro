@@ -238,7 +238,13 @@ class Agendamentos extends Painel_Controller {
                 if ($this->Agendamento_model->update($id, $dados)) {
                     // Verificar se houve mudança de data/hora (reagendamento)
                     if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
+                        // Notificar cliente
                         $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
+                            'data_anterior' => $data_anterior,
+                            'hora_anterior' => $hora_anterior
+                        ]);
+                        // Notificar profissional/estabelecimento
+                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_reagendamento', [
                             'data_anterior' => $data_anterior,
                             'hora_anterior' => $hora_anterior
                         ]);
@@ -306,6 +312,74 @@ class Agendamentos extends Painel_Controller {
      */
     public function excluir($id) {
         $this->cancelar($id);
+    }
+
+    /**
+     * Iniciar atendimento
+     * Muda status para 'em_atendimento' e notifica cliente
+     */
+    public function iniciar($id) {
+        $agendamento = $this->Agendamento_model->get($id);
+
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Agendamento não encontrado.');
+            redirect('painel/agendamentos');
+        }
+
+        // Verificar se pode iniciar (apenas confirmado ou pendente)
+        if (!in_array($agendamento->status, ['confirmado', 'pendente'])) {
+            $this->session->set_flashdata('erro', 'Este agendamento não pode ser iniciado.');
+            redirect('painel/agendamentos');
+        }
+
+        $dados = [
+            'status' => 'em_atendimento',
+            'hora_inicio_real' => date('H:i:s')
+        ];
+
+        if ($this->Agendamento_model->atualizar($id, $dados)) {
+            // Enviar notificação WhatsApp
+            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'inicio');
+            $this->session->set_flashdata('sucesso', 'Atendimento iniciado!');
+        } else {
+            $this->session->set_flashdata('erro', 'Erro ao iniciar atendimento.');
+        }
+
+        redirect('painel/agendamentos');
+    }
+
+    /**
+     * Finalizar atendimento
+     * Muda status para 'finalizado' e notifica cliente
+     */
+    public function finalizar($id) {
+        $agendamento = $this->Agendamento_model->get($id);
+
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Agendamento não encontrado.');
+            redirect('painel/agendamentos');
+        }
+
+        // Verificar se pode finalizar (apenas em_atendimento)
+        if ($agendamento->status !== 'em_atendimento') {
+            $this->session->set_flashdata('erro', 'Este agendamento não está em atendimento.');
+            redirect('painel/agendamentos');
+        }
+
+        $dados = [
+            'status' => 'finalizado',
+            'hora_fim_real' => date('H:i:s')
+        ];
+
+        if ($this->Agendamento_model->atualizar($id, $dados)) {
+            // Enviar notificação WhatsApp
+            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'finalizacao');
+            $this->session->set_flashdata('sucesso', 'Atendimento finalizado com sucesso!');
+        } else {
+            $this->session->set_flashdata('erro', 'Erro ao finalizar atendimento.');
+        }
+
+        redirect('painel/agendamentos');
     }
 
     /**

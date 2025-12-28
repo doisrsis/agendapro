@@ -155,7 +155,32 @@
                                     </div>
                                 </div>
                                 <div class="col-auto">
-                                    <span class="badge bg-primary"><?= date('H:i', strtotime($agendamento->hora_inicio)) ?></span>
+                                    <span class="badge bg-<?= $agendamento->status == 'em_atendimento' ? 'success' : 'primary' ?> me-2">
+                                        <?= date('H:i', strtotime($agendamento->hora_inicio)) ?>
+                                    </span>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="btn-group btn-group-sm">
+                                        <?php if (in_array($agendamento->status, ['confirmado', 'pendente'])): ?>
+                                        <a href="<?= base_url('painel/agendamentos/iniciar/' . $agendamento->id) ?>"
+                                           class="btn btn-success btn-icon" title="Iniciar Atendimento">
+                                            <i class="ti ti-player-play"></i>
+                                        </a>
+                                        <?php elseif ($agendamento->status == 'em_atendimento'): ?>
+                                        <a href="<?= base_url('painel/agendamentos/finalizar/' . $agendamento->id) ?>"
+                                           class="btn btn-warning btn-icon" title="Finalizar Atendimento">
+                                            <i class="ti ti-player-stop"></i>
+                                        </a>
+                                        <?php endif; ?>
+                                        <a href="<?= base_url('painel/agendamentos/visualizar/' . $agendamento->id) ?>"
+                                           class="btn btn-outline-secondary btn-icon" title="Visualizar">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
+                                        <a href="<?= base_url('painel/agendamentos/editar/' . $agendamento->id) ?>"
+                                           class="btn btn-outline-primary btn-icon" title="Editar">
+                                            <i class="ti ti-pencil"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
