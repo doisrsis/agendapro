@@ -824,6 +824,10 @@ class Agendamentos extends Painel_Controller {
 
                         $this->Pagamento_model->confirmar_agendamento($id);
 
+                        // Enviar notificações WhatsApp
+                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'confirmacao');
+                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_novo');
+
                         echo json_encode([
                             'status' => 'pago',
                             'valor' => $agendamento->pagamento_valor,
