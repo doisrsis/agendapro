@@ -127,6 +127,24 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['mp_public_key_prod'])) $update_data['mp_public_key_prod'] = $data['mp_public_key_prod'];
         if (isset($data['mp_sandbox'])) $update_data['mp_sandbox'] = $data['mp_sandbox'];
 
+        // Campos de WhatsApp - Tipo de API
+        if (isset($data['whatsapp_api_tipo'])) $update_data['whatsapp_api_tipo'] = $data['whatsapp_api_tipo'];
+
+        // Campos de WhatsApp - Evolution API
+        if (isset($data['whatsapp_api_url'])) $update_data['whatsapp_api_url'] = $data['whatsapp_api_url'];
+        if (isset($data['whatsapp_api_token'])) $update_data['whatsapp_api_token'] = $data['whatsapp_api_token'];
+        if (isset($data['whatsapp_numero'])) $update_data['whatsapp_numero'] = $data['whatsapp_numero'];
+        if (isset($data['whatsapp_ativo'])) $update_data['whatsapp_ativo'] = $data['whatsapp_ativo'];
+
+        // Campos de WhatsApp - WAHA API
+        if (isset($data['waha_api_url'])) $update_data['waha_api_url'] = $data['waha_api_url'];
+        if (isset($data['waha_api_key'])) $update_data['waha_api_key'] = $data['waha_api_key'];
+        if (isset($data['waha_session_name'])) $update_data['waha_session_name'] = $data['waha_session_name'];
+        if (isset($data['waha_webhook_url'])) $update_data['waha_webhook_url'] = $data['waha_webhook_url'];
+        if (isset($data['waha_status'])) $update_data['waha_status'] = $data['waha_status'];
+        if (isset($data['waha_numero_conectado'])) $update_data['waha_numero_conectado'] = $data['waha_numero_conectado'];
+        if (isset($data['waha_ativo'])) $update_data['waha_ativo'] = $data['waha_ativo'];
+        if (isset($data['waha_bot_ativo'])) $update_data['waha_bot_ativo'] = $data['waha_bot_ativo'];
 
         if (empty($update_data)) {
             return false;

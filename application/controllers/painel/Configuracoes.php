@@ -143,22 +143,190 @@ class Configuracoes extends CI_Controller {
 
     /**
      * Salvar integração WhatsApp
+     * Nota: A configuração agora é simplificada - o estabelecimento apenas conecta via QR Code
+     * As credenciais da API são herdadas do Super Admin
      */
     private function salvar_integracao_whatsapp() {
-        $dados = [
-            'whatsapp_api_url' => $this->input->post('whatsapp_api_url'),
-            'whatsapp_api_token' => $this->input->post('whatsapp_api_token'),
-            'whatsapp_numero' => $this->input->post('whatsapp_numero'),
-            'whatsapp_ativo' => $this->input->post('whatsapp_ativo') ? 1 : 0
-        ];
+        // Não há mais formulário para salvar - a conexão é feita via QR Code
+        // Este método é mantido para compatibilidade caso haja POST na aba whatsapp
+        redirect('painel/configuracoes?aba=whatsapp');
+    }
 
-        if ($this->Estabelecimento_model->update($this->estabelecimento_id, $dados)) {
-            $this->session->set_flashdata('sucesso', 'Integração WhatsApp atualizada!');
+    /**
+     * Gerar nome da sessão baseado no nome do estabelecimento
+     * Remove caracteres especiais e substitui espaços por underline
+     */
+    private function gerar_session_name() {
+        $nome = $this->estabelecimento->nome;
+        // Remover acentos
+        $nome = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nome);
+        // Converter para minúsculas
+        $nome = strtolower($nome);
+        // Substituir espaços por underline
+        $nome = preg_replace('/\s+/', '_', $nome);
+        // Remover caracteres especiais (manter apenas letras, números e underline)
+        $nome = preg_replace('/[^a-z0-9_]/', '', $nome);
+        // Limitar tamanho
+        $nome = substr($nome, 0, 50);
+        // Adicionar prefixo para evitar conflitos
+        return 'est_' . $this->estabelecimento_id . '_' . $nome;
+    }
+
+    /**
+     * Configurar WAHA usando credenciais do Super Admin
+     * O estabelecimento usa a mesma API do SaaS, mas com sessão própria
+     */
+    private function configurar_waha_estabelecimento() {
+        $this->load->model('Configuracao_model');
+        $this->load->library('waha_lib');
+
+        // Buscar configurações WAHA do Super Admin
+        $configs = $this->Configuracao_model->get_by_grupo('waha');
+
+        if (empty($configs)) {
+            return false;
+        }
+
+        $config_array = [];
+        foreach ($configs as $config) {
+            $config_array[$config->chave] = $config->valor;
+        }
+
+        // Verificar se WAHA está ativo no SaaS
+        if (empty($config_array['waha_api_url']) || empty($config_array['waha_api_key'])) {
+            return false;
+        }
+
+        // Gerar nome da sessão baseado no estabelecimento
+        $session_name = $this->estabelecimento->waha_session_name;
+        if (empty($session_name)) {
+            $session_name = $this->gerar_session_name();
+            // Salvar o nome da sessão gerado
+            $this->Estabelecimento_model->update($this->estabelecimento_id, [
+                'waha_session_name' => $session_name
+            ]);
+        }
+
+        // Configurar a library com credenciais do SaaS mas sessão do estabelecimento
+        $this->waha_lib->set_credentials(
+            $config_array['waha_api_url'],
+            $config_array['waha_api_key'],
+            $session_name
+        );
+
+        return true;
+    }
+
+    /**
+     * Iniciar sessão WAHA para o estabelecimento
+     * Usa configurações do Super Admin automaticamente
+     */
+    public function waha_iniciar_sessao() {
+        if (!$this->configurar_waha_estabelecimento()) {
+            $this->session->set_flashdata('erro', 'Integração WhatsApp não está configurada. Entre em contato com o suporte.');
+            redirect('painel/configuracoes?aba=whatsapp');
+            return;
+        }
+
+        // Gerar URL do webhook para este estabelecimento
+        $webhook_url = base_url('webhook_waha/estabelecimento/' . $this->estabelecimento_id);
+
+        $resultado = $this->waha_lib->criar_sessao([
+            'webhook_url' => $webhook_url,
+            'metadata' => [
+                'tipo' => 'estabelecimento',
+                'estabelecimento_id' => $this->estabelecimento_id,
+                'nome' => $this->estabelecimento->nome
+            ]
+        ]);
+
+        if ($resultado['success']) {
+            // Atualizar dados do estabelecimento
+            $this->Estabelecimento_model->update($this->estabelecimento_id, [
+                'waha_status' => 'conectando',
+                'waha_webhook_url' => $webhook_url,
+                'whatsapp_api_tipo' => 'waha',
+                'waha_ativo' => 1,
+                'waha_bot_ativo' => 1
+            ]);
+            $this->session->set_flashdata('sucesso', 'Escaneie o QR Code com seu WhatsApp para conectar.');
         } else {
-            $this->session->set_flashdata('erro', 'Erro ao atualizar integração.');
+            $erro = $resultado['response']['message'] ?? 'Erro desconhecido';
+            $this->session->set_flashdata('erro', 'Erro ao iniciar sessão: ' . $erro);
         }
 
         redirect('painel/configuracoes?aba=whatsapp');
+    }
+
+    /**
+     * Desconectar sessão WAHA do estabelecimento
+     */
+    public function waha_desconectar() {
+        if (!$this->configurar_waha_estabelecimento()) {
+            $this->session->set_flashdata('erro', 'Configurações WAHA não encontradas.');
+            redirect('painel/configuracoes?aba=whatsapp');
+            return;
+        }
+
+        $resultado = $this->waha_lib->logout_sessao();
+
+        if ($resultado['success']) {
+            $this->Estabelecimento_model->update($this->estabelecimento_id, [
+                'waha_status' => 'desconectado',
+                'waha_numero_conectado' => ''
+            ]);
+            $this->session->set_flashdata('sucesso', 'WhatsApp desconectado com sucesso!');
+        } else {
+            $this->session->set_flashdata('erro', 'Erro ao desconectar.');
+        }
+
+        redirect('painel/configuracoes?aba=whatsapp');
+    }
+
+    /**
+     * Obter QR Code WAHA via AJAX
+     */
+    public function waha_qrcode() {
+        if (!$this->configurar_waha_estabelecimento()) {
+            echo json_encode(['success' => false, 'error' => 'Configurações não encontradas']);
+            return;
+        }
+
+        $status = $this->waha_lib->get_status();
+
+        if (in_array($status, ['working', 'connected'])) {
+            $me = $this->waha_lib->get_me();
+
+            // Atualizar status no banco
+            $this->Estabelecimento_model->update($this->estabelecimento_id, [
+                'waha_status' => 'conectado',
+                'waha_numero_conectado' => $me['response']['id'] ?? ''
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'status' => 'connected',
+                'numero' => $me['response']['id'] ?? '',
+                'nome' => $me['response']['pushName'] ?? ''
+            ]);
+            return;
+        }
+
+        $qr = $this->waha_lib->get_qr_code();
+
+        if ($qr['success'] && isset($qr['response']['data'])) {
+            echo json_encode([
+                'success' => true,
+                'status' => $status,
+                'qrcode' => $qr['response']['data']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'status' => $status,
+                'error' => 'QR Code não disponível. Tente gerar novamente.'
+            ]);
+        }
     }
 
     /**
@@ -186,5 +354,74 @@ class Configuracoes extends CI_Controller {
         }
 
         redirect('painel/configuracoes?aba=mercadopago');
+    }
+
+    /**
+     * Debug: Testar envio de mensagem WhatsApp
+     * Acesse: /painel/configuracoes/waha_teste_envio
+     */
+    public function waha_teste_envio() {
+        header('Content-Type: application/json');
+
+        // Verificar se estabelecimento está conectado
+        if ($this->estabelecimento->waha_status != 'conectado') {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Estabelecimento não está conectado ao WhatsApp',
+                'waha_status' => $this->estabelecimento->waha_status,
+                'waha_session_name' => $this->estabelecimento->waha_session_name
+            ]);
+            return;
+        }
+
+        // Configurar WAHA
+        if (!$this->configurar_waha_estabelecimento()) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Falha ao configurar WAHA'
+            ]);
+            return;
+        }
+
+        // Dados de debug
+        $debug = [
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'estabelecimento_nome' => $this->estabelecimento->nome,
+            'waha_session_name' => $this->estabelecimento->waha_session_name,
+            'waha_status' => $this->estabelecimento->waha_status,
+            'waha_numero_conectado' => $this->estabelecimento->waha_numero_conectado
+        ];
+
+        // Verificar status da sessão na API
+        $status = $this->waha_lib->get_status();
+        $debug['api_status'] = $status;
+
+        // Tentar enviar mensagem de teste para o próprio número conectado
+        $numero_teste = $this->estabelecimento->waha_numero_conectado;
+        if (empty($numero_teste)) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Número conectado não encontrado',
+                'debug' => $debug
+            ]);
+            return;
+        }
+
+        // Limpar número (remover @c.us se existir)
+        $numero_teste = str_replace('@c.us', '', $numero_teste);
+
+        $mensagem = "🧪 *Teste de Notificação*\n\n";
+        $mensagem .= "Esta é uma mensagem de teste do sistema AgendaPro.\n";
+        $mensagem .= "Estabelecimento: {$this->estabelecimento->nome}\n";
+        $mensagem .= "Data/Hora: " . date('d/m/Y H:i:s');
+
+        $resultado = $this->waha_lib->enviar_texto($numero_teste, $mensagem);
+
+        echo json_encode([
+            'success' => $resultado['success'],
+            'debug' => $debug,
+            'numero_teste' => $numero_teste,
+            'resultado_envio' => $resultado
+        ], JSON_PRETTY_PRINT);
     }
 }

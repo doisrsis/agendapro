@@ -143,6 +143,9 @@ class Agendamento_model extends CI_Model {
             // Incrementar contador de agendamentos do cliente
             $this->Cliente_model->incrementar_agendamentos($data['cliente_id']);
 
+            // Enviar notificação WhatsApp de confirmação
+            $this->enviar_notificacao_whatsapp($agendamento_id, 'confirmacao');
+
             return $agendamento_id;
         }
 
@@ -217,18 +220,89 @@ class Agendamento_model extends CI_Model {
      * Cancelar agendamento
      */
     public function cancelar($id, $cancelado_por, $motivo = null) {
-        return $this->update($id, [
+        $resultado = $this->update($id, [
             'status' => 'cancelado',
             'cancelado_por' => $cancelado_por,
             'motivo_cancelamento' => $motivo
         ]);
+
+        if ($resultado) {
+            // Enviar notificação WhatsApp de cancelamento
+            $this->enviar_notificacao_whatsapp($id, 'cancelamento', ['motivo' => $motivo]);
+        }
+
+        return $resultado;
     }
 
     /**
      * Finalizar agendamento
      */
     public function finalizar($id) {
-        return $this->update($id, ['status' => 'finalizado']);
+        $resultado = $this->update($id, ['status' => 'finalizado']);
+
+        if ($resultado) {
+            // Enviar notificação WhatsApp de finalização
+            $this->enviar_notificacao_whatsapp($id, 'finalizacao');
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Enviar notificação WhatsApp para o cliente
+     *
+     * @param int $agendamento_id ID do agendamento
+     * @param string $tipo Tipo: confirmacao, lembrete, cancelamento, reagendamento, finalizacao
+     * @param array $dados_extras Dados adicionais (motivo, data_anterior, etc)
+     * @return bool
+     */
+    public function enviar_notificacao_whatsapp($agendamento_id, $tipo, $dados_extras = []) {
+        try {
+            $CI =& get_instance();
+            $CI->load->library('notificacao_whatsapp_lib');
+
+            $agendamento = $this->get_by_id($agendamento_id);
+            if (!$agendamento) {
+                log_message('error', 'Notificacao WhatsApp: Agendamento #' . $agendamento_id . ' não encontrado');
+                return false;
+            }
+
+            switch ($tipo) {
+                case 'confirmacao':
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_confirmacao($agendamento);
+                    break;
+
+                case 'lembrete':
+                    $horas = $dados_extras['horas_antes'] ?? 24;
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_lembrete($agendamento, $horas);
+                    break;
+
+                case 'cancelamento':
+                    $motivo = $dados_extras['motivo'] ?? null;
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_cancelamento($agendamento, $motivo);
+                    break;
+
+                case 'reagendamento':
+                    $data_anterior = $dados_extras['data_anterior'] ?? '';
+                    $hora_anterior = $dados_extras['hora_anterior'] ?? '';
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_reagendamento($agendamento, $data_anterior, $hora_anterior);
+                    break;
+
+                case 'finalizacao':
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_finalizacao($agendamento);
+                    break;
+
+                default:
+                    log_message('error', 'Notificacao WhatsApp: Tipo desconhecido - ' . $tipo);
+                    return false;
+            }
+
+            return $resultado['success'] ?? false;
+
+        } catch (Exception $e) {
+            log_message('error', 'Notificacao WhatsApp: Erro - ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**

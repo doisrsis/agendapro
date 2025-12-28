@@ -5,7 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Controller de Configurações do Sistema
  *
  * @author Rafael Dias - doisr.com.br
- * @date 14/11/2024
+ * @date 14/11/2025
  */
 class Configuracoes extends Admin_Controller {
 
@@ -40,6 +40,7 @@ class Configuracoes extends Admin_Controller {
         $data['configs_geral'] = $this->Configuracao_model->get_by_grupo('geral');
         $data['configs_smtp'] = $this->Configuracao_model->get_by_grupo('smtp');
         $data['configs_mercadopago'] = $this->Configuracao_model->get_by_grupo('mercadopago');
+        $data['configs_waha'] = $this->Configuracao_model->get_by_grupo('waha');
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/configuracoes/index', $data);
@@ -262,6 +263,13 @@ class Configuracoes extends Admin_Controller {
             }
         }
 
+        // Tratamento especial para checkbox waha_ativo
+        if ($grupo == 'waha') {
+            if (!isset($configs['waha_ativo'])) {
+                $configs['waha_ativo'] = '0';
+            }
+        }
+
         // Salvar outras configurações
         if ($configs) {
             foreach ($configs as $chave => $valor) {
@@ -296,5 +304,249 @@ class Configuracoes extends Admin_Controller {
         }
 
         redirect('admin/configuracoes?aba=' . $grupo);
+    }
+
+    /**
+     * Testar conexão com WAHA API
+     */
+    public function testar_waha() {
+        $this->load->library('waha_lib');
+
+        // Configurar com dados do SaaS Admin
+        if (!$this->waha_lib->set_saas_admin()) {
+            $this->session->set_flashdata('erro', 'Configurações WAHA não encontradas. Salve as configurações primeiro.');
+            redirect('admin/configuracoes?aba=waha');
+            return;
+        }
+
+        $resultado = $this->waha_lib->testar_conexao();
+
+        if ($resultado['success']) {
+            $this->session->set_flashdata('sucesso', '✅ ' . $resultado['message']);
+        } else {
+            $this->session->set_flashdata('erro', '❌ ' . $resultado['message']);
+        }
+
+        redirect('admin/configuracoes?aba=waha');
+    }
+
+    /**
+     * Obter QR Code WAHA via AJAX
+     */
+    public function waha_qrcode() {
+        $this->load->library('waha_lib');
+
+        if (!$this->waha_lib->set_saas_admin()) {
+            echo json_encode(['success' => false, 'error' => 'Configurações não encontradas']);
+            return;
+        }
+
+        // Verificar status da sessão
+        $status = $this->waha_lib->get_status();
+
+        if ($status === 'working') {
+            // Já conectado, buscar informações
+            $me = $this->waha_lib->get_me();
+            echo json_encode([
+                'success' => true,
+                'status' => 'connected',
+                'numero' => $me['response']['id'] ?? '',
+                'nome' => $me['response']['pushName'] ?? ''
+            ]);
+            return;
+        }
+
+        // Buscar QR Code
+        $qr = $this->waha_lib->get_qr_code();
+
+        if ($qr['success'] && isset($qr['response']['data'])) {
+            echo json_encode([
+                'success' => true,
+                'status' => $status,
+                'qrcode' => $qr['response']['data']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'status' => $status,
+                'error' => 'QR Code não disponível. Status: ' . $status
+            ]);
+        }
+    }
+
+    /**
+     * Criar/Iniciar sessão WAHA
+     */
+    public function waha_iniciar_sessao() {
+        $this->load->library('waha_lib');
+
+        if (!$this->waha_lib->set_saas_admin()) {
+            $this->session->set_flashdata('erro', 'Configurações WAHA não encontradas.');
+            redirect('admin/configuracoes?aba=waha');
+            return;
+        }
+
+        // Obter webhook URL das configurações
+        $webhook_url = $this->Configuracao_model->get_valor('waha_webhook_url');
+
+        $resultado = $this->waha_lib->criar_sessao([
+            'webhook_url' => $webhook_url,
+            'metadata' => [
+                'tipo' => 'saas_admin',
+                'sistema' => 'AgendaPro'
+            ]
+        ]);
+
+        if ($resultado['success']) {
+            $this->Configuracao_model->update_by_chave('waha_status', 'conectando');
+            $this->session->set_flashdata('sucesso', 'Sessão iniciada! Escaneie o QR Code para conectar.');
+        } else {
+            $erro = $resultado['response']['message'] ?? 'Erro desconhecido';
+            $this->session->set_flashdata('erro', 'Erro ao iniciar sessão: ' . $erro);
+        }
+
+        redirect('admin/configuracoes?aba=waha');
+    }
+
+    /**
+     * Desconectar sessão WAHA
+     */
+    public function waha_desconectar() {
+        $this->load->library('waha_lib');
+
+        if (!$this->waha_lib->set_saas_admin()) {
+            $this->session->set_flashdata('erro', 'Configurações WAHA não encontradas.');
+            redirect('admin/configuracoes?aba=waha');
+            return;
+        }
+
+        $resultado = $this->waha_lib->logout_sessao();
+
+        if ($resultado['success']) {
+            $this->Configuracao_model->update_by_chave('waha_status', 'desconectado');
+            $this->Configuracao_model->update_by_chave('waha_numero_conectado', '');
+            $this->session->set_flashdata('sucesso', 'Sessão desconectada com sucesso!');
+        } else {
+            $this->session->set_flashdata('erro', 'Erro ao desconectar sessão.');
+        }
+
+        redirect('admin/configuracoes?aba=waha');
+    }
+
+    /**
+     * Debug: Ver resposta bruta da API WAHA
+     */
+    public function waha_debug() {
+        $this->load->library('waha_lib');
+
+        // Mostrar configurações carregadas
+        $configs = $this->Configuracao_model->get_by_grupo('waha');
+        $config_array = [];
+        foreach ($configs as $config) {
+            $config_array[$config->chave] = $config->chave === 'waha_api_key'
+                ? substr($config->valor, 0, 30) . '...'
+                : $config->valor;
+        }
+
+        if (!$this->waha_lib->set_saas_admin()) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => 'Configurações não encontradas ou incompletas',
+                'configs_encontradas' => $config_array
+            ], JSON_PRETTY_PRINT);
+            return;
+        }
+
+        $debug = $this->waha_lib->debug_sessao();
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'configs' => $config_array,
+            'sessao_response' => $debug
+        ], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * Enviar mensagem de teste via WAHA
+     */
+    public function waha_enviar_teste() {
+        $numero = $this->input->post('numero');
+
+        if (!$numero) {
+            $this->session->set_flashdata('erro', 'Informe o número para teste.');
+            redirect('admin/configuracoes?aba=waha');
+            return;
+        }
+
+        $this->load->library('waha_lib');
+
+        if (!$this->waha_lib->set_saas_admin()) {
+            $this->session->set_flashdata('erro', 'Configurações WAHA não encontradas.');
+            redirect('admin/configuracoes?aba=waha');
+            return;
+        }
+
+        // Verificar se está conectado
+        if (!$this->waha_lib->esta_conectado()) {
+            $this->session->set_flashdata('erro', 'WhatsApp não está conectado. Status: ' . $this->waha_lib->get_status());
+            redirect('admin/configuracoes?aba=waha');
+            return;
+        }
+
+        // Enviar mensagem de teste
+        $mensagem = "🚀 *Teste AgendaPro*\n\n";
+        $mensagem .= "✅ Integração WAHA funcionando!\n\n";
+        $mensagem .= "📅 Data/Hora: " . date('d/m/Y H:i:s') . "\n";
+        $mensagem .= "🔧 Enviado pelo painel administrativo.";
+
+        $resultado = $this->waha_lib->enviar_texto($numero, $mensagem);
+
+        if ($resultado['success']) {
+            $this->session->set_flashdata('sucesso', '✅ Mensagem de teste enviada com sucesso para ' . $numero);
+        } else {
+            $erro = $resultado['error'] ?? 'Erro desconhecido';
+            $this->session->set_flashdata('erro', '❌ Erro ao enviar: ' . $erro);
+        }
+
+        redirect('admin/configuracoes?aba=waha');
+    }
+
+    /**
+     * Verificar status da sessão WAHA via AJAX
+     */
+    public function waha_status() {
+        $this->load->library('waha_lib');
+
+        if (!$this->waha_lib->set_saas_admin()) {
+            echo json_encode(['success' => false, 'status' => 'not_configured']);
+            return;
+        }
+
+        $sessao = $this->waha_lib->get_sessao();
+
+        if ($sessao['success']) {
+            $status = strtolower($sessao['response']['status'] ?? 'unknown');
+            $me = $sessao['response']['me'] ?? null;
+
+            // Atualizar status no banco
+            $this->Configuracao_model->update_by_chave('waha_status', $status === 'working' ? 'conectado' : $status);
+
+            if ($me && isset($me['id'])) {
+                $this->Configuracao_model->update_by_chave('waha_numero_conectado', $me['id']);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'status' => $status,
+                'numero' => $me['id'] ?? '',
+                'nome' => $me['pushName'] ?? ''
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'status' => 'error',
+                'error' => $sessao['error'] ?? 'Erro ao verificar status'
+            ]);
+        }
     }
 }

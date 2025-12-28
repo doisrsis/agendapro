@@ -80,6 +80,12 @@
                             Mercado Pago
                         </a>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <a href="#tab-waha" class="nav-link <?= $aba_ativa == 'waha' ? 'active' : '' ?>" data-bs-toggle="tab" aria-selected="<?= $aba_ativa == 'waha' ? 'true' : 'false' ?>" role="tab">
+                            <i class="ti ti-brand-whatsapp me-2"></i>
+                            WhatsApp (WAHA)
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -603,11 +609,275 @@
                             </div>
                         </form>
                     </div>
+
+                    <!-- ABA WHATSAPP (WAHA) -->
+                    <div class="tab-pane <?= $aba_ativa == 'waha' ? 'active show' : '' ?>" id="tab-waha" role="tabpanel">
+                        <form method="post" action="<?= base_url('admin/configuracoes') ?>">
+                            <input type="hidden" name="grupo" value="waha">
+
+                            <div class="alert alert-info mb-3">
+                                <div class="d-flex">
+                                    <div>
+                                        <i class="ti ti-info-circle icon alert-icon"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="alert-title">Sobre a Integração WAHA</h4>
+                                        <div class="text-secondary">
+                                            Configure a integração com <strong>WAHA - WhatsApp HTTP API</strong> para enviar notificações
+                                            aos estabelecimentos (clientes do SaaS) e ter um bot de suporte.
+                                            <br>
+                                            <a href="https://waha.devlike.pro/docs/" target="_blank" class="alert-link">
+                                                📚 Documentação WAHA
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status da Conexão -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">
+                                        <i class="ti ti-plug me-2"></i>
+                                        Status da Conexão
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div id="waha-status-container">
+                                        <?php
+                                        $waha_status = get_config_value($configs_waha, 'waha_status', 'desconectado');
+                                        $waha_numero = get_config_value($configs_waha, 'waha_numero_conectado', '');
+                                        ?>
+
+                                        <?php if ($waha_status == 'conectado' && $waha_numero): ?>
+                                            <div class="alert alert-success">
+                                                <div class="d-flex align-items-center">
+                                                    <span class="status-indicator status-green status-indicator-animated me-3">
+                                                        <span class="status-indicator-circle"></span>
+                                                        <span class="status-indicator-circle"></span>
+                                                        <span class="status-indicator-circle"></span>
+                                                    </span>
+                                                    <div>
+                                                        <strong>Conectado</strong>
+                                                        <div class="text-muted">Número: <?= $waha_numero ?></div>
+                                                    </div>
+                                                    <div class="ms-auto">
+                                                        <a href="<?= base_url('admin/configuracoes/waha_desconectar') ?>"
+                                                           class="btn btn-outline-danger btn-sm"
+                                                           onclick="return confirm('Deseja realmente desconectar o WhatsApp?')">
+                                                            <i class="ti ti-plug-off me-1"></i>
+                                                            Desconectar
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php elseif ($waha_status == 'conectando'): ?>
+                                            <div class="alert alert-warning">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="spinner-border spinner-border-sm me-3" role="status"></div>
+                                                    <div>
+                                                        <strong>Aguardando conexão...</strong>
+                                                        <div class="text-muted">Escaneie o QR Code abaixo com seu WhatsApp</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- QR Code Container -->
+                                            <div class="text-center my-4" id="qrcode-container">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">Carregando QR Code...</span>
+                                                </div>
+                                                <p class="text-muted mt-2">Carregando QR Code...</p>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="alert alert-secondary">
+                                                <div class="d-flex align-items-center">
+                                                    <span class="status-indicator status-secondary me-3"></span>
+                                                    <div>
+                                                        <strong>Desconectado</strong>
+                                                        <div class="text-muted">Configure as credenciais e inicie a sessão</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <?php if ($waha_status != 'conectado'): ?>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <a href="<?= base_url('admin/configuracoes/waha_iniciar_sessao') ?>" class="btn btn-success">
+                                            <i class="ti ti-plug me-1"></i>
+                                            Iniciar Sessão
+                                        </a>
+                                        <a href="<?= base_url('admin/configuracoes/testar_waha') ?>" class="btn btn-outline-primary">
+                                            <i class="ti ti-test-pipe me-1"></i>
+                                            Testar Conexão API
+                                        </a>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Formulário de Teste de Envio (separado do form principal) -->
+                            <?php if ($waha_status == 'conectado'): ?>
+                            </form><!-- Fecha form principal temporariamente -->
+                            <div class="card mb-4 border-success">
+                                <div class="card-header bg-success-lt">
+                                    <h4 class="card-title mb-0">
+                                        <i class="ti ti-send me-2"></i>
+                                        Enviar Mensagem de Teste
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="<?= base_url('admin/configuracoes/waha_enviar_teste') ?>" class="row g-2 align-items-end">
+                                        <div class="col-md-8">
+                                            <label class="form-label">Número do WhatsApp</label>
+                                            <input type="text" class="form-control" name="numero"
+                                                   placeholder="5511999999999" required
+                                                   pattern="[0-9]{10,15}"
+                                                   title="Número com código do país (ex: 5511999999999)">
+                                            <small class="text-muted">Código do país (55) + DDD + número</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="submit" class="btn btn-success w-100">
+                                                <i class="ti ti-send me-1"></i>
+                                                Enviar Teste
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <form method="post" action="<?= base_url('admin/configuracoes') ?>"><!-- Reabre form principal -->
+                            <input type="hidden" name="grupo" value="waha">
+                            <?php endif; ?>
+
+                            <h3 class="mb-3">Configurações da API</h3>
+
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label required">URL da API WAHA</label>
+                                    <input type="url" class="form-control" name="config[waha_api_url]"
+                                        value="<?= get_config_value($configs_waha, 'waha_api_url') ?>"
+                                        placeholder="http://localhost:3000">
+                                    <small class="form-hint">URL onde a WAHA está rodando (ex: http://localhost:3000 ou https://waha.seudominio.com)</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">API Key</label>
+                                    <input type="password" class="form-control" name="config[waha_api_key]"
+                                        value="<?= get_config_value($configs_waha, 'waha_api_key') ?>"
+                                        placeholder="sua-api-key">
+                                    <small class="form-hint">Chave de autenticação (se configurada)</small>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nome da Sessão</label>
+                                    <input type="text" class="form-control" name="config[waha_session_name]"
+                                        value="<?= get_config_value($configs_waha, 'waha_session_name', 'saas_admin') ?>"
+                                        placeholder="saas_admin">
+                                    <small class="form-hint">Identificador único da sessão (padrão: saas_admin)</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">URL do Webhook</label>
+                                    <div class="input-group">
+                                        <input type="url" class="form-control" name="config[waha_webhook_url]"
+                                            value="<?= get_config_value($configs_waha, 'waha_webhook_url', base_url('webhook/waha')) ?>"
+                                            id="waha-webhook-url"
+                                            placeholder="<?= base_url('webhook/waha') ?>">
+                                        <button class="btn btn-icon" type="button"
+                                                onclick="navigator.clipboard.writeText(document.getElementById('waha-webhook-url').value); alert('URL copiada!')">
+                                            <i class="ti ti-copy"></i>
+                                        </button>
+                                    </div>
+                                    <small class="form-hint">URL para receber mensagens e eventos</small>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-check form-switch form-switch-lg">
+                                        <input class="form-check-input" type="checkbox" name="config[waha_ativo]" value="1"
+                                            <?= (get_config_value($configs_waha, 'waha_ativo') == '1') ? 'checked' : '' ?>>
+                                        <span class="form-check-label">
+                                            <strong>Ativar Integração WAHA</strong>
+                                            <span class="form-check-description">
+                                                Habilitar envio de mensagens via WhatsApp usando WAHA
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h3 class="mb-3">Documentação e Ajuda</h3>
+
+                            <div class="list-group mb-4">
+                                <a href="https://waha.devlike.pro/docs/overview/quick-start/" target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-rocket me-2"></i>
+                                    Quick Start - Instalação Rápida
+                                </a>
+                                <a href="https://waha.devlike.pro/docs/how-to/sessions/" target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-device-mobile me-2"></i>
+                                    Gerenciamento de Sessões
+                                </a>
+                                <a href="https://waha.devlike.pro/docs/how-to/send-messages/" target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-send me-2"></i>
+                                    Envio de Mensagens
+                                </a>
+                                <a href="https://waha.devlike.pro/docs/how-to/receive-messages/" target="_blank" class="list-group-item list-group-item-action">
+                                    <i class="ti ti-message me-2"></i>
+                                    Recebimento de Mensagens (Webhooks)
+                                </a>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-device-floppy me-2"></i>
+                                    Salvar Configurações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Script para atualizar QR Code e Status WAHA -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const qrcodeContainer = document.getElementById('qrcode-container');
+    const statusContainer = document.getElementById('waha-status-container');
+
+    // Se estiver em modo "conectando", buscar QR Code periodicamente
+    <?php if ($waha_status == 'conectando'): ?>
+    let qrInterval = setInterval(function() {
+        fetch('<?= base_url('admin/configuracoes/waha_qrcode') ?>')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.status === 'connected' || data.status === 'working') {
+                        // Conectado! Recarregar página
+                        clearInterval(qrInterval);
+                        location.reload();
+                    } else if (data.qrcode) {
+                        // Mostrar QR Code
+                        qrcodeContainer.innerHTML = `
+                            <img src="data:image/png;base64,${data.qrcode}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
+                            <p class="text-muted mt-2">Escaneie com seu WhatsApp</p>
+                        `;
+                    }
+                }
+            })
+            .catch(err => console.error('Erro ao buscar QR:', err));
+    }, 3000);
+    <?php endif; ?>
+});
+</script>
 
 <?php
 // Helper para pegar valor da configuração

@@ -401,51 +401,167 @@
                     <!-- Aba WhatsApp -->
                     <?php if ($aba_ativa == 'whatsapp'): ?>
                     <div class="tab-pane active">
-                        <form method="post">
-                            <input type="hidden" name="aba" value="whatsapp">
+                        <?php
+                        // Status da conexão WhatsApp do estabelecimento
+                        $waha_status = $estabelecimento->waha_status ?? 'desconectado';
+                        $waha_numero = $estabelecimento->waha_numero_conectado ?? '';
+                        ?>
 
-                            <div class="alert alert-info">
-                                <i class="ti ti-info-circle me-2"></i>
-                                <strong>Evolution API:</strong> Configure a integração com WhatsApp para enviar notificações automáticas aos clientes.
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="ti ti-brand-whatsapp me-2 text-success"></i>
+                                    Conectar WhatsApp
+                                </h3>
                             </div>
+                            <div class="card-body">
+                                <!-- Status Conectado -->
+                                <?php if ($waha_status == 'conectado' && $waha_numero): ?>
+                                    <div class="text-center py-4">
+                                        <div class="mb-4">
+                                            <span class="avatar avatar-xl bg-success-lt">
+                                                <i class="ti ti-check icon-lg text-success"></i>
+                                            </span>
+                                        </div>
+                                        <h2 class="text-success mb-2">WhatsApp Conectado!</h2>
+                                        <p class="text-muted mb-4">
+                                            Número: <strong><?= $waha_numero ?></strong>
+                                        </p>
 
-                            <div class="mb-3">
-                                <label class="form-label">URL da API</label>
-                                <input type="url" class="form-control" name="whatsapp_api_url"
-                                       value="<?= set_value('whatsapp_api_url', $estabelecimento->whatsapp_api_url ?? '') ?>"
-                                       placeholder="https://api.evolution.com.br">
-                            </div>
+                                        <div class="alert alert-success">
+                                            <i class="ti ti-info-circle me-2"></i>
+                                            Seu WhatsApp está conectado e pronto para enviar notificações aos seus clientes.
+                                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Token da API</label>
-                                <input type="text" class="form-control" name="whatsapp_api_token"
-                                       value="<?= set_value('whatsapp_api_token', $estabelecimento->whatsapp_api_token ?? '') ?>">
-                            </div>
+                                        <div class="mt-4">
+                                            <a href="<?= base_url('painel/configuracoes/waha_desconectar') ?>"
+                                               class="btn btn-outline-danger"
+                                               onclick="return confirm('Deseja realmente desconectar o WhatsApp?')">
+                                                <i class="ti ti-plug-off me-1"></i>
+                                                Desconectar WhatsApp
+                                            </a>
+                                        </div>
+                                    </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Número do WhatsApp</label>
-                                <input type="text" class="form-control" name="whatsapp_numero"
-                                       value="<?= set_value('whatsapp_numero', $estabelecimento->whatsapp_numero ?? '') ?>"
-                                       placeholder="5511999999999">
-                                <small class="text-muted">Número com código do país (55) + DDD + número</small>
-                            </div>
+                                <!-- Status Conectando - Mostrar QR Code -->
+                                <?php elseif ($waha_status == 'conectando'): ?>
+                                    <div class="text-center py-4">
+                                        <h3 class="mb-4">Escaneie o QR Code</h3>
+                                        <p class="text-muted mb-4">
+                                            Abra o WhatsApp no seu celular, vá em <strong>Configurações > Aparelhos conectados</strong> e escaneie o código abaixo.
+                                        </p>
 
-                            <div class="mb-3">
-                                <label class="form-check form-switch">
-                                    <input type="checkbox" class="form-check-input" name="whatsapp_ativo"
-                                           <?= ($estabelecimento->whatsapp_ativo ?? 0) ? 'checked' : '' ?>>
-                                    <span class="form-check-label">Integração Ativa</span>
-                                </label>
-                            </div>
+                                        <div id="qrcode-container" class="mb-4">
+                                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+                                            <p class="text-muted mt-3">Carregando QR Code...</p>
+                                        </div>
 
-                            <div class="text-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ti ti-device-floppy me-2"></i>
-                                    Salvar Integração
-                                </button>
+                                        <div class="alert alert-warning">
+                                            <i class="ti ti-clock me-2"></i>
+                                            O QR Code expira em alguns segundos. Se não conseguir escanear, clique em "Gerar Novo QR Code".
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <a href="<?= base_url('painel/configuracoes/waha_iniciar_sessao') ?>" class="btn btn-outline-primary">
+                                                <i class="ti ti-refresh me-1"></i>
+                                                Gerar Novo QR Code
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                <!-- Status Desconectado - Botão para Conectar -->
+                                <?php else: ?>
+                                    <div class="text-center py-4">
+                                        <div class="mb-4">
+                                            <span class="avatar avatar-xl bg-secondary-lt">
+                                                <i class="ti ti-brand-whatsapp icon-lg text-secondary"></i>
+                                            </span>
+                                        </div>
+                                        <h2 class="mb-2">Conecte seu WhatsApp</h2>
+                                        <p class="text-muted mb-4">
+                                            Conecte o WhatsApp do seu estabelecimento para enviar notificações automáticas aos seus clientes sobre agendamentos.
+                                        </p>
+
+                                        <div class="row justify-content-center mb-4">
+                                            <div class="col-md-8">
+                                                <div class="list-group list-group-flush text-start">
+                                                    <div class="list-group-item bg-transparent border-0">
+                                                        <i class="ti ti-check text-success me-2"></i>
+                                                        Confirmação automática de agendamentos
+                                                    </div>
+                                                    <div class="list-group-item bg-transparent border-0">
+                                                        <i class="ti ti-check text-success me-2"></i>
+                                                        Lembretes antes do horário marcado
+                                                    </div>
+                                                    <div class="list-group-item bg-transparent border-0">
+                                                        <i class="ti ti-check text-success me-2"></i>
+                                                        Notificações de cancelamento
+                                                    </div>
+                                                    <div class="list-group-item bg-transparent border-0">
+                                                        <i class="ti ti-check text-success me-2"></i>
+                                                        Bot de agendamento automático
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <a href="<?= base_url('painel/configuracoes/waha_iniciar_sessao') ?>" class="btn btn-success btn-lg">
+                                            <i class="ti ti-brand-whatsapp me-2"></i>
+                                            Conectar WhatsApp
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        </form>
+                        </div>
                     </div>
+
+                    <!-- Script para polling do QR Code -->
+                    <?php if ($waha_status == 'conectando'): ?>
+                    <script>
+                    (function() {
+                        let tentativas = 0;
+                        const maxTentativas = 60; // 3 minutos (60 * 3s)
+
+                        function atualizarQRCode() {
+                            if (tentativas >= maxTentativas) {
+                                document.getElementById('qrcode-container').innerHTML = `
+                                    <div class="alert alert-danger">
+                                        <i class="ti ti-alert-circle me-2"></i>
+                                        Tempo esgotado. Clique em "Gerar Novo QR Code" para tentar novamente.
+                                    </div>
+                                `;
+                                return;
+                            }
+
+                            fetch('<?= base_url('painel/configuracoes/waha_qrcode') ?>')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'connected' || data.status === 'working') {
+                                        // Conectou! Recarregar página
+                                        location.reload();
+                                    } else if (data.qrcode) {
+                                        document.getElementById('qrcode-container').innerHTML = `
+                                            <div class="p-3 bg-white rounded shadow-sm d-inline-block">
+                                                <img src="data:image/png;base64,${data.qrcode}" alt="QR Code" style="width: 280px; height: 280px;">
+                                            </div>
+                                            <p class="text-muted mt-3">Escaneie com seu WhatsApp</p>
+                                        `;
+                                    }
+                                    tentativas++;
+                                    setTimeout(atualizarQRCode, 3000);
+                                })
+                                .catch(err => {
+                                    console.error('Erro:', err);
+                                    tentativas++;
+                                    setTimeout(atualizarQRCode, 3000);
+                                });
+                        }
+
+                        // Iniciar polling
+                        atualizarQRCode();
+                    })();
+                    </script>
+                    <?php endif; ?>
                     <?php endif; ?>
 
                     <!-- Aba Mercado Pago -->
