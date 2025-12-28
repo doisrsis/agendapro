@@ -60,12 +60,16 @@
                                 <label class="form-label required">Serviço</label>
                                 <select class="form-select" name="servico_id" id="servico_id" required>
                                     <option value="">Selecione o profissional primeiro...</option>
-                                    <?php foreach ($servicos as $servico): ?>
+                                    <?php foreach ($servicos as $servico):
+                                        // Em modo edição, mostrar o serviço selecionado
+                                        $isSelected = ($agendamento->servico_id ?? '') == $servico->id;
+                                        $displayStyle = $isSelected ? '' : 'display:none;';
+                                    ?>
                                     <option value="<?= $servico->id ?>"
                                             data-preco="<?= $servico->preco ?>"
                                             data-profissionais="<?= isset($servico->profissionais) ? $servico->profissionais : '' ?>"
-                                            style="display:none;"
-                                            <?= set_select('servico_id', $servico->id, ($agendamento->servico_id ?? '') == $servico->id) ?>>
+                                            style="<?= $displayStyle ?>"
+                                            <?= $isSelected ? 'selected' : '' ?>>
                                         <?= $servico->nome ?> - R$ <?= number_format($servico->preco, 2, ',', '.') ?>
                                     </option>
                                     <?php endforeach; ?>
@@ -107,63 +111,73 @@
                 </div>
 
                 <div class="col-md-4">
-                    <!-- Status -->
-                    <div class="card mb-3">
+                    <!-- Ações -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Ações</h3>
+                        </div>
+                        <div class="card-body">
+                            <button type="submit" class="btn btn-primary w-100 mb-2">
+                                <i class="ti ti-device-floppy me-2"></i>
+                                <?= isset($agendamento) ? 'Salvar Alterações' : 'Salvar Agendamento' ?>
+                            </button>
+                            <a href="<?= base_url('painel/agendamentos') ?>" class="btn btn-secondary w-100 mb-2">
+                                <i class="ti ti-x me-2"></i>
+                                Cancelar
+                            </a>
+                            <?php if (isset($agendamento)): ?>
+                            <a href="<?= base_url('painel/agendamentos/cancelar/' . $agendamento->id) ?>"
+                               class="btn btn-danger w-100"
+                               onclick="return confirm('Tem certeza que deseja cancelar este agendamento?')">
+                                <i class="ti ti-ban me-2"></i>
+                                Cancelar Agendamento
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Informações -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Informações</h3>
+                        </div>
+                        <div class="card-body">
+                            <?php if (isset($agendamento)): ?>
+                            <div class="text-muted small">
+                                <p><strong>Cliente:</strong> <?= $agendamento->cliente_nome ?? '-' ?></p>
+                                <?php if (!empty($agendamento->cliente_whatsapp)): ?>
+                                <p><strong>WhatsApp:</strong> <?= $agendamento->cliente_whatsapp ?></p>
+                                <a href="https://wa.me/55<?= preg_replace('/\D/', '', $agendamento->cliente_whatsapp) ?>"
+                                   class="btn btn-success btn-sm w-100 mb-2" target="_blank">
+                                    <i class="ti ti-brand-whatsapp me-2"></i>Enviar WhatsApp
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                            <?php else: ?>
+                            <div class="text-muted small">
+                                <p><i class="ti ti-info-circle me-2"></i>O agendamento será criado com status <strong>Confirmado</strong>.</p>
+                                <p><i class="ti ti-clock me-2"></i>Certifique-se de que o horário está disponível.</p>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Status (apenas na edição) -->
+                    <?php if (isset($agendamento)): ?>
+                    <div class="card mt-3">
                         <div class="card-header">
                             <h3 class="card-title">Status</h3>
                         </div>
                         <div class="card-body">
                             <select class="form-select" name="status">
-                                <option value="pendente" <?= set_select('status', 'pendente', ($agendamento->status ?? '') == 'pendente') ?>>Pendente</option>
-                                <option value="confirmado" <?= set_select('status', 'confirmado', ($agendamento->status ?? 'confirmado') == 'confirmado') ?>>Confirmado</option>
-                                <option value="cancelado" <?= set_select('status', 'cancelado', ($agendamento->status ?? '') == 'cancelado') ?>>Cancelado</option>
-                                <option value="finalizado" <?= set_select('status', 'finalizado', ($agendamento->status ?? '') == 'finalizado') ?>>Finalizado</option>
+                                <option value="pendente" <?= ($agendamento->status ?? '') == 'pendente' ? 'selected' : '' ?>>Pendente</option>
+                                <option value="confirmado" <?= ($agendamento->status ?? 'confirmado') == 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
+                                <option value="cancelado" <?= ($agendamento->status ?? '') == 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
+                                <option value="finalizado" <?= ($agendamento->status ?? '') == 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
                             </select>
                         </div>
                     </div>
-
-                    <!-- Resumo -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Resumo</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-2">
-                                <small class="text-muted">Cliente:</small>
-                                <div id="resumo-cliente">-</div>
-                            </div>
-                            <div class="mb-2">
-                                <small class="text-muted">Serviço:</small>
-                                <div id="resumo-servico">-</div>
-                            </div>
-                            <div class="mb-2">
-                                <small class="text-muted">Profissional:</small>
-                                <div id="resumo-profissional">-</div>
-                            </div>
-                            <div class="mb-2">
-                                <small class="text-muted">Data/Hora:</small>
-                                <div id="resumo-data-hora">-</div>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between">
-                                <strong>Valor:</strong>
-                                <strong id="resumo-valor">R$ 0,00</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botões -->
-            <div class="card">
-                <div class="card-footer text-end">
-                    <a href="<?= base_url(($base_controller ?? 'admin') . '/agendamentos') ?>" class="btn btn-link">
-                        Cancelar
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ti ti-device-floppy me-2"></i>
-                        Salvar
-                    </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </form>
@@ -178,6 +192,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const profissionalSelect = document.getElementById('profissional_id');
     const dataInput = document.getElementById('data');
     const horaSelect = document.getElementById('hora_inicio');
+
+    // ID do agendamento sendo editado (para excluir da verificação de conflitos)
+    const agendamentoId = '<?= isset($agendamento) ? $agendamento->id : '' ?>';
+    const horarioAtual = '<?= isset($agendamento) ? date('H:i', strtotime($agendamento->hora_inicio)) : '' ?>';
+    const isEdicao = agendamentoId !== '';
 
     // Carregar serviços quando profissional for selecionado
     profissionalSelect.addEventListener('change', function() {
@@ -228,24 +247,55 @@ document.addEventListener('DOMContentLoaded', function() {
             horaSelect.innerHTML = '<option value="">🔄 Carregando horários...</option>';
             horaSelect.disabled = true;
 
-            fetch(`<?= base_url('painel/agendamentos/get_horarios_disponiveis') ?>?profissional_id=${profissionalId}&data=${data}&servico_id=${servicoId}`)
+            // Incluir agendamento_id na URL para excluir da verificação (modo edição)
+            let url = `<?= base_url('painel/agendamentos/get_horarios_disponiveis') ?>?profissional_id=${profissionalId}&data=${data}&servico_id=${servicoId}`;
+            if (agendamentoId) {
+                url += `&agendamento_id=${agendamentoId}`;
+            }
+
+            fetch(url)
                 .then(r => r.json())
                 .then(horarios => {
                     horaSelect.disabled = false;
 
                     if (horarios.length > 0) {
-                        horaSelect.innerHTML = '<option value="">Selecione...</option>';
+                        horaSelect.innerHTML = '';
+
+                        // Verificar se horário atual está na lista
+                        let horarioAtualNaLista = horarios.includes(horarioAtual);
+
                         horarios.forEach(h => {
-                            horaSelect.innerHTML += `<option value="${h}">${h}</option>`;
+                            const isAtual = (h === horarioAtual);
+                            const selected = isAtual ? 'selected' : '';
+                            const label = isAtual ? `${h} (atual)` : h;
+                            horaSelect.innerHTML += `<option value="${h}" ${selected}>${label}</option>`;
                         });
+
+                        // Se horário atual não estava na lista (modo edição), adicionar no topo
+                        if (isEdicao && !horarioAtualNaLista && horarioAtual) {
+                            const option = document.createElement('option');
+                            option.value = horarioAtual;
+                            option.text = horarioAtual + ' (atual)';
+                            option.selected = true;
+                            horaSelect.insertBefore(option, horaSelect.firstChild);
+                        }
                     } else {
-                        horaSelect.innerHTML = '<option value="">❌ Nenhum horário disponível</option>';
+                        // Manter horário atual mesmo sem outros disponíveis (modo edição)
+                        if (isEdicao && horarioAtual) {
+                            horaSelect.innerHTML = `<option value="${horarioAtual}" selected>${horarioAtual} (atual)</option>`;
+                        } else {
+                            horaSelect.innerHTML = '<option value="">❌ Nenhum horário disponível</option>';
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Erro ao carregar horários:', error);
                     horaSelect.disabled = false;
-                    horaSelect.innerHTML = '<option value="">⚠️ Erro ao carregar horários</option>';
+                    if (isEdicao && horarioAtual) {
+                        horaSelect.innerHTML = `<option value="${horarioAtual}" selected>${horarioAtual} (atual)</option>`;
+                    } else {
+                        horaSelect.innerHTML = '<option value="">⚠️ Erro ao carregar horários</option>';
+                    }
                 });
         }
     }
@@ -253,6 +303,11 @@ document.addEventListener('DOMContentLoaded', function() {
     profissionalSelect?.addEventListener('change', carregarHorarios);
     dataInput?.addEventListener('change', carregarHorarios);
     servicoSelect?.addEventListener('change', carregarHorarios);
+
+    // Carregar horários automaticamente ao abrir página em modo edição
+    if (isEdicao && profissionalSelect.value && dataInput.value && servicoSelect.value) {
+        carregarHorarios();
+    }
 
     // Atualizar resumo
     function atualizarResumo() {

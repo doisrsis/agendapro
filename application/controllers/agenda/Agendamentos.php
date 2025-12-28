@@ -113,6 +113,10 @@ class Agendamentos extends Agenda_Controller {
             if ($this->form_validation->run()) {
                 log_message('debug', 'Agenda/Agendamentos/editar - Validação OK');
 
+                // Guardar data/hora anterior para verificar se houve reagendamento
+                $data_anterior = $agendamento->data;
+                $hora_anterior = $agendamento->hora_inicio;
+
                 $dados = [
                     'data' => $this->input->post('data'),
                     'hora_inicio' => $this->input->post('hora_inicio'),
@@ -126,6 +130,14 @@ class Agendamentos extends Agenda_Controller {
                 log_message('debug', 'Agenda/Agendamentos/editar - Resultado update: ' . ($result ? 'true' : 'false'));
 
                 if ($result) {
+                    // Verificar se houve mudança de data/hora (reagendamento)
+                    if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
+                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
+                            'data_anterior' => $data_anterior,
+                            'hora_anterior' => $hora_anterior
+                        ]);
+                    }
+
                     log_message('debug', 'Agenda/Agendamentos/editar - Agendamento atualizado com sucesso');
                     $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
                     redirect('agenda/dashboard');
@@ -145,6 +157,14 @@ class Agendamentos extends Agenda_Controller {
         $data['menu_ativo'] = 'agenda';
         $data['agendamento'] = $agendamento;
 
+        // Calcular data máxima baseada no período de abertura
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+        $dias_antecedencia = $estabelecimento->dias_antecedencia_agenda ?? 30;
+        $data['data_maxima'] = $dias_antecedencia > 0
+            ? $this->calcular_data_maxima_dias_uteis($this->estabelecimento_id, $dias_antecedencia)
+            : null;
+
         $this->load->view('agenda/layout/header', $data);
         $this->load->view('agenda/agendamentos/editar', $data);
         $this->load->view('agenda/layout/footer');
@@ -152,10 +172,12 @@ class Agendamentos extends Agenda_Controller {
 
     /**
      * API: Retorna horários disponíveis para agendamento
+     * @param agendamento_id (opcional) - ID do agendamento sendo editado (para excluir da verificação)
      */
     public function get_horarios_disponiveis() {
         $servico_id = $this->input->get('servico_id');
         $data = $this->input->get('data');
+        $agendamento_id = $this->input->get('agendamento_id'); // Para edição
 
         if (!$servico_id || !$data) {
             header('Content-Type: application/json');
@@ -246,7 +268,8 @@ class Agendamentos extends Agenda_Controller {
                     $data,
                     $hora_inicio_str,
                     $hora_fim_str,
-                    $servico_id
+                    $servico_id,
+                    $agendamento_id // Excluir este agendamento da verificação (para edição)
                 )) {
                     $horarios[] = $hora_atual->format('H:i');
                 }
@@ -272,7 +295,7 @@ class Agendamentos extends Agenda_Controller {
             redirect('agenda/dashboard');
         }
 
-        if ($this->Agendamento_model->update($id, ['status' => 'cancelado'])) {
+        if ($this->Agendamento_model->cancelar($id, 'profissional')) {
             $this->session->set_flashdata('sucesso', 'Agendamento cancelado com sucesso!');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao cancelar agendamento.');
@@ -285,6 +308,11 @@ class Agendamentos extends Agenda_Controller {
      * Calcular data máxima considerando apenas dias úteis (dias ativos do estabelecimento)
      */
     private function calcular_data_maxima_dias_uteis($estabelecimento_id, $dias_necessarios) {
+        // Carregar model se necessário
+        if (!isset($this->Horario_estabelecimento_model)) {
+            $this->load->model('Horario_estabelecimento_model');
+        }
+
         // Buscar horários do estabelecimento
         $horarios = $this->Horario_estabelecimento_model->get_by_estabelecimento($estabelecimento_id);
 

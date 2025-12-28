@@ -38,19 +38,25 @@
                                 <label class="form-label">Serviço</label>
                                 <input type="text" class="form-control" value="<?= $agendamento->servico_nome ?>" disabled>
                                 <small class="text-muted">Não é possível alterar o serviço</small>
+                                <!-- Campo hidden para o script de horários -->
+                                <input type="hidden" id="servico_id" value="<?= $agendamento->servico_id ?>">
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required">Data</label>
-                                    <input type="date" class="form-control" name="data"
-                                           value="<?= set_value('data', $agendamento->data) ?>" required>
+                                    <input type="date" class="form-control" name="data" id="data"
+                                           value="<?= set_value('data', $agendamento->data) ?>"
+                                           min="<?= date('Y-m-d') ?>"
+                                           <?= isset($data_maxima) && $data_maxima ? 'max="' . $data_maxima . '"' : '' ?>
+                                           required>
                                     <?= form_error('data', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required">Horário</label>
-                                    <input type="time" class="form-control" name="hora_inicio"
-                                           value="<?= set_value('hora_inicio', $agendamento->hora_inicio) ?>" required>
+                                    <select class="form-select" name="hora_inicio" id="hora_inicio" required>
+                                        <option value="<?= $agendamento->hora_inicio ?>"><?= substr($agendamento->hora_inicio, 0, 5) ?> (atual)</option>
+                                    </select>
                                     <?= form_error('hora_inicio', '<div class="invalid-feedback d-block">', '</div>') ?>
                                 </div>
                             </div>
@@ -121,3 +127,5 @@
 
     </div>
 </div>
+
+<?php $this->load->view('agenda/agendamentos/_horarios_script_editar'); ?>

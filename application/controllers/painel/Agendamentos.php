@@ -219,18 +219,36 @@ class Agendamentos extends Painel_Controller {
         }
 
         if ($this->input->method() === 'post') {
+            $this->form_validation->set_rules('data', 'Data', 'required');
+            $this->form_validation->set_rules('hora_inicio', 'Horário', 'required');
             $this->form_validation->set_rules('status', 'Status', 'required');
 
             if ($this->form_validation->run()) {
+                // Guardar data/hora anterior para verificar se houve reagendamento
+                $data_anterior = $agendamento->data;
+                $hora_anterior = $agendamento->hora_inicio;
+
                 $dados = [
+                    'data' => $this->input->post('data'),
+                    'hora_inicio' => $this->input->post('hora_inicio'),
                     'status' => $this->input->post('status'),
+                    'observacoes' => $this->input->post('observacoes')
                 ];
 
-                if ($this->Agendamento_model->atualizar($id, $dados)) {
+                if ($this->Agendamento_model->update($id, $dados)) {
+                    // Verificar se houve mudança de data/hora (reagendamento)
+                    if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
+                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
+                            'data_anterior' => $data_anterior,
+                            'hora_anterior' => $hora_anterior
+                        ]);
+                    }
+
                     $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
                     redirect('painel/agendamentos');
                 } else {
-                    $this->session->set_flashdata('erro', 'Erro ao atualizar agendamento.');
+                    $erro_msg = $this->Agendamento_model->erro_disponibilidade ?? 'Erro ao atualizar agendamento. Verifique a disponibilidade.';
+                    $this->session->set_flashdata('erro', $erro_msg);
                 }
             }
         }
@@ -267,7 +285,7 @@ class Agendamentos extends Painel_Controller {
             redirect('painel/agendamentos');
         }
 
-        if ($this->Agendamento_model->atualizar($id, ['status' => 'cancelado'])) {
+        if ($this->Agendamento_model->cancelar($id, 'estabelecimento')) {
             $this->session->set_flashdata('sucesso', 'Agendamento cancelado com sucesso!');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao cancelar agendamento.');
@@ -474,11 +492,13 @@ class Agendamentos extends Painel_Controller {
 
     /**
      * API: Retorna horários disponíveis para agendamento
+     * @param agendamento_id (opcional) - ID do agendamento sendo editado (para excluir da verificação)
      */
     public function get_horarios_disponiveis() {
         $profissional_id = $this->input->get('profissional_id');
         $data = $this->input->get('data');
         $servico_id = $this->input->get('servico_id');
+        $agendamento_id = $this->input->get('agendamento_id'); // Para edição
 
         if (!$profissional_id || !$data || !$servico_id) {
             header('Content-Type: application/json');
@@ -568,7 +588,9 @@ class Agendamentos extends Painel_Controller {
                     $profissional_id,
                     $data,
                     $hora_inicio_str,
-                    $hora_fim_str
+                    $hora_fim_str,
+                    $servico_id,
+                    $agendamento_id // Excluir este agendamento da verificação (para edição)
                 )) {
                     $horarios[] = $hora_atual->format('H:i');
                 }

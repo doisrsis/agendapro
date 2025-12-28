@@ -72,13 +72,15 @@ class Cliente_model extends CI_Model {
      * Criar novo cliente
      */
     public function create($data) {
+        // CPF vazio deve ser NULL para evitar erro de duplicidade
+        $cpf = !empty($data['cpf']) ? $data['cpf'] : null;
+
         $insert_data = [
             'estabelecimento_id' => $data['estabelecimento_id'],
             'nome' => $data['nome'],
-            'cpf' => $data['cpf'] ?? null,
+            'cpf' => $cpf,
             'whatsapp' => $data['whatsapp'],
-            'telefone' => $data['telefone'] ?? null,
-            'email' => $data['email'] ?? null,
+            'email' => !empty($data['email']) ? $data['email'] : null,
             'foto' => $data['foto'] ?? null,
             'tipo' => $data['tipo'] ?? 'novo',
             'total_agendamentos' => 0,
@@ -100,7 +102,6 @@ class Cliente_model extends CI_Model {
         if (isset($data['nome'])) $update_data['nome'] = $data['nome'];
         if (isset($data['cpf'])) $update_data['cpf'] = $data['cpf'];
         if (isset($data['whatsapp'])) $update_data['whatsapp'] = $data['whatsapp'];
-        if (isset($data['telefone'])) $update_data['telefone'] = $data['telefone'];
         if (isset($data['email'])) $update_data['email'] = $data['email'];
         if (isset($data['foto'])) $update_data['foto'] = $data['foto'];
         if (isset($data['tipo'])) $update_data['tipo'] = $data['tipo'];

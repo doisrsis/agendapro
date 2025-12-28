@@ -173,6 +173,10 @@ class Agendamentos extends Admin_Controller {
             if ($this->form_validation->run()) {
                 $dados_antigos = (array) $agendamento;
 
+                // Guardar data/hora anterior para verificar se houve reagendamento
+                $data_anterior = $agendamento->data;
+                $hora_anterior = $agendamento->hora_inicio;
+
                 $dados = [
                     'data' => $this->input->post('data'),
                     'hora_inicio' => $this->input->post('hora_inicio'),
@@ -181,6 +185,14 @@ class Agendamentos extends Admin_Controller {
                 ];
 
                 if ($this->Agendamento_model->update($id, $dados)) {
+                    // Verificar se houve mudança de data/hora (reagendamento)
+                    if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
+                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
+                            'data_anterior' => $data_anterior,
+                            'hora_anterior' => $hora_anterior
+                        ]);
+                    }
+
                     $this->registrar_log('atualizar', 'agendamentos', $id, $dados_antigos, $dados);
                     $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
                     redirect('admin/agendamentos');
