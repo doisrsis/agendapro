@@ -36,8 +36,22 @@ class Notificacao_whatsapp_lib {
         // Buscar estabelecimento
         $estabelecimento = $this->CI->Estabelecimento_model->get_by_id($estabelecimento_id);
 
-        if (!$estabelecimento || $estabelecimento->waha_status != 'conectado') {
-            log_message('debug', 'Notificacao WhatsApp: Estabelecimento ' . $estabelecimento_id . ' não está conectado');
+        if (!$estabelecimento) {
+            log_message('error', 'Notificacao WhatsApp: Estabelecimento ' . $estabelecimento_id . ' não encontrado');
+            return false;
+        }
+
+        log_message('debug', 'Notificacao WhatsApp: waha_status=' . ($estabelecimento->waha_status ?? 'NULL') . ', session=' . ($estabelecimento->waha_session_name ?? 'NULL'));
+
+        // Verificar se tem sessão WAHA configurada
+        if (empty($estabelecimento->waha_session_name)) {
+            log_message('error', 'Notificacao WhatsApp: Estabelecimento ' . $estabelecimento_id . ' sem sessão WAHA configurada');
+            return false;
+        }
+
+        // Verificar se WAHA está ativo para o estabelecimento
+        if (!$estabelecimento->waha_ativo) {
+            log_message('debug', 'Notificacao WhatsApp: WAHA não está ativo para estabelecimento ' . $estabelecimento_id);
             return false;
         }
 
@@ -81,7 +95,11 @@ class Notificacao_whatsapp_lib {
      * @return array
      */
     public function enviar_confirmacao($agendamento) {
+        log_message('debug', 'Notificacao WhatsApp: enviar_confirmacao - Agendamento #' . $agendamento->id);
+        log_message('debug', 'Notificacao WhatsApp: estabelecimento_id=' . ($agendamento->estabelecimento_id ?? 'NULL'));
+
         if (!$this->configurar_waha($agendamento->estabelecimento_id)) {
+            log_message('error', 'Notificacao WhatsApp: Falha ao configurar WAHA para estabelecimento ' . $agendamento->estabelecimento_id);
             return ['success' => false, 'error' => 'WhatsApp não configurado'];
         }
 
@@ -318,6 +336,56 @@ class Notificacao_whatsapp_lib {
 
         // Log da notificação
         $this->registrar_log($agendamento, 'finalizacao', $resultado);
+
+        return $resultado;
+    }
+
+    /**
+     * Enviar lembrete de pagamento pendente
+     * Enviado quando o tempo inicial do PIX expira
+     *
+     * @param object $agendamento Objeto do agendamento com joins
+     * @param string $link_pagamento URL da página pública de pagamento
+     * @param int $minutos_restantes Minutos restantes para pagar
+     * @return array
+     */
+    public function enviar_lembrete_pagamento($agendamento, $link_pagamento, $minutos_restantes = 5) {
+        if (!$this->configurar_waha($agendamento->estabelecimento_id)) {
+            return ['success' => false, 'error' => 'WhatsApp não configurado'];
+        }
+
+        $numero = $this->limpar_numero($agendamento->cliente_whatsapp);
+        if (!$numero) {
+            log_message('warning', 'Notificacao WhatsApp: Cliente sem WhatsApp - Lembrete pagamento #' . $agendamento->id);
+            return ['success' => false, 'error' => 'Número do cliente não informado'];
+        }
+
+        $chat_id = $this->CI->waha_lib->obter_chat_id_valido($numero);
+        if (!$chat_id) {
+            return ['success' => false, 'error' => 'Número não encontrado no WhatsApp'];
+        }
+
+        $data_formatada = date('d/m/Y', strtotime($agendamento->data));
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+        $valor_formatado = number_format($agendamento->pagamento_valor, 2, ',', '.');
+
+        $mensagem = "⚠️ *Pagamento Pendente!*\n\n";
+        $mensagem .= "Olá {$agendamento->cliente_nome},\n\n";
+        $mensagem .= "Notamos que você ainda não concluiu o pagamento do seu agendamento:\n\n";
+        $mensagem .= "📅 *Data:* {$data_formatada}\n";
+        $mensagem .= "⏰ *Horário:* {$hora_formatada}\n";
+        $mensagem .= "💇 *Serviço:* {$agendamento->servico_nome}\n";
+        $mensagem .= "💰 *Valor:* R$ {$valor_formatado}\n\n";
+        $mensagem .= "⏳ *Você tem mais {$minutos_restantes} minutos para pagar.*\n\n";
+        $mensagem .= "🔗 *Clique no link abaixo para pagar:*\n";
+        $mensagem .= "{$link_pagamento}\n\n";
+        $mensagem .= "Após esse prazo, seu agendamento será cancelado automaticamente.\n\n";
+        $mensagem .= "📍 {$agendamento->estabelecimento_nome}\n\n";
+        $mensagem .= "_Mensagem automática - não responda._";
+
+        $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);
+
+        $this->registrar_log($agendamento, 'lembrete_pagamento', $resultado);
 
         return $resultado;
     }

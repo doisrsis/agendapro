@@ -355,17 +355,38 @@
                                 </small>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Tempo de Expiração do PIX</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" name="agendamento_tempo_expiracao_pix"
-                                           value="<?= $estabelecimento->agendamento_tempo_expiracao_pix ?? 30 ?>"
-                                           min="5" max="60">
-                                    <span class="input-group-text">minutos</span>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tempo de Expiração do PIX</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="agendamento_tempo_expiracao_pix"
+                                               value="<?= $estabelecimento->agendamento_tempo_expiracao_pix ?? 30 ?>"
+                                               min="5" max="60">
+                                        <span class="input-group-text">minutos</span>
+                                    </div>
+                                    <small class="text-muted">
+                                        Tempo inicial que o cliente tem para pagar o PIX
+                                    </small>
                                 </div>
-                                <small class="text-muted">
-                                    Tempo que o cliente tem para pagar o PIX antes de expirar
-                                </small>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tempo Adicional após Expiração</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="agendamento_tempo_adicional_pix"
+                                               value="<?= $estabelecimento->agendamento_tempo_adicional_pix ?? 5 ?>"
+                                               min="0" max="30">
+                                        <span class="input-group-text">minutos</span>
+                                    </div>
+                                    <small class="text-muted">
+                                        Tempo extra após enviar lembrete de pagamento (0 = desativado)
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-secondary mb-3">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>Como funciona:</strong> Quando o tempo inicial expirar, o cliente receberá uma notificação no WhatsApp
+                                com um link para pagar. Ele terá o tempo adicional configurado para concluir o pagamento antes do agendamento ser cancelado.
                             </div>
 
                             <script>

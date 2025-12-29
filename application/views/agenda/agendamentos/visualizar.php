@@ -98,7 +98,7 @@
                         <hr>
                         <div class="mb-3">
                             <label class="form-label">Observações</label>
-                            <div class="text-muted"><?= nl2br(esc($agendamento->observacoes)) ?></div>
+                            <div class="text-muted"><?= nl2br(htmlspecialchars($agendamento->observacoes)) ?></div>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -137,6 +137,178 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Card de Pagamento (se houver) -->
+                <?php if (!empty($agendamento->pagamento_status) && $agendamento->pagamento_status != 'nao_requer'): ?>
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="ti ti-credit-card me-2"></i>
+                            Histórico de Pagamento
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <!-- Status do Pagamento -->
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <?php
+                                        $pagamento_icons = [
+                                            'pendente' => 'ti-clock text-warning',
+                                            'pago' => 'ti-check text-success',
+                                            'expirado' => 'ti-x text-danger',
+                                            'cancelado' => 'ti-x text-danger'
+                                        ];
+                                        $pagamento_badges = [
+                                            'pendente' => 'warning',
+                                            'pago' => 'success',
+                                            'expirado' => 'danger',
+                                            'cancelado' => 'danger'
+                                        ];
+                                        $pagamento_textos = [
+                                            'pendente' => 'Aguardando Pagamento',
+                                            'pago' => 'Pago',
+                                            'expirado' => 'Expirado',
+                                            'cancelado' => 'Cancelado'
+                                        ];
+                                        ?>
+                                        <span class="avatar bg-<?= $pagamento_badges[$agendamento->pagamento_status] ?? 'secondary' ?>-lt">
+                                            <i class="ti <?= $pagamento_icons[$agendamento->pagamento_status] ?? 'ti-help' ?>"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="text-truncate">
+                                            <strong>Status do Pagamento</strong>
+                                        </div>
+                                        <div class="text-muted">
+                                            <span class="badge bg-<?= $pagamento_badges[$agendamento->pagamento_status] ?? 'secondary' ?>">
+                                                <?= $pagamento_textos[$agendamento->pagamento_status] ?? $agendamento->pagamento_status ?>
+                                            </span>
+                                            <?php if (!empty($agendamento->pagamento_valor)): ?>
+                                            - R$ <?= number_format($agendamento->pagamento_valor, 2, ',', '.') ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Expiração Original -->
+                            <?php if (!empty($agendamento->pagamento_expira_em)): ?>
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar bg-secondary-lt">
+                                            <i class="ti ti-clock-hour-4 text-secondary"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="text-truncate">
+                                            <strong>PIX Gerado</strong>
+                                        </div>
+                                        <div class="text-muted">
+                                            Expiração: <?= date('d/m/Y H:i', strtotime($agendamento->pagamento_expira_em)) ?>
+                                            <?php if (strtotime($agendamento->pagamento_expira_em) < time() && $agendamento->pagamento_status != 'pago'): ?>
+                                            <span class="badge bg-danger-lt text-danger ms-1">Expirado</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <!-- Lembrete Enviado -->
+                            <?php if (!empty($agendamento->pagamento_lembrete_enviado) && $agendamento->pagamento_lembrete_enviado == 1): ?>
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar bg-info-lt">
+                                            <i class="ti ti-brand-whatsapp text-info"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="text-truncate">
+                                            <strong>Lembrete Enviado</strong>
+                                        </div>
+                                        <div class="text-muted">
+                                            Cliente notificado via WhatsApp sobre pagamento pendente
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <!-- Tempo Adicional -->
+                            <?php if (!empty($agendamento->pagamento_expira_adicional_em)): ?>
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar bg-warning-lt">
+                                            <i class="ti ti-clock-plus text-warning"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="text-truncate">
+                                            <strong>Prazo Adicional</strong>
+                                        </div>
+                                        <div class="text-muted">
+                                            Expiração estendida até: <?= date('d/m/Y H:i', strtotime($agendamento->pagamento_expira_adicional_em)) ?>
+                                            <?php if (strtotime($agendamento->pagamento_expira_adicional_em) < time() && $agendamento->pagamento_status != 'pago'): ?>
+                                            <span class="badge bg-danger-lt text-danger ms-1">Expirado</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <!-- Motivo do Cancelamento (se cancelado por falta de pagamento) -->
+                            <?php if ($agendamento->status == 'cancelado' && !empty($agendamento->motivo_cancelamento)): ?>
+                            <div class="list-group-item list-group-item-danger">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar bg-danger-lt">
+                                            <i class="ti ti-alert-circle text-danger"></i>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="text-truncate">
+                                            <strong>Motivo do Cancelamento</strong>
+                                        </div>
+                                        <div class="text-muted">
+                                            <?= htmlspecialchars($agendamento->motivo_cancelamento) ?>
+                                            <?php if (!empty($agendamento->cancelado_por)): ?>
+                                            <br><small>Cancelado por: <?= ucfirst($agendamento->cancelado_por) ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Card de Cancelamento (se cancelado sem pagamento) -->
+                <?php if ($agendamento->status == 'cancelado' && empty($agendamento->pagamento_status)): ?>
+                <div class="card mt-3 border-danger">
+                    <div class="card-header bg-danger-lt">
+                        <h3 class="card-title text-danger">
+                            <i class="ti ti-x me-2"></i>
+                            Agendamento Cancelado
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($agendamento->motivo_cancelamento)): ?>
+                        <p class="mb-1"><strong>Motivo:</strong> <?= htmlspecialchars($agendamento->motivo_cancelamento) ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($agendamento->cancelado_por)): ?>
+                        <p class="mb-0 text-muted"><small>Cancelado por: <?= ucfirst($agendamento->cancelado_por) ?></small></p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <div class="card mt-3">
                     <div class="card-header">

@@ -99,6 +99,9 @@ class Agendamentos extends Agenda_Controller {
                         if ($pix_result && isset($pix_result['response']) && in_array($pix_result['status'], [200, 201])) {
                             $pix_data = $pix_result['response'];
 
+                            // Gerar token único para acesso público
+                            $token_pagamento = $this->Agendamento_model->gerar_token_pagamento();
+
                             // Salvar dados do PIX no agendamento
                             $this->Agendamento_model->update($agendamento_id, [
                                 'pagamento_status' => 'pendente',
@@ -106,6 +109,8 @@ class Agendamentos extends Agenda_Controller {
                                 'pagamento_pix_qrcode' => $pix_data['point_of_interaction']['transaction_data']['qr_code_base64'] ?? null,
                                 'pagamento_pix_copia_cola' => $pix_data['point_of_interaction']['transaction_data']['qr_code'] ?? null,
                                 'pagamento_expira_em' => date('Y-m-d H:i:s', strtotime("+{$estabelecimento->agendamento_tempo_expiracao_pix} minutes")),
+                                'pagamento_token' => $token_pagamento,
+                                'pagamento_lembrete_enviado' => 0,
                                 'status' => 'pendente'
                             ]);
 

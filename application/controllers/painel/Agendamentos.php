@@ -135,13 +135,18 @@ class Agendamentos extends Painel_Controller {
 
                             log_message('error', 'DEBUG: PIX ID = ' . $pix_data['id']);
 
+                            // Gerar token único para acesso público
+                            $token_pagamento = $this->Agendamento_model->gerar_token_pagamento();
+
                             // Salvar dados do PIX no agendamento
                             $this->Agendamento_model->atualizar($agendamento_id, [
                                 'pagamento_status' => 'pendente',
                                 'pagamento_valor' => $valor,
                                 'pagamento_pix_qrcode' => $pix_data['point_of_interaction']['transaction_data']['qr_code_base64'] ?? null,
                                 'pagamento_pix_copia_cola' => $pix_data['point_of_interaction']['transaction_data']['qr_code'] ?? null,
-                                'pagamento_expira_em' => date('Y-m-d H:i:s', strtotime("+{$estabelecimento->agendamento_tempo_expiracao_pix} minutes"))
+                                'pagamento_expira_em' => date('Y-m-d H:i:s', strtotime("+{$estabelecimento->agendamento_tempo_expiracao_pix} minutes")),
+                                'pagamento_token' => $token_pagamento,
+                                'pagamento_lembrete_enviado' => 0
                             ]);
 
                             // Criar registro de pagamento

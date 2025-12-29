@@ -112,5 +112,23 @@ $route['agenda/(:any)'] = 'agenda/$1';
 // Webhook Mercado Pago
 $route['webhook/mercadopago'] = 'webhook/mercadopago';
 
+// Webhook WAHA (WhatsApp)
+$route['webhook_waha'] = 'webhook_waha/index';
+$route['webhook_waha/teste'] = 'webhook_waha/teste';
+$route['webhook_waha/ver_logs'] = 'webhook_waha/ver_logs';
+$route['webhook_waha/limpar_logs'] = 'webhook_waha/limpar_logs';
+$route['webhook_waha/simular_mensagem/(:num)/(:any)/(:any)'] = 'webhook_waha/simular_mensagem/$1/$2/$3';
+$route['webhook_waha/simular_mensagem/(:num)/(:any)'] = 'webhook_waha/simular_mensagem/$1/$2';
+$route['webhook_waha/estabelecimento/(:num)'] = 'webhook_waha/estabelecimento/$1';
+
+// Página pública de pagamento PIX
+$route['pagamento/(:any)'] = 'pagamento/index/$1';
+$route['pagamento/verificar/(:any)'] = 'pagamento/verificar/$1';
+
+// Cron Jobs (protegidos por token)
+$route['cron/verificar_pagamentos'] = 'cron/verificar_pagamentos';
+$route['cron/verificar_status_mp'] = 'cron/verificar_status_mp';
+$route['cron/limpar_logs'] = 'cron/limpar_logs';
+
 // API Pública (se houver)
 $route['api/(:any)'] = 'api/$1';

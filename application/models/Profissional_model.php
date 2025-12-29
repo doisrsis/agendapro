@@ -176,6 +176,29 @@ class Profissional_model extends CI_Model {
         return $this->get_all(['estabelecimento_id' => $estabelecimento_id]);
     }
 
+    /**
+     * Buscar profissionais que realizam um serviço específico
+     *
+     * @param int $servico_id
+     * @param int $estabelecimento_id
+     * @return array
+     */
+    public function get_by_servico($servico_id, $estabelecimento_id = null) {
+        $this->db->select('p.*');
+        $this->db->from($this->table . ' p');
+        $this->db->join('profissional_servicos ps', 'ps.profissional_id = p.id');
+        $this->db->where('ps.servico_id', $servico_id);
+        $this->db->where('p.status', 'ativo');
+
+        if ($estabelecimento_id) {
+            $this->db->where('p.estabelecimento_id', $estabelecimento_id);
+        }
+
+        $this->db->order_by('p.nome', 'ASC');
+
+        return $this->db->get()->result();
+    }
+
     // =========================================================================
     // ALIASES PARA COMPATIBILIDADE DE NOMENCLATURA
     // =========================================================================

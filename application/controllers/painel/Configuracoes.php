@@ -123,7 +123,8 @@ class Configuracoes extends CI_Controller {
             // Pagamento de agendamentos
             'agendamento_requer_pagamento' => $this->input->post('agendamento_requer_pagamento') ?? 'nao',
             'agendamento_taxa_fixa' => $this->input->post('agendamento_taxa_fixa') ?? 0.00,
-            'agendamento_tempo_expiracao_pix' => $this->input->post('agendamento_tempo_expiracao_pix') ?? 30
+            'agendamento_tempo_expiracao_pix' => $this->input->post('agendamento_tempo_expiracao_pix') ?? 30,
+            'agendamento_tempo_adicional_pix' => $this->input->post('agendamento_tempo_adicional_pix') ?? 5
         ];
 
         // DEBUG: Log dos dados que serão salvos
@@ -228,6 +229,14 @@ class Configuracoes extends CI_Controller {
             return;
         }
 
+        // Verificar se já existe uma sessão e deletá-la primeiro
+        $sessao_existente = $this->waha_lib->get_sessao();
+        if ($sessao_existente['success'] && isset($sessao_existente['response']['name'])) {
+            log_message('debug', 'WAHA: Sessão existente encontrada, deletando...');
+            $this->waha_lib->deletar_sessao();
+            sleep(1); // Aguardar um segundo para garantir que foi deletada
+        }
+
         // Gerar URL do webhook para este estabelecimento
         $webhook_url = base_url('webhook_waha/estabelecimento/' . $this->estabelecimento_id);
 
@@ -247,11 +256,13 @@ class Configuracoes extends CI_Controller {
                 'waha_webhook_url' => $webhook_url,
                 'whatsapp_api_tipo' => 'waha',
                 'waha_ativo' => 1,
-                'waha_bot_ativo' => 1
+                'waha_bot_ativo' => 1,
+                'waha_numero_conectado' => ''
             ]);
             $this->session->set_flashdata('sucesso', 'Escaneie o QR Code com seu WhatsApp para conectar.');
         } else {
-            $erro = $resultado['response']['message'] ?? 'Erro desconhecido';
+            $erro = $resultado['response']['message'] ?? json_encode($resultado);
+            log_message('error', 'WAHA criar_sessao erro: ' . $erro);
             $this->session->set_flashdata('erro', 'Erro ao iniciar sessão: ' . $erro);
         }
 
@@ -287,14 +298,17 @@ class Configuracoes extends CI_Controller {
      * Obter QR Code WAHA via AJAX
      */
     public function waha_qrcode() {
+        header('Content-Type: application/json');
+
         if (!$this->configurar_waha_estabelecimento()) {
             echo json_encode(['success' => false, 'error' => 'Configurações não encontradas']);
             return;
         }
 
         $status = $this->waha_lib->get_status();
+        log_message('debug', 'WAHA QRCode - Status: ' . $status);
 
-        if (in_array($status, ['working', 'connected'])) {
+        if (in_array($status, ['working', 'connected', 'WORKING'])) {
             $me = $this->waha_lib->get_me();
 
             // Atualizar status no banco
@@ -312,7 +326,16 @@ class Configuracoes extends CI_Controller {
             return;
         }
 
+        // Se a sessão não existe ou está parada, tentar iniciar
+        if (in_array($status, ['stopped', 'STOPPED', 'failed', 'FAILED', 'unknown', ''])) {
+            log_message('debug', 'WAHA QRCode - Sessão parada/inexistente, iniciando...');
+            $this->waha_lib->iniciar_sessao();
+            sleep(2); // Aguardar sessão iniciar
+            $status = $this->waha_lib->get_status();
+        }
+
         $qr = $this->waha_lib->get_qr_code();
+        log_message('debug', 'WAHA QRCode - Resultado: ' . json_encode($qr));
 
         if ($qr['success'] && isset($qr['response']['data'])) {
             echo json_encode([
@@ -320,11 +343,19 @@ class Configuracoes extends CI_Controller {
                 'status' => $status,
                 'qrcode' => $qr['response']['data']
             ]);
+        } elseif ($qr['success'] && isset($qr['response']['value'])) {
+            // Formato alternativo do QR Code
+            echo json_encode([
+                'success' => true,
+                'status' => $status,
+                'qrcode' => $qr['response']['value']
+            ]);
         } else {
             echo json_encode([
                 'success' => false,
                 'status' => $status,
-                'error' => 'QR Code não disponível. Tente gerar novamente.'
+                'error' => 'QR Code não disponível. Aguarde alguns segundos e tente novamente.',
+                'debug' => $qr
             ]);
         }
     }
@@ -423,5 +454,152 @@ class Configuracoes extends CI_Controller {
             'numero_teste' => $numero_teste,
             'resultado_envio' => $resultado
         ], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * Atualizar webhook da sessão WAHA
+     * Necessário se o webhook não foi configurado corretamente
+     */
+    public function waha_atualizar_webhook() {
+        if (!$this->configurar_waha_estabelecimento()) {
+            $this->session->set_flashdata('erro', 'Configurações WAHA não encontradas.');
+            redirect('painel/configuracoes?aba=whatsapp');
+            return;
+        }
+
+        // Gerar URL do webhook para este estabelecimento
+        $webhook_url = base_url('webhook_waha/estabelecimento/' . $this->estabelecimento_id);
+
+        $resultado = $this->waha_lib->atualizar_webhook($webhook_url);
+
+        if ($resultado['success']) {
+            $this->Estabelecimento_model->update($this->estabelecimento_id, [
+                'waha_webhook_url' => $webhook_url
+            ]);
+            $this->session->set_flashdata('sucesso', 'Webhook atualizado com sucesso! URL: ' . $webhook_url);
+        } else {
+            $erro = $resultado['response']['message'] ?? json_encode($resultado);
+            $this->session->set_flashdata('erro', 'Erro ao atualizar webhook: ' . $erro);
+        }
+
+        redirect('painel/configuracoes?aba=whatsapp');
+    }
+
+    /**
+     * Diagnóstico completo do bot WhatsApp
+     * Acesse: /painel/configuracoes/waha_diagnostico
+     */
+    public function waha_diagnostico() {
+        header('Content-Type: application/json');
+
+        $diagnostico = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'estabelecimento' => [
+                'id' => $this->estabelecimento_id,
+                'nome' => $this->estabelecimento->nome,
+                'waha_status' => $this->estabelecimento->waha_status,
+                'waha_bot_ativo' => $this->estabelecimento->waha_bot_ativo,
+                'waha_session_name' => $this->estabelecimento->waha_session_name,
+                'waha_numero_conectado' => $this->estabelecimento->waha_numero_conectado,
+                'waha_webhook_url' => $this->estabelecimento->waha_webhook_url ?? 'NÃO CONFIGURADO'
+            ],
+            'verificacoes' => []
+        ];
+
+        // Verificar se bot está ativo
+        $diagnostico['verificacoes']['bot_ativo'] = [
+            'status' => $this->estabelecimento->waha_bot_ativo == 1 ? 'OK' : 'ERRO',
+            'mensagem' => $this->estabelecimento->waha_bot_ativo == 1
+                ? 'Bot está ativo'
+                : 'Bot está DESATIVADO - ative nas configurações'
+        ];
+
+        // Verificar conexão WhatsApp
+        $diagnostico['verificacoes']['conexao_whatsapp'] = [
+            'status' => $this->estabelecimento->waha_status == 'conectado' ? 'OK' : 'ERRO',
+            'mensagem' => $this->estabelecimento->waha_status == 'conectado'
+                ? 'WhatsApp conectado'
+                : 'WhatsApp NÃO conectado - status: ' . $this->estabelecimento->waha_status
+        ];
+
+        // Verificar configuração WAHA
+        if ($this->configurar_waha_estabelecimento()) {
+            $diagnostico['verificacoes']['config_waha'] = [
+                'status' => 'OK',
+                'mensagem' => 'Configurações WAHA carregadas'
+            ];
+
+            // Verificar status da sessão na API
+            $api_status = $this->waha_lib->get_status();
+            $diagnostico['verificacoes']['api_status'] = [
+                'status' => in_array($api_status, ['working', 'connected']) ? 'OK' : 'ERRO',
+                'mensagem' => 'Status na API: ' . $api_status
+            ];
+
+            // Verificar sessão
+            $sessao = $this->waha_lib->get_sessao();
+            $diagnostico['sessao_waha'] = $sessao;
+
+        } else {
+            $diagnostico['verificacoes']['config_waha'] = [
+                'status' => 'ERRO',
+                'mensagem' => 'Falha ao carregar configurações WAHA do SaaS Admin'
+            ];
+        }
+
+        // URL esperada do webhook
+        $webhook_esperado = base_url('webhook_waha/estabelecimento/' . $this->estabelecimento_id);
+        $diagnostico['webhook'] = [
+            'url_esperada' => $webhook_esperado,
+            'url_configurada' => $this->estabelecimento->waha_webhook_url ?? 'NÃO CONFIGURADO',
+            'match' => ($this->estabelecimento->waha_webhook_url ?? '') === $webhook_esperado
+        ];
+
+        // Instruções de correção
+        $diagnostico['instrucoes'] = [];
+
+        if ($this->estabelecimento->waha_bot_ativo != 1) {
+            $diagnostico['instrucoes'][] = 'Ative o bot nas configurações do WhatsApp';
+        }
+
+        if ($this->estabelecimento->waha_status != 'conectado') {
+            $diagnostico['instrucoes'][] = 'Reconecte o WhatsApp escaneando o QR Code';
+        }
+
+        if (($this->estabelecimento->waha_webhook_url ?? '') !== $webhook_esperado) {
+            $diagnostico['instrucoes'][] = 'Atualize o webhook acessando: /painel/configuracoes/waha_atualizar_webhook';
+        }
+
+        echo json_encode($diagnostico, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Reiniciar sessão WAHA para aplicar configurações
+     */
+    public function waha_reiniciar() {
+        if (!$this->configurar_waha_estabelecimento()) {
+            $this->session->set_flashdata('erro', 'Configurações WAHA não encontradas.');
+            redirect('painel/configuracoes?aba=whatsapp');
+            return;
+        }
+
+        // Primeiro atualizar o webhook
+        $webhook_url = base_url('webhook_waha/estabelecimento/' . $this->estabelecimento_id);
+        $this->waha_lib->atualizar_webhook($webhook_url);
+
+        // Reiniciar a sessão
+        $resultado = $this->waha_lib->reiniciar_sessao();
+
+        if ($resultado['success']) {
+            $this->Estabelecimento_model->update($this->estabelecimento_id, [
+                'waha_webhook_url' => $webhook_url
+            ]);
+            $this->session->set_flashdata('sucesso', 'Sessão reiniciada! Aguarde alguns segundos e teste novamente.');
+        } else {
+            $erro = $resultado['response']['message'] ?? json_encode($resultado);
+            $this->session->set_flashdata('erro', 'Erro ao reiniciar: ' . $erro);
+        }
+
+        redirect('painel/configuracoes?aba=whatsapp');
     }
 }

@@ -219,6 +219,9 @@ class Agendamento_model extends CI_Model {
         if (isset($data['pagamento_pix_qrcode'])) $update_data['pagamento_pix_qrcode'] = $data['pagamento_pix_qrcode'];
         if (isset($data['pagamento_pix_copia_cola'])) $update_data['pagamento_pix_copia_cola'] = $data['pagamento_pix_copia_cola'];
         if (isset($data['pagamento_expira_em'])) $update_data['pagamento_expira_em'] = $data['pagamento_expira_em'];
+        if (isset($data['pagamento_lembrete_enviado'])) $update_data['pagamento_lembrete_enviado'] = $data['pagamento_lembrete_enviado'];
+        if (isset($data['pagamento_token'])) $update_data['pagamento_token'] = $data['pagamento_token'];
+        if (isset($data['pagamento_expira_adicional_em'])) $update_data['pagamento_expira_adicional_em'] = $data['pagamento_expira_adicional_em'];
 
         if (empty($update_data)) {
             return false;
@@ -586,5 +589,131 @@ class Agendamento_model extends CI_Model {
      */
     public function atualizar($id, $dados) {
         return $this->update($id, $dados);
+    }
+
+    // =========================================================================
+    // MÉTODOS PARA CRON DE PAGAMENTOS
+    // =========================================================================
+
+    /**
+     * Buscar agendamentos com pagamento pendente que expiraram
+     * Usado pelo cron para enviar lembretes e cancelar
+     *
+     * @return array Lista de agendamentos pendentes expirados
+     */
+    public function get_pagamentos_pendentes_expirados() {
+        return $this->db
+            ->select('a.*, e.nome as estabelecimento_nome, e.agendamento_tempo_adicional_pix,
+                      c.nome as cliente_nome, c.whatsapp as cliente_whatsapp, c.email as cliente_email,
+                      s.nome as servico_nome, p.nome as profissional_nome')
+            ->from($this->table . ' a')
+            ->join('estabelecimentos e', 'a.estabelecimento_id = e.id')
+            ->join('clientes c', 'a.cliente_id = c.id')
+            ->join('servicos s', 'a.servico_id = s.id')
+            ->join('profissionais p', 'a.profissional_id = p.id')
+            ->where('a.pagamento_status', 'pendente')
+            ->where('a.pagamento_expira_em IS NOT NULL')
+            ->where('a.pagamento_expira_em <', date('Y-m-d H:i:s'))
+            ->where('a.pagamento_lembrete_enviado', 0)
+            ->get()
+            ->result();
+    }
+
+    /**
+     * Buscar agendamentos com tempo adicional expirado
+     * Usado pelo cron para cancelar definitivamente
+     *
+     * @return array Lista de agendamentos para cancelar
+     */
+    public function get_pagamentos_tempo_adicional_expirado() {
+        return $this->db
+            ->select('a.*, e.nome as estabelecimento_nome,
+                      c.nome as cliente_nome, c.whatsapp as cliente_whatsapp')
+            ->from($this->table . ' a')
+            ->join('estabelecimentos e', 'a.estabelecimento_id = e.id')
+            ->join('clientes c', 'a.cliente_id = c.id')
+            ->where('a.pagamento_status', 'pendente')
+            ->where('a.pagamento_lembrete_enviado', 1)
+            ->where('a.pagamento_expira_adicional_em IS NOT NULL')
+            ->where('a.pagamento_expira_adicional_em <', date('Y-m-d H:i:s'))
+            ->get()
+            ->result();
+    }
+
+    /**
+     * Buscar agendamento por token de pagamento
+     *
+     * @param string $token Token único do pagamento
+     * @return object|null Agendamento encontrado
+     */
+    public function get_by_pagamento_token($token) {
+        if (empty($token)) {
+            return null;
+        }
+
+        return $this->db
+            ->select('a.*, e.nome as estabelecimento_nome, e.logo as estabelecimento_logo,
+                      c.nome as cliente_nome, c.whatsapp as cliente_whatsapp,
+                      s.nome as servico_nome, s.preco as servico_preco,
+                      p.nome as profissional_nome')
+            ->from($this->table . ' a')
+            ->join('estabelecimentos e', 'a.estabelecimento_id = e.id')
+            ->join('clientes c', 'a.cliente_id = c.id')
+            ->join('servicos s', 'a.servico_id = s.id')
+            ->join('profissionais p', 'a.profissional_id = p.id')
+            ->where('a.pagamento_token', $token)
+            ->get()
+            ->row();
+    }
+
+    /**
+     * Gerar token único para pagamento
+     *
+     * @return string Token de 32 caracteres
+     */
+    public function gerar_token_pagamento() {
+        return bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Buscar próximos agendamentos de um cliente
+     *
+     * @param int $cliente_id
+     * @param int $limite
+     * @return array
+     */
+    public function get_proximos_by_cliente($cliente_id, $limite = 5) {
+        return $this->db
+            ->select('a.*, s.nome as servico_nome, p.nome as profissional_nome')
+            ->from($this->table . ' a')
+            ->join('servicos s', 'a.servico_id = s.id')
+            ->join('profissionais p', 'a.profissional_id = p.id')
+            ->where('a.cliente_id', $cliente_id)
+            ->where('a.data >=', date('Y-m-d'))
+            ->where_in('a.status', ['pendente', 'confirmado'])
+            ->order_by('a.data', 'ASC')
+            ->order_by('a.hora_inicio', 'ASC')
+            ->limit($limite)
+            ->get()
+            ->result();
+    }
+
+    /**
+     * Buscar agendamentos de um profissional em uma data específica
+     *
+     * @param int $profissional_id
+     * @param string $data
+     * @return array
+     */
+    public function get_by_profissional_data($profissional_id, $data) {
+        return $this->db
+            ->select('a.*')
+            ->from($this->table . ' a')
+            ->where('a.profissional_id', $profissional_id)
+            ->where('a.data', $data)
+            ->where_in('a.status', ['pendente', 'confirmado', 'em_atendimento'])
+            ->order_by('a.hora_inicio', 'ASC')
+            ->get()
+            ->result();
     }
 }

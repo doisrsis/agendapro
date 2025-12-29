@@ -131,6 +131,23 @@ class Servico_model extends CI_Model {
         return $this->db->count_all_results();
     }
 
+    /**
+     * Buscar serviços ativos de um estabelecimento
+     *
+     * @param int $estabelecimento_id
+     * @return array
+     */
+    public function get_by_estabelecimento($estabelecimento_id) {
+        return $this->db
+            ->select('s.*, s.duracao as duracao_minutos')
+            ->from($this->table . ' s')
+            ->where('s.estabelecimento_id', $estabelecimento_id)
+            ->where('s.status', 'ativo')
+            ->order_by('s.nome', 'ASC')
+            ->get()
+            ->result();
+    }
+
     // =========================================================================
     // ALIASES PARA COMPATIBILIDADE DE NOMENCLATURA
     // =========================================================================

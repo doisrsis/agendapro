@@ -119,6 +119,7 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['agendamento_requer_pagamento'])) $update_data['agendamento_requer_pagamento'] = $data['agendamento_requer_pagamento'];
         if (isset($data['agendamento_taxa_fixa'])) $update_data['agendamento_taxa_fixa'] = $data['agendamento_taxa_fixa'];
         if (isset($data['agendamento_tempo_expiracao_pix'])) $update_data['agendamento_tempo_expiracao_pix'] = $data['agendamento_tempo_expiracao_pix'];
+        if (isset($data['agendamento_tempo_adicional_pix'])) $update_data['agendamento_tempo_adicional_pix'] = $data['agendamento_tempo_adicional_pix'];
 
         // Campos de Mercado Pago
         if (isset($data['mp_access_token_test'])) $update_data['mp_access_token_test'] = $data['mp_access_token_test'];

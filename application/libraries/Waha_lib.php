@@ -33,18 +33,37 @@ class Waha_lib {
 
     /**
      * Configura credenciais para um estabelecimento específico
+     * Usa credenciais do SaaS Admin com sessão do estabelecimento
      *
      * @param object $estabelecimento Objeto do estabelecimento
      * @return bool
      */
     public function set_estabelecimento($estabelecimento) {
-        if (empty($estabelecimento->waha_api_url) || empty($estabelecimento->waha_api_key)) {
+        // Buscar credenciais do SaaS Admin
+        $this->CI->load->model('Configuracao_model');
+        $configs = $this->CI->Configuracao_model->get_by_grupo('waha');
+
+        if (empty($configs)) {
+            log_message('error', 'WAHA: Configurações do SaaS Admin não encontradas');
             return false;
         }
 
-        $this->api_url = rtrim($estabelecimento->waha_api_url, '/');
-        $this->api_key = $estabelecimento->waha_api_key;
+        $config_array = [];
+        foreach ($configs as $config) {
+            $config_array[$config->chave] = $config->valor;
+        }
+
+        if (empty($config_array['waha_api_url']) || empty($config_array['waha_api_key'])) {
+            log_message('error', 'WAHA: URL ou API Key do SaaS não configuradas');
+            return false;
+        }
+
+        // Usar credenciais do SaaS com sessão do estabelecimento
+        $this->api_url = rtrim($config_array['waha_api_url'], '/');
+        $this->api_key = $config_array['waha_api_key'];
         $this->session_name = $estabelecimento->waha_session_name ?? 'est_' . $estabelecimento->id;
+
+        log_message('debug', 'WAHA: Configurado para estabelecimento ' . $estabelecimento->id . ' - Sessão: ' . $this->session_name);
 
         return true;
     }
@@ -115,7 +134,20 @@ class Waha_lib {
         if (!empty($config['webhook_url'])) {
             $data['config']['webhooks'][] = [
                 'url' => $config['webhook_url'],
-                'events' => ['message', 'session.status', 'message.ack']
+                'events' => [
+                    'message',
+                    'message.any',
+                    'message.reaction',
+                    'message.ack',
+                    'message.waiting',
+                    'message.revoked',
+                    'session.status'
+                ],
+                'retries' => [
+                    'delaySeconds' => 2,
+                    'attempts' => 15,
+                    'policy' => 'constant'
+                ]
             ];
         }
 
@@ -123,6 +155,8 @@ class Waha_lib {
         if (!empty($config['metadata'])) {
             $data['config']['metadata'] = $config['metadata'];
         }
+
+        log_message('debug', 'WAHA criar_sessao - Data: ' . json_encode($data));
 
         return $this->request('POST', '/api/sessions/', $data);
     }
@@ -195,6 +229,42 @@ class Waha_lib {
      */
     public function deletar_sessao() {
         return $this->request('DELETE', "/api/sessions/{$this->session_name}");
+    }
+
+    /**
+     * Atualizar configuração de webhook da sessão
+     *
+     * @param string $webhook_url URL do webhook
+     * @return array
+     */
+    public function atualizar_webhook($webhook_url) {
+        $data = [
+            'config' => [
+                'webhooks' => [
+                    [
+                        'url' => $webhook_url,
+                        'events' => [
+                            'message',
+                            'message.any',
+                            'message.reaction',
+                            'message.ack',
+                            'message.waiting',
+                            'message.revoked',
+                            'session.status'
+                        ],
+                        'retries' => [
+                            'delaySeconds' => 2,
+                            'attempts' => 15,
+                            'policy' => 'constant'
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        log_message('debug', 'WAHA atualizar_webhook - Data: ' . json_encode($data));
+
+        return $this->request('PUT', "/api/sessions/{$this->session_name}", $data);
     }
 
     /**
