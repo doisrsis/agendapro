@@ -149,7 +149,7 @@ class Webhook_waha extends CI_Controller {
             $resposta .= "0️⃣ *Sair* - Encerrar atendimento\n\n";
             $resposta .= "_Digite o número da opção desejada._";
         } else {
-            $resposta = "Desculpe, não entendi. 🤔\n\nDigite *oi* para ver o menu de opções.";
+            $resposta = "Desculpe, não entendi. 🤔\n\nDigite *menu* para ver as opções.";
         }
 
         // Tentar enviar a mensagem
@@ -471,6 +471,26 @@ class Webhook_waha extends CI_Controller {
                 $this->processar_estado_cancelamento($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
 
+            case 'gerenciando_agendamento':
+                $this->processar_estado_gerenciando($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
+            case 'aguardando_acao_agendamento':
+                $this->processar_estado_acao_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
+            case 'reagendando_data':
+                $this->processar_estado_reagendando_data($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
+            case 'reagendando_hora':
+                $this->processar_estado_reagendando_hora($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
+            case 'confirmando_reagendamento':
+                $this->processar_estado_confirmando_reagendamento($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
             case 'confirmando_saida':
                 $this->processar_estado_confirmando_saida($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
@@ -491,7 +511,7 @@ class Webhook_waha extends CI_Controller {
         }
 
         if (in_array($msg, ['2', 'meus agendamentos', 'consultar', 'agendamentos'])) {
-            $this->consultar_agendamentos($estabelecimento, $numero, $cliente);
+            $this->iniciar_gerenciar_agendamentos($estabelecimento, $numero, $conversa, $cliente);
             return;
         }
 
@@ -503,7 +523,7 @@ class Webhook_waha extends CI_Controller {
         // Não reconheceu comando no menu
         $this->waha_lib->enviar_texto($numero,
             "Desculpe, não entendi. 🤔\n\n" .
-            "Digite *oi* para ver o menu de opções."
+            "Digite *menu* para ver as opções."
         );
     }
 
@@ -518,7 +538,15 @@ class Webhook_waha extends CI_Controller {
             return;
         }
 
-        $servicos = $this->Servico_model->get_by_estabelecimento($estabelecimento->id);
+        // Buscar serviços e filtrar apenas os que têm profissionais
+        $servicos_todos = $this->Servico_model->get_by_estabelecimento($estabelecimento->id);
+        $servicos = [];
+        foreach ($servicos_todos as $servico) {
+            $profissionais = $this->Profissional_model->get_by_servico($servico->id, $estabelecimento->id);
+            if (!empty($profissionais)) {
+                $servicos[] = $servico;
+            }
+        }
 
         // Verificar se é um número válido
         if (is_numeric($msg)) {
@@ -746,7 +774,7 @@ class Webhook_waha extends CI_Controller {
                     "✅ Agendamento cancelado com sucesso!\n\n" .
                     "📅 *{$data}* às *{$hora}*\n" .
                     "💇 {$ag->servico_nome}\n\n" .
-                    "_Digite *menu* para voltar ao menu._"
+                    "_Digite *menu* para voltar ao menu ou *0* para sair._"
                 );
 
                 $this->Bot_conversa_model->resetar($conversa->id);
@@ -827,17 +855,33 @@ class Webhook_waha extends CI_Controller {
             return;
         }
 
+        // Filtrar apenas serviços que têm profissionais ativos
+        $servicos_disponiveis = [];
+        foreach ($servicos as $servico) {
+            $profissionais = $this->Profissional_model->get_by_servico($servico->id, $estabelecimento->id);
+            if (!empty($profissionais)) {
+                $servicos_disponiveis[] = $servico;
+            }
+        }
+
+        if (empty($servicos_disponiveis)) {
+            $this->waha_lib->enviar_texto($numero,
+                "Desculpe, não há serviços com profissionais disponíveis no momento. 😔\n\n" .
+                "_Digite *menu* para voltar ao menu._"
+            );
+            return;
+        }
+
         // Atualizar estado para aguardando serviço
         $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_servico', []);
 
         $mensagem = "📋 *Nossos Serviços:*\n\n";
 
-        foreach ($servicos as $i => $servico) {
+        foreach ($servicos_disponiveis as $i => $servico) {
             $num = $i + 1;
             $preco = number_format($servico->preco, 2, ',', '.');
-            $duracao = $servico->duracao_minutos;
             $mensagem .= "{$num}. *{$servico->nome}*\n";
-            $mensagem .= "   💰 R$ {$preco} | ⏱️ {$duracao} min\n\n";
+            $mensagem .= "   💰 R$ {$preco}\n\n";
         }
 
         $mensagem .= "_Digite o número do serviço desejado._\n";
@@ -1054,7 +1098,7 @@ class Webhook_waha extends CI_Controller {
 
         log_message('debug', 'Bot: dados do agendamento: ' . json_encode($agendamento_data));
 
-        $agendamento_id = $this->Agendamento_model->create($agendamento_data);
+        $agendamento_id = $this->Agendamento_model->create($agendamento_data, false); // false = não enviar notificação automática
 
         log_message('debug', 'Bot: agendamento_id retornado: ' . ($agendamento_id ? $agendamento_id : 'FALHOU'));
 
@@ -1178,7 +1222,7 @@ class Webhook_waha extends CI_Controller {
                 $mensagem .= "📌 {$estabelecimento->endereco}\n";
             }
             $mensagem .= "\nAté lá! 👋\n\n";
-            $mensagem .= "_Digite *menu* para voltar ao menu._";
+            $mensagem .= "_Digite *menu* para voltar ao menu ou *0* para sair._";
         }
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
@@ -1193,7 +1237,7 @@ class Webhook_waha extends CI_Controller {
      * Retorna apenas datas que realmente têm horários disponíveis
      * Filtra feriados cadastrados
      */
-    private function obter_datas_disponiveis($estabelecimento, $profissional_id, $dias = 7, $duracao_servico = 30) {
+    private function obter_datas_disponiveis($estabelecimento, $profissional_id, $dias = 7, $duracao_servico = 30, $excluir_agendamento_id = null) {
         $this->load->model('Horario_estabelecimento_model');
         $this->load->model('Feriado_model');
 
@@ -1222,7 +1266,7 @@ class Webhook_waha extends CI_Controller {
 
             if ($horario && $horario->ativo) {
                 // Verificar se realmente existem horários disponíveis nesta data
-                $horarios_disponiveis = $this->obter_horarios_disponiveis($estabelecimento, $profissional_id, $data, $duracao_servico);
+                $horarios_disponiveis = $this->obter_horarios_disponiveis($estabelecimento, $profissional_id, $data, $duracao_servico, $excluir_agendamento_id);
 
                 if (!empty($horarios_disponiveis)) {
                     $datas[] = $data;
@@ -1242,8 +1286,10 @@ class Webhook_waha extends CI_Controller {
      * Obtém horários disponíveis para uma data
      * Usa horários do estabelecimento (tabela horarios_estabelecimento)
      */
-    private function obter_horarios_disponiveis($estabelecimento, $profissional_id, $data, $duracao_servico) {
+    private function obter_horarios_disponiveis($estabelecimento, $profissional_id, $data, $duracao_servico, $excluir_agendamento_id = null) {
         $this->load->model('Horario_estabelecimento_model');
+
+        log_message('debug', "Bot: obter_horarios_disponiveis - data={$data}, profissional_id={$profissional_id}, excluir_agendamento_id=" . ($excluir_agendamento_id ?? 'NULL'));
 
         // horarios_estabelecimento usa 0=Domingo, 6=Sábado (formato PHP date('w'))
         $dia_semana = date('w', strtotime($data));
@@ -1258,6 +1304,11 @@ class Webhook_waha extends CI_Controller {
 
         // Buscar agendamentos existentes
         $agendamentos_existentes = $this->Agendamento_model->get_by_profissional_data($profissional_id, $data);
+
+        log_message('debug', "Bot: agendamentos_existentes encontrados: " . count($agendamentos_existentes));
+        foreach ($agendamentos_existentes as $ag) {
+            log_message('debug', "Bot: ag_id={$ag->id}, status={$ag->status}, hora={$ag->hora_inicio}-{$ag->hora_fim}, data={$ag->data}");
+        }
 
         // Processar período da manhã (antes do almoço)
         $hora_atual = strtotime($horario_dia->hora_inicio);
@@ -1292,8 +1343,11 @@ class Webhook_waha extends CI_Controller {
             // Verificar se está no horário de almoço
             $no_almoco = false;
             if ($almoco_inicio && $almoco_fim) {
+                // Bloquear se o horário do serviço sobrepõe com o almoço
+                // Serviço inicia antes do fim do almoço E termina depois do início do almoço
                 if ($hora_atual < $almoco_fim && $hora_fim_servico > $almoco_inicio) {
                     $no_almoco = true;
+                    log_message('debug', "Bot: horario={$hora_str} bloqueado por almoço (almoco: " . date('H:i', $almoco_inicio) . "-" . date('H:i', $almoco_fim) . ", servico_fim: " . date('H:i', $hora_fim_servico) . ")");
                 }
             }
 
@@ -1303,11 +1357,18 @@ class Webhook_waha extends CI_Controller {
                 foreach ($agendamentos_existentes as $ag) {
                     if ($ag->status == 'cancelado') continue;
 
+                    // Excluir o agendamento atual (para reagendamento)
+                    if ($excluir_agendamento_id && $ag->id == $excluir_agendamento_id) {
+                        continue;
+                    }
+
                     $ag_inicio = strtotime($ag->hora_inicio);
                     $ag_fim = strtotime($ag->hora_fim);
 
+                    // Verificar sobreposição: serviço inicia antes do fim do agendamento E termina depois do início
                     if ($hora_atual < $ag_fim && $hora_fim_servico > $ag_inicio) {
                         $conflito = true;
+                        log_message('debug', "Bot: CONFLITO - horario={$hora_str}, ag_id={$ag->id}, ag_status={$ag->status}, ag_hora={$ag->hora_inicio}-{$ag->hora_fim}");
                         break;
                     }
                 }
@@ -1315,6 +1376,10 @@ class Webhook_waha extends CI_Controller {
 
             if (!$no_almoco && !$conflito && !in_array($hora_str, $horarios)) {
                 $horarios[] = $hora_str;
+                log_message('debug', "Bot: ADICIONADO - horario={$hora_str}");
+            } else {
+                $motivo = $no_almoco ? 'almoco' : ($conflito ? 'conflito' : 'duplicado');
+                log_message('debug', "Bot: IGNORADO - horario={$hora_str}, motivo={$motivo}");
             }
 
             $hora_atual = strtotime("+{$intervalo} minutes", $hora_atual);
@@ -1322,6 +1387,8 @@ class Webhook_waha extends CI_Controller {
 
         // Ordenar horários
         sort($horarios);
+
+        log_message('debug', "Bot: horários disponíveis retornados: " . count($horarios) . " - " . implode(', ', $horarios));
 
         return $horarios;
     }
@@ -1367,6 +1434,521 @@ class Webhook_waha extends CI_Controller {
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
 
+    /**
+     * Inicia fluxo de gerenciamento de agendamentos (visualizar/reagendar/cancelar)
+     * Autor: Rafael Dias - doisr.com.br (30/12/2025)
+     */
+    private function iniciar_gerenciar_agendamentos($estabelecimento, $numero, $conversa, $cliente) {
+        if (!$cliente) {
+            $this->waha_lib->enviar_texto($numero,
+                "Não encontrei agendamentos para este número. 🔍\n\n" .
+                "Se você já é cliente, verifique se o número está cadastrado corretamente.\n\n" .
+                "_Digite *menu* para voltar ao menu._"
+            );
+            return;
+        }
+
+        $this->load->model('Agendamento_model');
+        $agendamentos = $this->Agendamento_model->get_proximos_by_cliente($cliente->id, 5);
+
+        if (empty($agendamentos)) {
+            $this->waha_lib->enviar_texto($numero,
+                "Você não tem agendamentos futuros. 📅\n\n" .
+                "_Digite *1* para fazer um novo agendamento ou *menu* para o menu principal._"
+            );
+            return;
+        }
+
+        // Atualizar estado para gerenciando agendamento
+        $this->Bot_conversa_model->atualizar_estado($conversa->id, 'gerenciando_agendamento', []);
+
+        $mensagem = "📅 *Seus Próximos Agendamentos:*\n\n";
+
+        foreach ($agendamentos as $i => $ag) {
+            $num = $i + 1;
+            $data = date('d/m/Y', strtotime($ag->data));
+            $hora = date('H:i', strtotime($ag->hora_inicio));
+            $status_emoji = $ag->status == 'confirmado' ? '✅' : '⏳';
+
+            $mensagem .= "{$num}. {$status_emoji} *{$data}* às *{$hora}*\n";
+            $mensagem .= "   💇 {$ag->servico_nome}\n";
+            $mensagem .= "   👤 {$ag->profissional_nome}\n\n";
+        }
+
+        $mensagem .= "_Digite o número do agendamento para gerenciar._\n";
+        $mensagem .= "_Ou digite *menu* para voltar ao menu._";
+
+        $this->waha_lib->enviar_texto($numero, $mensagem);
+    }
+
+    /**
+     * Processa estado: Gerenciando agendamento (seleção do agendamento)
+     */
+    private function processar_estado_gerenciando($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        if (!$cliente) {
+            $this->Bot_conversa_model->resetar($conversa->id);
+            return;
+        }
+
+        $agendamentos = $this->Agendamento_model->get_proximos_by_cliente($cliente->id, 5);
+
+        if (is_numeric($msg)) {
+            $indice = intval($msg) - 1;
+
+            if (isset($agendamentos[$indice])) {
+                $ag = $agendamentos[$indice];
+
+                // Salvar agendamento selecionado nos dados
+                $dados = [
+                    'agendamento_id' => $ag->id,
+                    'agendamento_data_original' => $ag->data,
+                    'agendamento_hora_original' => $ag->hora_inicio,
+                    'servico_id' => $ag->servico_id,
+                    'servico_nome' => $ag->servico_nome,
+                    'servico_duracao' => $ag->duracao_minutos,
+                    'servico_preco' => $ag->preco,
+                    'profissional_id' => $ag->profissional_id,
+                    'profissional_nome' => $ag->profissional_nome
+                ];
+
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_acao_agendamento', $dados);
+
+                $data = date('d/m/Y', strtotime($ag->data));
+                $hora = date('H:i', strtotime($ag->hora_inicio));
+
+                $mensagem = "📋 *Agendamento Selecionado:*\n\n";
+                $mensagem .= "📅 Data: *{$data}*\n";
+                $mensagem .= "⏰ Horário: *{$hora}*\n";
+                $mensagem .= "💇 Serviço: *{$ag->servico_nome}*\n";
+                $mensagem .= "👤 Profissional: *{$ag->profissional_nome}*\n\n";
+                $mensagem .= "O que deseja fazer?\n\n";
+                $mensagem .= "*1* - 🔄 Reagendar\n";
+                $mensagem .= "*2* - ❌ Cancelar\n\n";
+                $mensagem .= "_Ou digite *voltar* para ver outros agendamentos._";
+
+                $this->waha_lib->enviar_texto($numero, $mensagem);
+                return;
+            }
+        }
+
+        $this->waha_lib->enviar_texto($numero,
+            "Opção inválida. Por favor, digite o *número* do agendamento.\n\n" .
+            "_Digite *menu* para voltar ao menu._"
+        );
+    }
+
+    /**
+     * Processa estado: Aguardando ação sobre agendamento (reagendar ou cancelar)
+     */
+    private function processar_estado_acao_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $dados = $conversa->dados;
+
+        // Comando voltar - retorna para lista de agendamentos
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            $this->iniciar_gerenciar_agendamentos($estabelecimento, $numero, $conversa, $cliente);
+            return;
+        }
+
+        // PRIMEIRO: Se está confirmando cancelamento, processar resposta
+        if (isset($dados['confirmando_cancelamento']) && $dados['confirmando_cancelamento']) {
+            if (in_array($msg, ['1', 'sim', 's'])) {
+                // Confirmar cancelamento
+                $this->Agendamento_model->update($dados['agendamento_id'], [
+                    'status' => 'cancelado',
+                    'cancelado_por' => 'cliente',
+                    'motivo_cancelamento' => 'Cancelado via WhatsApp Bot'
+                ]);
+
+                $data = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+                $hora = date('H:i', strtotime($dados['agendamento_hora_original']));
+
+                $this->waha_lib->enviar_texto($numero,
+                    "✅ Agendamento cancelado com sucesso!\n\n" .
+                    "📅 *{$data}* às *{$hora}*\n" .
+                    "💇 {$dados['servico_nome']}\n\n" .
+                    "_Digite *menu* para voltar ao menu ou *0* para sair._"
+                );
+
+                $this->Bot_conversa_model->resetar($conversa->id);
+                return;
+            }
+
+            if (in_array($msg, ['2', 'não', 'nao', 'n'])) {
+                // Ir para reagendamento
+                unset($dados['confirmando_cancelamento']);
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'reagendando_data', $dados);
+                $this->enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados);
+                return;
+            }
+
+            // Opção inválida na confirmação de cancelamento
+            $this->waha_lib->enviar_texto($numero,
+                "Por favor, escolha:\n\n" .
+                "*1* - ❌ Sim, cancelar\n" .
+                "*2* - 🔄 Não, prefiro reagendar\n\n" .
+                "_Ou digite *voltar* para escolher outro agendamento._"
+            );
+            return;
+        }
+
+        // Opção 1: Reagendar (apenas se NÃO está confirmando cancelamento)
+        if (in_array($msg, ['1', 'reagendar'])) {
+            // Verificar se estabelecimento permite reagendamento
+            if (isset($estabelecimento->permite_reagendamento) && !$estabelecimento->permite_reagendamento) {
+                $this->waha_lib->enviar_texto($numero,
+                    "Desculpe, o estabelecimento não permite reagendamento. 😔\n\n" .
+                    "Por favor, entre em contato diretamente.\n\n" .
+                    "_Digite *menu* para voltar ao menu._"
+                );
+                return;
+            }
+
+            // Verificar limite de reagendamentos
+            $agendamento = $this->Agendamento_model->get_by_id($dados['agendamento_id']);
+            $qtd_atual = isset($agendamento->qtd_reagendamentos) ? (int)$agendamento->qtd_reagendamentos : 0;
+            $limite = isset($estabelecimento->limite_reagendamentos) ? (int)$estabelecimento->limite_reagendamentos : 0;
+
+            if ($limite > 0 && $qtd_atual >= $limite) {
+                $this->waha_lib->enviar_texto($numero,
+                    "⚠️ *Limite de Reagendamentos Atingido*\n\n" .
+                    "Este agendamento já foi reagendado *{$qtd_atual}* vez(es).\n" .
+                    "Limite permitido: *{$limite}* reagendamento(s).\n\n" .
+                    "Para alterar, por favor entre em contato diretamente com o estabelecimento.\n\n" .
+                    "_Digite *menu* para voltar ao menu._"
+                );
+                return;
+            }
+
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'reagendando_data', $dados);
+            $this->enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados);
+            return;
+        }
+
+        // Opção 2: Cancelar (primeira vez)
+        if (in_array($msg, ['2', 'cancelar'])) {
+            // Perguntar se tem certeza ou se prefere reagendar
+            $data = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+            $hora = date('H:i', strtotime($dados['agendamento_hora_original']));
+
+            $mensagem = "⚠️ *Confirmar Cancelamento*\n\n";
+            $mensagem .= "Você tem certeza que deseja cancelar o agendamento?\n\n";
+            $mensagem .= "📅 *{$data}* às *{$hora}*\n";
+            $mensagem .= "💇 {$dados['servico_nome']}\n\n";
+            $mensagem .= "*1* - ❌ Sim, cancelar\n";
+            $mensagem .= "*2* - 🔄 Não, prefiro reagendar\n\n";
+            $mensagem .= "_Ou digite *voltar* para escolher outro agendamento._";
+
+            $dados['confirmando_cancelamento'] = true;
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_acao_agendamento', $dados);
+            $this->waha_lib->enviar_texto($numero, $mensagem);
+            return;
+        }
+
+        $this->waha_lib->enviar_texto($numero,
+            "Opção inválida. Por favor, escolha:\n\n" .
+            "*1* - 🔄 Reagendar\n" .
+            "*2* - ❌ Cancelar\n\n" .
+            "_Ou digite *voltar* para escolher outro agendamento._"
+        );
+    }
+
+    /**
+     * Envia opções de data para reagendamento
+     */
+    private function enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados) {
+        $duracao = $dados['servico_duracao'] ?? 30;
+        $datas = $this->obter_datas_disponiveis($estabelecimento, $dados['profissional_id'], 7, $duracao, $dados['agendamento_id']);
+
+        if (empty($datas)) {
+            $this->waha_lib->enviar_texto($numero,
+                "Desculpe, não há datas disponíveis nos próximos dias. 😔\n\n" .
+                "_Digite *menu* para voltar ao menu._"
+            );
+            return;
+        }
+
+        $data_original = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+        $hora_original = date('H:i', strtotime($dados['agendamento_hora_original']));
+
+        $mensagem = "🔄 *Reagendar Agendamento*\n\n";
+        $mensagem .= "📅 Agendamento atual: *{$data_original}* às *{$hora_original}*\n";
+        $mensagem .= "💇 Serviço: *{$dados['servico_nome']}*\n";
+        $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n\n";
+        $mensagem .= "Escolha a nova data:\n\n";
+
+        $dias_semana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+        foreach ($datas as $i => $data) {
+            $num = $i + 1;
+            $data_formatada = date('d/m/Y', strtotime($data));
+            $dia_semana = $dias_semana[date('w', strtotime($data))];
+            $mensagem .= "{$num}. *{$data_formatada}* ({$dia_semana})\n";
+        }
+
+        $mensagem .= "\n_Digite o número da nova data._\n";
+        $mensagem .= "_Ou digite *voltar* para escolher outra ação._";
+
+        $this->waha_lib->enviar_texto($numero, $mensagem);
+    }
+
+    /**
+     * Processa estado: Reagendando data
+     */
+    private function processar_estado_reagendando_data($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $dados = $conversa->dados;
+
+        // Comando voltar - retorna para ações do agendamento
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            unset($dados['confirmando_cancelamento']);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_acao_agendamento', $dados);
+
+            $data = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+            $hora = date('H:i', strtotime($dados['agendamento_hora_original']));
+
+            $mensagem = "📋 *Agendamento Selecionado:*\n\n";
+            $mensagem .= "📅 Data: *{$data}*\n";
+            $mensagem .= "⏰ Horário: *{$hora}*\n";
+            $mensagem .= "💇 Serviço: *{$dados['servico_nome']}*\n";
+            $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n\n";
+            $mensagem .= "O que deseja fazer?\n\n";
+            $mensagem .= "*1* - 🔄 Reagendar\n";
+            $mensagem .= "*2* - ❌ Cancelar\n\n";
+            $mensagem .= "_Ou digite *voltar* para ver outros agendamentos._";
+
+            $this->waha_lib->enviar_texto($numero, $mensagem);
+            return;
+        }
+
+        $duracao = $dados['servico_duracao'] ?? 30;
+        $datas_disponiveis = $this->obter_datas_disponiveis($estabelecimento, $dados['profissional_id'], 7, $duracao, $dados['agendamento_id']);
+
+        if (is_numeric($msg)) {
+            $indice = intval($msg) - 1;
+
+            if (isset($datas_disponiveis[$indice])) {
+                $data_selecionada = $datas_disponiveis[$indice];
+
+                $dados['nova_data'] = $data_selecionada;
+
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'reagendando_hora', $dados);
+                $this->enviar_opcoes_hora_reagendamento($estabelecimento, $numero, $dados);
+                return;
+            }
+        }
+
+        $this->waha_lib->enviar_texto($numero,
+            "Opção inválida. Por favor, digite o *número* da nova data.\n\n" .
+            "_Digite *voltar* para escolher outra ação._"
+        );
+    }
+
+    /**
+     * Envia opções de horário para reagendamento
+     */
+    private function enviar_opcoes_hora_reagendamento($estabelecimento, $numero, $dados) {
+        $horarios = $this->obter_horarios_disponiveis(
+            $estabelecimento,
+            $dados['profissional_id'],
+            $dados['nova_data'],
+            $dados['servico_duracao'],
+            $dados['agendamento_id'] // Excluir agendamento atual
+        );
+
+        if (empty($horarios)) {
+            $this->waha_lib->enviar_texto($numero,
+                "Desculpe, não há horários disponíveis nesta data. 😔\n\n" .
+                "Por favor, escolha outra data.\n\n" .
+                "_Digite *voltar* para escolher outra data._"
+            );
+            return;
+        }
+
+        $data_formatada = date('d/m/Y', strtotime($dados['nova_data']));
+        $data_original = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+        $hora_original = date('H:i', strtotime($dados['agendamento_hora_original']));
+
+        $mensagem = "⏰ *Escolha o Novo Horário:*\n\n";
+        $mensagem .= "📅 Agendamento atual: *{$data_original}* às *{$hora_original}*\n";
+        $mensagem .= "🔄 Nova data: *{$data_formatada}*\n\n";
+        $mensagem .= "Horários disponíveis:\n\n";
+
+        foreach ($horarios as $i => $hora) {
+            $num = $i + 1;
+            $mensagem .= "{$num}. *{$hora}*\n";
+        }
+
+        $mensagem .= "\n_Digite o número do novo horário._\n";
+        $mensagem .= "_Ou digite *voltar* para escolher outra data._";
+
+        $this->waha_lib->enviar_texto($numero, $mensagem);
+    }
+
+    /**
+     * Processa estado: Reagendando hora
+     */
+    private function processar_estado_reagendando_hora($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $dados = $conversa->dados;
+
+        // Comando voltar - retorna para seleção de data
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            unset($dados['nova_data']);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'reagendando_data', $dados);
+            $this->enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados);
+            return;
+        }
+
+        $horarios = $this->obter_horarios_disponiveis(
+            $estabelecimento,
+            $dados['profissional_id'],
+            $dados['nova_data'],
+            $dados['servico_duracao'],
+            $dados['agendamento_id'] // Excluir agendamento atual
+        );
+
+        if (is_numeric($msg)) {
+            $indice = intval($msg) - 1;
+
+            if (isset($horarios[$indice])) {
+                $hora_selecionada = $horarios[$indice];
+
+                $dados['nova_hora'] = $hora_selecionada;
+
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'confirmando_reagendamento', $dados);
+                $this->enviar_confirmacao_reagendamento($estabelecimento, $numero, $dados, $cliente);
+                return;
+            }
+        }
+
+        $this->waha_lib->enviar_texto($numero,
+            "Opção inválida. Por favor, digite o *número* do novo horário.\n\n" .
+            "_Digite *voltar* para escolher outra data._"
+        );
+    }
+
+    /**
+     * Envia confirmação de reagendamento
+     */
+    private function enviar_confirmacao_reagendamento($estabelecimento, $numero, $dados, $cliente) {
+        $data_original = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+        $hora_original = date('H:i', strtotime($dados['agendamento_hora_original']));
+        $nova_data_formatada = date('d/m/Y', strtotime($dados['nova_data']));
+
+        // Buscar informações de reagendamento
+        $agendamento = $this->Agendamento_model->get_by_id($dados['agendamento_id']);
+        $qtd_atual = isset($agendamento->qtd_reagendamentos) ? (int)$agendamento->qtd_reagendamentos : 0;
+        $limite = isset($estabelecimento->limite_reagendamentos) ? (int)$estabelecimento->limite_reagendamentos : 0;
+
+        $mensagem = "✅ *Confirme o Reagendamento:*\n\n";
+        $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
+        $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n\n";
+        $mensagem .= "❌ *De:* {$data_original} às {$hora_original}\n";
+        $mensagem .= "✅ *Para:* {$nova_data_formatada} às {$dados['nova_hora']}\n\n";
+
+        // Adicionar informações de contador
+        if ($limite > 0) {
+            $qtd_apos = $qtd_atual + 1;
+            $restantes = $limite - $qtd_apos;
+            $mensagem .= "ℹ️ *Reagendamentos:* {$qtd_atual} vez(es) | Após confirmar: {$qtd_apos}/{$limite}\n";
+            if ($restantes > 0) {
+                $mensagem .= "   Você ainda poderá reagendar *{$restantes}* vez(es) após este.\n\n";
+            } else {
+                $mensagem .= "   ⚠️ Este será seu último reagendamento permitido.\n\n";
+            }
+        } else {
+            $mensagem .= "ℹ️ *Reagendamentos:* {$qtd_atual} vez(es) | Após confirmar: " . ($qtd_atual + 1) . "\n\n";
+        }
+
+        $mensagem .= "Deseja confirmar o reagendamento?\n\n";
+        $mensagem .= "*1* ou *Sim* - Confirmar ✅\n";
+        $mensagem .= "*2* ou *Não* - Cancelar ❌\n\n";
+        $mensagem .= "_Ou digite *voltar* para escolher outro horário._";
+
+        $this->waha_lib->enviar_texto($numero, $mensagem);
+    }
+
+    /**
+     * Processa estado: Confirmando reagendamento
+     */
+    private function processar_estado_confirmando_reagendamento($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $dados = $conversa->dados;
+
+        // Comando voltar - retorna para seleção de horário
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            unset($dados['nova_hora']);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'reagendando_hora', $dados);
+            $this->enviar_opcoes_hora_reagendamento($estabelecimento, $numero, $dados);
+            return;
+        }
+
+        if (in_array($msg, ['sim', 's', '1', 'confirmar', 'confirmo'])) {
+            // Realizar reagendamento
+            $agendamento_id = $dados['agendamento_id'];
+
+            // Calcular hora_fim baseado na duração
+            $hora_inicio = $dados['nova_hora'];
+            $duracao = $dados['servico_duracao'];
+            $hora_fim = date('H:i:s', strtotime($hora_inicio) + ($duracao * 60));
+
+            // Buscar agendamento atual para incrementar contador
+            $agendamento_atual = $this->Agendamento_model->get_by_id($agendamento_id);
+
+            // Calcular novo contador de reagendamentos
+            $qtd_atual = 0;
+            if (isset($agendamento_atual->qtd_reagendamentos)) {
+                $qtd_atual = (int)$agendamento_atual->qtd_reagendamentos;
+            }
+
+            // Atualizar agendamento
+            $update_data = [
+                'data' => $dados['nova_data'],
+                'hora_inicio' => $hora_inicio,
+                'hora_fim' => $hora_fim,
+                'qtd_reagendamentos' => $qtd_atual + 1
+            ];
+
+            $this->Agendamento_model->update($agendamento_id, $update_data);
+
+            log_message('info', "Bot: Reagendamento confirmado - ID: {$agendamento_id}, qtd_reagendamentos: " . ($qtd_atual + 1));
+
+            $data_original = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+            $hora_original = date('H:i', strtotime($dados['agendamento_hora_original']));
+            $nova_data_formatada = date('d/m/Y', strtotime($dados['nova_data']));
+
+            $mensagem = "🎉 *Reagendamento Confirmado!*\n\n";
+            $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
+            $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n\n";
+            $mensagem .= "❌ *Era:* {$data_original} às {$hora_original}\n";
+            $mensagem .= "✅ *Agora:* {$nova_data_formatada} às {$dados['nova_hora']}\n\n";
+            $mensagem .= "📍 *{$estabelecimento->nome}*\n";
+            if ($estabelecimento->endereco) {
+                $mensagem .= "📌 {$estabelecimento->endereco}\n";
+            }
+            $mensagem .= "\nAté lá! 👋\n\n";
+            $mensagem .= "_Digite *menu* para voltar ao menu ou *0* para sair._";
+
+            $this->waha_lib->enviar_texto($numero, $mensagem);
+
+            // Resetar conversa
+            $this->Bot_conversa_model->resetar($conversa->id);
+            return;
+        }
+
+        if (in_array($msg, ['não', 'nao', 'n', '2', 'cancelar'])) {
+            $this->Bot_conversa_model->resetar($conversa->id);
+            $this->waha_lib->enviar_texto($numero,
+                "Reagendamento cancelado. ❌\n\n" .
+                "_Digite *menu* para voltar ao menu ou *0* para sair._"
+            );
+            return;
+        }
+
+        $this->waha_lib->enviar_texto($numero,
+            "Por favor, responda:\n\n" .
+            "*1* ou *Sim* - Para confirmar\n" .
+            "*2* ou *Não* - Para cancelar\n\n" .
+            "_Digite *voltar* para escolher outro horário._"
+        );
+    }
 
     /**
      * Bot de suporte para o SaaS Admin

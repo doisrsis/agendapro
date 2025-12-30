@@ -95,7 +95,7 @@ class Agendamento_model extends CI_Model {
     /**
      * Criar novo agendamento
      */
-    public function create($data) {
+    public function create($data, $enviar_notificacao = true) {
         // Validar dados obrigatórios
         if (empty($data['estabelecimento_id']) || empty($data['cliente_id']) ||
             empty($data['profissional_id']) || empty($data['servico_id']) ||
@@ -148,9 +148,10 @@ class Agendamento_model extends CI_Model {
             $estabelecimento = $this->Estabelecimento_model->get_by_id($data['estabelecimento_id']);
             $requer_pagamento = ($estabelecimento->agendamento_requer_pagamento ?? 'nao') != 'nao';
 
-            // Só enviar notificações se NÃO requer pagamento
+            // Só enviar notificações se NÃO requer pagamento E se enviar_notificacao = true
             // Se requer pagamento, as notificações serão enviadas após confirmação do pagamento
-            if (!$requer_pagamento) {
+            // Se enviar_notificacao = false (bot), o bot enviará sua própria mensagem
+            if (!$requer_pagamento && $enviar_notificacao) {
                 // Enviar notificação WhatsApp de confirmação para cliente
                 $this->enviar_notificacao_whatsapp($agendamento_id, 'confirmacao');
 
@@ -212,6 +213,7 @@ class Agendamento_model extends CI_Model {
         if (isset($data['observacoes'])) $update_data['observacoes'] = $data['observacoes'];
         if (isset($data['cancelado_por'])) $update_data['cancelado_por'] = $data['cancelado_por'];
         if (isset($data['motivo_cancelamento'])) $update_data['motivo_cancelamento'] = $data['motivo_cancelamento'];
+        if (isset($data['qtd_reagendamentos'])) $update_data['qtd_reagendamentos'] = $data['qtd_reagendamentos'];
 
         // Campos de pagamento
         if (isset($data['pagamento_status'])) $update_data['pagamento_status'] = $data['pagamento_status'];
@@ -715,5 +717,150 @@ class Agendamento_model extends CI_Model {
             ->order_by('a.hora_inicio', 'ASC')
             ->get()
             ->result();
+    }
+
+    /**
+     * Reagendar um agendamento
+     * Valida limite de reagendamentos e disponibilidade
+     *
+     * @param int $agendamento_id
+     * @param string $nova_data
+     * @param string $nova_hora_inicio
+     * @return array ['success' => bool, 'message' => string, 'agendamento_id' => int]
+     */
+    public function reagendar($agendamento_id, $nova_data, $nova_hora_inicio) {
+        // Buscar agendamento
+        $agendamento = $this->get_by_id($agendamento_id);
+
+        if (!$agendamento) {
+            return ['success' => false, 'message' => 'Agendamento não encontrado'];
+        }
+
+        // Verificar se agendamento pode ser reagendado
+        if (!in_array($agendamento->status, ['pendente', 'confirmado'])) {
+            return ['success' => false, 'message' => 'Agendamento não pode ser reagendado (status: ' . $agendamento->status . ')'];
+        }
+
+        // Buscar estabelecimento
+        $CI =& get_instance();
+        $CI->load->model('Estabelecimento_model');
+        $estabelecimento = $CI->Estabelecimento_model->get_by_id($agendamento->estabelecimento_id);
+
+        // Verificar se estabelecimento permite reagendamento
+        if (!$estabelecimento->permite_reagendamento) {
+            return ['success' => false, 'message' => 'Estabelecimento não permite reagendamento'];
+        }
+
+        // Verificar limite de reagendamentos
+        $qtd_atual = $agendamento->qtd_reagendamentos ?? 0;
+        $limite = $estabelecimento->limite_reagendamentos ?? 3;
+
+        if ($qtd_atual >= $limite) {
+            return ['success' => false, 'message' => "Limite de reagendamentos atingido ({$limite}x)"];
+        }
+
+        // Calcular nova hora de término
+        $duracao = $agendamento->servico_duracao ?? 30;
+        $nova_hora_fim = date('H:i:s', strtotime($nova_hora_inicio) + ($duracao * 60));
+
+        // Verificar disponibilidade
+        $disponivel = $this->verificar_disponibilidade(
+            $agendamento->profissional_id,
+            $nova_data,
+            $nova_hora_inicio,
+            $nova_hora_fim,
+            $agendamento->servico_id,
+            $agendamento_id // Excluir o próprio agendamento da verificação
+        );
+
+        if (!$disponivel) {
+            return ['success' => false, 'message' => $this->erro_disponibilidade ?? 'Horário não disponível'];
+        }
+
+        // Guardar data/hora anterior para notificação
+        $data_anterior = $agendamento->data;
+        $hora_anterior = $agendamento->hora_inicio;
+
+        // Atualizar agendamento
+        $dados_update = [
+            'data' => $nova_data,
+            'hora_inicio' => $nova_hora_inicio,
+            'hora_fim' => $nova_hora_fim,
+            'qtd_reagendamentos' => $qtd_atual + 1
+        ];
+
+        $atualizado = $this->update($agendamento_id, $dados_update);
+
+        if (!$atualizado) {
+            return ['success' => false, 'message' => 'Erro ao atualizar agendamento'];
+        }
+
+        // Enviar notificações
+        $this->enviar_notificacao_whatsapp($agendamento_id, 'reagendamento', [
+            'data_anterior' => $data_anterior,
+            'hora_anterior' => $hora_anterior
+        ]);
+
+        $this->enviar_notificacao_whatsapp($agendamento_id, 'profissional_reagendamento', [
+            'data_anterior' => $data_anterior,
+            'hora_anterior' => $hora_anterior
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'Agendamento reagendado com sucesso',
+            'agendamento_id' => $agendamento_id,
+            'qtd_reagendamentos' => $qtd_atual + 1,
+            'limite_reagendamentos' => $limite
+        ];
+    }
+
+    /**
+     * Verificar se agendamento pode ser reagendado
+     *
+     * @param int $agendamento_id
+     * @return array ['pode_reagendar' => bool, 'motivo' => string, 'qtd_atual' => int, 'limite' => int]
+     */
+    public function pode_reagendar($agendamento_id) {
+        $agendamento = $this->get_by_id($agendamento_id);
+
+        if (!$agendamento) {
+            return ['pode_reagendar' => false, 'motivo' => 'Agendamento não encontrado'];
+        }
+
+        // Verificar status
+        if (!in_array($agendamento->status, ['pendente', 'confirmado'])) {
+            return ['pode_reagendar' => false, 'motivo' => 'Status não permite reagendamento'];
+        }
+
+        // Buscar estabelecimento
+        $CI =& get_instance();
+        $CI->load->model('Estabelecimento_model');
+        $estabelecimento = $CI->Estabelecimento_model->get_by_id($agendamento->estabelecimento_id);
+
+        // Verificar se estabelecimento permite
+        if (!$estabelecimento->permite_reagendamento) {
+            return ['pode_reagendar' => false, 'motivo' => 'Estabelecimento não permite reagendamento'];
+        }
+
+        // Verificar limite
+        $qtd_atual = $agendamento->qtd_reagendamentos ?? 0;
+        $limite = $estabelecimento->limite_reagendamentos ?? 3;
+
+        if ($qtd_atual >= $limite) {
+            return [
+                'pode_reagendar' => false,
+                'motivo' => "Limite de reagendamentos atingido ({$qtd_atual}/{$limite})",
+                'qtd_atual' => $qtd_atual,
+                'limite' => $limite
+            ];
+        }
+
+        return [
+            'pode_reagendar' => true,
+            'motivo' => 'Pode reagendar',
+            'qtd_atual' => $qtd_atual,
+            'limite' => $limite
+        ];
     }
 }

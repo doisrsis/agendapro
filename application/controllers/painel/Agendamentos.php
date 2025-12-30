@@ -233,33 +233,41 @@ class Agendamentos extends Painel_Controller {
                 $data_anterior = $agendamento->data;
                 $hora_anterior = $agendamento->hora_inicio;
 
-                $dados = [
-                    'data' => $this->input->post('data'),
-                    'hora_inicio' => $this->input->post('hora_inicio'),
-                    'status' => $this->input->post('status'),
-                    'observacoes' => $this->input->post('observacoes')
-                ];
+                $nova_data = $this->input->post('data');
+                $nova_hora = $this->input->post('hora_inicio');
+                $status = $this->input->post('status');
+                $observacoes = $this->input->post('observacoes');
 
-                if ($this->Agendamento_model->update($id, $dados)) {
-                    // Verificar se houve mudança de data/hora (reagendamento)
-                    if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
-                        // Notificar cliente
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
-                            'data_anterior' => $data_anterior,
-                            'hora_anterior' => $hora_anterior
+                // Verificar se houve mudança de data/hora (reagendamento)
+                if ($nova_data != $data_anterior || $nova_hora != $hora_anterior) {
+                    // Usar método reagendar que valida limite
+                    $resultado = $this->Agendamento_model->reagendar($id, $nova_data, $nova_hora);
+
+                    if ($resultado['success']) {
+                        // Atualizar status e observações separadamente
+                        $this->Agendamento_model->update($id, [
+                            'status' => $status,
+                            'observacoes' => $observacoes
                         ]);
-                        // Notificar profissional/estabelecimento
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_reagendamento', [
-                            'data_anterior' => $data_anterior,
-                            'hora_anterior' => $hora_anterior
-                        ]);
+
+                        $this->session->set_flashdata('sucesso', $resultado['message']);
+                        redirect('painel/agendamentos');
+                    } else {
+                        $this->session->set_flashdata('erro', $resultado['message']);
                     }
-
-                    $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
-                    redirect('painel/agendamentos');
                 } else {
-                    $erro_msg = $this->Agendamento_model->erro_disponibilidade ?? 'Erro ao atualizar agendamento. Verifique a disponibilidade.';
-                    $this->session->set_flashdata('erro', $erro_msg);
+                    // Apenas atualizar status e observações
+                    $dados = [
+                        'status' => $status,
+                        'observacoes' => $observacoes
+                    ];
+
+                    if ($this->Agendamento_model->update($id, $dados)) {
+                        $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
+                        redirect('painel/agendamentos');
+                    } else {
+                        $this->session->set_flashdata('erro', 'Erro ao atualizar agendamento.');
+                    }
                 }
             }
         }

@@ -1,0 +1,3453 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.2
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost:3306
+-- Tempo de geração: 30/12/2025 às 09:55
+-- Versão do servidor: 10.11.14-MariaDB-cll-lve
+-- Versão do PHP: 8.4.16
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Banco de dados: `dois8950_agendapro`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `agendamentos`
+--
+
+CREATE TABLE `agendamentos` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `cliente_id` int(11) UNSIGNED NOT NULL,
+  `profissional_id` int(11) UNSIGNED NOT NULL,
+  `servico_id` int(11) UNSIGNED NOT NULL,
+  `data` date NOT NULL,
+  `hora_inicio` time NOT NULL,
+  `hora_fim` time NOT NULL,
+  `hora_inicio_real` time DEFAULT NULL,
+  `hora_fim_real` time DEFAULT NULL,
+  `status` enum('pendente','confirmado','em_atendimento','cancelado','reagendado','finalizado') NOT NULL DEFAULT 'pendente',
+  `observacoes` text DEFAULT NULL,
+  `pagamento_id` int(11) DEFAULT NULL,
+  `pagamento_status` enum('pendente','pago','expirado','cancelado','nao_requerido') DEFAULT 'nao_requerido',
+  `pagamento_valor` decimal(10,2) DEFAULT NULL,
+  `pagamento_pix_qrcode` text DEFAULT NULL,
+  `pagamento_pix_copia_cola` text DEFAULT NULL,
+  `pagamento_expira_em` datetime DEFAULT NULL,
+  `cancelado_por` enum('cliente','profissional','admin','sistema') DEFAULT NULL,
+  `motivo_cancelamento` text DEFAULT NULL,
+  `qtd_reagendamentos` tinyint(4) DEFAULT 0 COMMENT 'Quantidade de vezes que foi reagendado',
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `pagamento_lembrete_enviado` tinyint(1) DEFAULT 0 COMMENT 'Flag indicando se lembrete de pagamento foi enviado',
+  `pagamento_token` varchar(64) DEFAULT NULL COMMENT 'Token único para acesso público à página de pagamento',
+  `pagamento_expira_adicional_em` datetime DEFAULT NULL COMMENT 'Data/hora de expiração após tempo adicional'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `agendamentos`
+--
+
+INSERT INTO `agendamentos` (`id`, `estabelecimento_id`, `cliente_id`, `profissional_id`, `servico_id`, `data`, `hora_inicio`, `hora_fim`, `hora_inicio_real`, `hora_fim_real`, `status`, `observacoes`, `pagamento_id`, `pagamento_status`, `pagamento_valor`, `pagamento_pix_qrcode`, `pagamento_pix_copia_cola`, `pagamento_expira_em`, `cancelado_por`, `motivo_cancelamento`, `qtd_reagendamentos`, `criado_em`, `atualizado_em`, `pagamento_lembrete_enviado`, `pagamento_token`, `pagamento_expira_adicional_em`) VALUES
+(1, 4, 3, 2, 2, '2025-12-12', '09:00:00', '09:06:00', NULL, NULL, 'cancelado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-11 18:50:31', '2025-12-11 18:57:26', 0, NULL, NULL),
+(2, 4, 3, 2, 3, '2025-12-12', '09:35:00', '09:51:00', NULL, NULL, 'cancelado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-11 18:59:55', '2025-12-12 15:54:22', 0, NULL, NULL),
+(3, 4, 3, 2, 2, '2025-12-13', '10:05:00', '10:11:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-11 19:02:32', '2025-12-11 19:10:18', 0, NULL, NULL),
+(4, 4, 3, 2, 2, '2025-12-17', '09:24:00', '09:30:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-11 23:24:38', NULL, 0, NULL, NULL),
+(5, 4, 3, 2, 2, '2025-12-13', '14:20:00', '14:26:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-12 10:13:32', NULL, 0, NULL, NULL),
+(6, 4, 3, 2, 2, '2025-12-12', '14:26:00', '14:32:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-12 10:22:44', NULL, 0, NULL, NULL),
+(8, 4, 3, 2, 2, '2025-12-13', '11:30:00', '11:36:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-12 10:33:00', NULL, 0, NULL, NULL),
+(9, 4, 3, 2, 2, '2025-12-13', '16:30:00', '16:36:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-12 10:36:32', NULL, 0, NULL, NULL),
+(10, 4, 3, 2, 3, '2025-12-20', '14:42:00', '14:58:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-12 10:38:57', NULL, 0, NULL, NULL),
+(11, 4, 3, 2, 2, '2025-12-17', '11:00:00', '11:06:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-12 16:44:14', NULL, 0, NULL, NULL),
+(12, 4, 3, 2, 3, '2025-12-25', '09:00:00', '09:16:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 07:41:11', NULL, 0, NULL, NULL),
+(13, 4, 3, 2, 3, '2025-12-25', '09:30:00', '09:46:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 12:59:51', NULL, 0, NULL, NULL),
+(14, 4, 3, 2, 2, '2025-12-25', '14:00:00', '14:06:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 13:02:43', NULL, 0, NULL, NULL),
+(15, 4, 3, 2, 3, '2025-12-25', '12:30:00', '12:46:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 13:03:18', NULL, 0, NULL, NULL),
+(16, 4, 3, 2, 3, '2025-12-25', '17:25:00', '17:41:00', NULL, NULL, 'cancelado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 13:06:47', '2025-12-23 15:09:26', 0, NULL, NULL),
+(17, 4, 3, 2, 2, '2025-12-23', '13:20:00', '13:26:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 13:08:29', NULL, 0, NULL, NULL),
+(18, 4, 3, 2, 2, '2025-12-24', '08:00:00', '08:16:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 20:01:18', NULL, 0, NULL, NULL),
+(19, 4, 3, 2, 2, '2025-12-24', '08:30:00', '08:46:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 20:02:37', NULL, 0, NULL, NULL),
+(20, 4, 3, 2, 2, '2025-12-24', '09:00:00', '09:20:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 21:00:40', NULL, 0, NULL, NULL),
+(21, 4, 3, 2, 3, '2025-12-25', '10:00:00', '10:25:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 21:01:16', NULL, 0, NULL, NULL),
+(22, 4, 3, 2, 2, '2025-12-24', '15:00:00', '15:20:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 21:11:10', NULL, 0, NULL, NULL),
+(23, 4, 3, 2, 2, '2025-12-24', '09:30:00', '09:50:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 21:11:24', NULL, 0, NULL, NULL),
+(24, 4, 3, 2, 3, '2025-12-29', '08:00:00', '08:25:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 21:12:09', '2025-12-27 22:59:16', 0, NULL, NULL),
+(25, 4, 3, 2, 2, '2025-12-29', '08:30:00', '08:50:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-23 22:24:11', NULL, 0, NULL, NULL),
+(26, 4, 3, 2, 2, '2025-12-29', '09:00:00', '09:20:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-26 10:04:06', NULL, 0, NULL, NULL),
+(27, 4, 3, 2, 3, '2025-12-29', '09:30:00', '09:55:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-26 10:04:31', NULL, 0, NULL, NULL),
+(28, 4, 3, 2, 3, '2025-12-29', '09:55:00', '10:20:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-26 16:33:28', NULL, 0, NULL, NULL),
+(29, 4, 3, 2, 2, '2025-12-30', '08:00:00', '08:20:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:01:46', NULL, 0, NULL, NULL),
+(30, 4, 3, 2, 3, '2025-12-30', '08:30:00', '08:55:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:02:25', NULL, 0, NULL, NULL),
+(31, 4, 3, 2, 2, '2025-12-30', '09:00:00', '09:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:08:33', NULL, 0, NULL, NULL),
+(32, 4, 3, 2, 2, '2025-12-30', '09:30:00', '09:50:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:11:27', NULL, 0, NULL, NULL),
+(33, 4, 3, 2, 2, '2025-12-30', '10:00:00', '10:20:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:13:10', NULL, 0, NULL, NULL),
+(34, 4, 3, 2, 3, '2025-12-30', '10:30:00', '10:55:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:16:27', NULL, 0, NULL, NULL),
+(35, 4, 3, 2, 4, '2025-12-30', '11:00:00', '11:10:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:18:02', NULL, 0, NULL, NULL),
+(36, 4, 3, 2, 2, '2025-12-30', '11:30:00', '11:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:20:10', NULL, 0, NULL, NULL),
+(37, 4, 3, 2, 3, '2025-12-30', '13:00:00', '13:25:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:30:02', NULL, 0, NULL, NULL),
+(38, 4, 3, 2, 3, '2025-12-30', '13:30:00', '13:55:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:33:39', NULL, 0, NULL, NULL),
+(39, 4, 3, 2, 3, '2025-12-30', '14:00:00', '14:25:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:36:03', NULL, 0, NULL, NULL),
+(40, 4, 3, 2, 2, '2025-12-30', '14:30:00', '14:50:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 21:37:28', NULL, 0, NULL, NULL),
+(41, 4, 3, 2, 2, '2025-12-30', '15:00:00', '15:20:00', NULL, NULL, 'cancelado', NULL, NULL, 'expirado', 1.00, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter13907899858963044687', '2025-12-27 22:10:24', 'sistema', 'Pagamento não realizado dentro do prazo', 0, '2025-12-27 21:40:21', '2025-12-28 16:34:03', 1, '70e8d0da5a5b69bf5d2c9a6ee4a4f2e6', '2025-12-28 16:32:04'),
+(42, 4, 3, 2, 3, '2025-12-30', '15:30:00', '15:55:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.00, 'iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX///8AAABVwtN+AAAKJElEQVR42uzdT5LiuBIHYBMsWHIEjsLR4GgcxUdgyYJAL7qmZGfK4k/31LyIhu+3mWkX2J/ZSUqlBhEREREREREREREREREREREREREREREREREREREREfk/ZleWOQ5D/d/z14cOpQzDul7Y//rE6utfl68bnL4+kZOfUv98GYZt+4ltR3CipaWlpaWlpaWlpaWlpf087am9cPz131W9d/3zOlwIuPGLX8qtPnr8/vwqv3+9cJ751/qV02MSLS0tLS0tLS0tLS0tLe2fa8OAfJdG6OFhcYRecZv0sWsaf6/qhTGN0KdkbfgELS0tLS0tLS0tLS0tLS1t0l7SEvj1C3eeZwv+uTCm223rEnh9n7BMf8uL6v0ZClpaWlpaWlpaWlpaWlra/1gbxt+nNJ5+Xng+fn8+3rEO2S9JO/zUCJ2WlpaWlpaWlpaWlpaW9k20iyr3ULUetJtUpL5YZY9V7nlr+NDdKz78VE0+LS0tLS0tLS0tLS0tLe07aPu9124Vt/++cE0X4op/uLCtFxZV7mFn+9iu+P/7TnG0tLS0tLS0tLS0tLS0tK+m3OsfHla8p0X1fWeEXrXhjrE7W9D+QGhpaWlpaWlpaWlpaWlp30G7T4P9kEu7wL1pm5tv5u7oTbv0Tu+1SRvef5PmMJ5WudPS0tLS0tLS0tLS0tLSvqt21/Z1W4z+S7viX2cLpnv3c/uaMDh36ubHe3Xz17z3nZaWlpaWlpaWlpaWlpb2J7RTM/TQKe3OGnr5Lmrv5c5G7qHttx4uTKvy9dCx8f5kAi0tLS0tLS0tLS0tLS3tu2qHzhL4YV7gPqdPToP9w/dsQZkvNGXvnVZrcZn+2PZbP7y6D52WlpaWlpaWlpaWlpaW9nVtHi3X5uGr+rC6bzvvw14t2rW1K+TNRu7FCH2xVzz/ILS0tLS0tLS0tLS0tLS0H6XdpRXyYR7933+fOp8Qb9Dft52r3OOURW7vlickdrS0tLS0tLS0tLS0tLS0n6etvddiH7S7VeuXzgnbi8mBkna2b1NntTz/sG4L6devdoqjpaWlpaWlpaWlpaWlpX2uDRu5L23FecT1a9jDV2756cPMGdsx/65T5R4eQUtLS0tLS0tLS0tLS0v7sdqv0f+m7WW+2Ie+6L12afnn+WGrdmf7qt2Yvs4XFnxaWlpaWlpaWlpaWlpa2s/RhjO7S6cx3LlacmO4zj70eET3fi57HzonnI2pMdyiofpIS0tLS0tLS0tLS0tLS/sT2nwiWNiYvXpU1B5O2B7n7mxxZ3c4s3vRHX1s6+ZLZ3s5LS0tLS0tLS0tLS0tLe0HajvzCau8Qh7W0E+dCYnyzd/2ZxyO8wxFroNf7H2/0NLS0tLS0tLS0tLS0tL+kLYuXy86pd0C7u6BXps63D60/cYXd2wLz4c6xD+nIf7TfuO0tLS0tLS0tLS0tLS0tG+p3aWh/LbtlLZNx3XFsvd+lXtYlX/WHT3865QW1R/PftDS0tLS0tLS0tLS0tLSvrX2Flbfj20Jep4OOKVm6Hk+YSoBGGZ+rnIPcxhNv/XXqtxpaWlpaWlpaWlpaWlpaV/UDqlT2rbtfDaN0Nsq99Wj7uD7dCLY4v3HtAhfHi/T09LS0tLS0tLS0tLS0tJ+hDaseG/KvRy7X53mExaL6rWb27WdspieeUwvU1ID9pGWlpaWlpaWlpaWlpaW9lO1i05x+dH5tLF9y8/d0cP5ZdPTeyv+X3++pJqAfy483odOS0tLS0tLS0tLS0tLS/tb2mDZdarcw3C75v6Z3aV92G7u5rZJDdjX4dCxQxrR09LS0tLS0tLS0tLS0tJ+qra51WI+IdSkV1wJJ5zl+YTAOc9L5tMLjp2i9vCIl1f8aWlpaWlpaWlpaWlpaWmfaBe910q7ZB5G6IsG5IuM7Vdy77Xt3er0vKhOS0tLS0tLS0tLS0tLS/tp2ryze/yeT3hyZveqv/c7rKGvwqp8fv9dOhFsqpuvj3h5DZ2WlpaWlpaWlpaWlpaW9n20iwX+kmrSw4USdqrX48rC+vyqUwcfe6894ueyd1paWlpaWlpaWlpaWlran9Lu2yXwQ+f87Lpkfk4j9FzlPhW1n+Yh/vAAN+RF+HCBlpaWlpaWlpaWlpaWlvYDtUPbe633zYrbtu3SSyp7n7qjL6YPwh3H7vs3y/q0tLS0tLS0tLS0tLS0tJ+m3c/TB9u5jdst/Pn4fe9Q9n4L6/Nl3naezy8b2hKAcreGIPxk48MflpaWlpaWlpaWlpaWlpb2RW04s3tqjHZMS+Ch9/kmVbmvw70P6dGL989D/HEuao/t3V5YQ6elpaWlpaWlpaWlpaWlfWNt3iSex/a5s1qeHLi277N+vMu8WUPvL9MXWlpaWlpaWlpaWlpaWtof0g6pyjvg7qx418QR+j5dCNu046p8/kEO8wFg27Y0fXi+4k9LS0tLS0tLS0tLS0tL+67amEOH3+7svrVfudX5hJB1+4J3Wq2VeULitfkEWlpaWlpaWlpaWlpaWto31ObV93Kv4nzd1+5S77X8/nmCIRbS133rvd5rr4WWlpaWlpaWlpaWlpaW9ne1Y7/i/O4aekn8bb1Q0oWszY84t5vHf2eETktLS0tLS0tLS0tLS0v7Jtp6wvb0zV1b5X6aa9IXuM1c5T4lWK71EWENPWx1vwZcKHt/EFpaWlpaWlpaWlpaWlrad9XeST5+LKznb+dHxzL5Y7eoPd9x8YOs243p0/vT0tLS0tLS0tLS0tLS0v57be6OvmidNqTx92Xm33Jh/LFb1B6H7DVhUT3XzZd8xhgtLS0tLS0tLS0tLS0t7Udph7m5eZ4+KGGwH+rgw4XFmd29fejT9EHovTZ2V+VpaWlpaWlpaWlpaWlpaX9c+5VVHX/vyjL9bdf5RLDydEA+vW7vEYWWlpaWlpaWlpaWlpaWlrZX5V46i+qb2ikt40LrtG2nyn3XOQW8tBu584QELS0tLS0tLS0tLS0tLe2nae9MH7RF7fHeVXsNvdeOvyzXtjv6w7L3+ojtfABaeaFTHC0tLS0tLS0tLS0tLS3t69pTe+HYOa4rD5/DvXdplX07L4GvOr/DdCLYYblXPPYnP9HS0tLS0tLS0tLS0tLSfqQ24Hbzo6c18dpZ7ZKq4ks7wVDCvvL6ifPc3u15lftAS0tLS0tLS0tLS0tLS0ubtOGE7X3i5+PKFu3St2kb+Tod0X1rnx3PL8uV9bS0tLS0tLS0tLS0tLS0/5k2DLD3nSF7rWG/1Bscvi+cW04YkPfeZ0gngv35fAItLS0tLS0tLS0tLS0t7VtoO1Xutzx90G+MtklF7de291rmN4vqdSN7abUPQktLS0tLS0tLS0tLS0v7W9pe77U8Qg9l36VTSB7qxnOZeG+rd64bj63W/rxTHC0tLS0tLS0tLS0tLS3tX68VERERERERERERERERERERERERERERERERERERERH5W/K/AAAA//8mciPoQ5cyygAAAABJRU5ErkJggg==', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1397259451766304C0C5', '2025-12-27 22:16:27', NULL, NULL, 0, '2025-12-27 21:46:26', '2025-12-27 21:59:19', 0, NULL, NULL),
+(43, 4, 3, 2, 3, '2025-12-30', '16:00:00', '16:25:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter13972800926863040265', '2025-12-27 22:32:15', NULL, NULL, 0, '2025-12-27 22:02:14', '2025-12-27 22:03:32', 0, NULL, NULL),
+(44, 4, 3, 2, 2, '2025-12-30', '16:30:00', '16:50:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.00, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1397272899206304227C', '2025-12-27 22:34:40', NULL, NULL, 0, '2025-12-27 22:04:39', '2025-12-27 22:07:25', 0, NULL, NULL),
+(45, 4, 3, 2, 3, '2025-12-30', '17:00:00', '17:25:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1390823752036304A7DF', '2025-12-27 22:50:23', NULL, NULL, 0, '2025-12-27 22:20:22', '2025-12-27 22:25:15', 0, NULL, NULL),
+(46, 4, 3, 2, 3, '2025-12-30', '17:30:00', '17:55:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.00, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1397293377566304B3A5', '2025-12-27 22:59:42', NULL, NULL, 0, '2025-12-27 22:29:41', '2025-12-27 22:34:59', 0, NULL, NULL),
+(47, 4, 3, 2, 2, '2025-12-29', '10:30:00', '10:50:00', NULL, NULL, 'cancelado', NULL, NULL, 'expirado', 1.00, 'iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX///8AAABVwtN+AAAKCUlEQVR42uzdQXLiShIG4CJYeMkROIqOho/GUThCL1kQaKJtF8qsKmF62vEiGr5/MxN6tPTJO1VlZRYRERERERERERERERERERERERERERERERERERERERH5D7Of+7y3Pzr8vnr5+L+7eT7+/t/Nx4W3j98ff//imu/48YvPnL5ucP34/a/lF6XescuRlpaWlpaWlpaWlpaWlvb1tMf2wnsp9d63f5lxVfuZaXnMr/EjwvvvFn5+/3USLS0tLS0tLS0tLS0tLe3/rw0Pq9r49MPv7+lt+HyuD3v7eHRZ+Lv6i/nrF7vlm38zz+f0B4naw9fNz7S0tLS0tLS0tLS0tLS0tIu23vv2sLCeUJMvXPOG+Pe16h/vf6alpaWlpaWlpaWlpaWl/c+1pVZ5TwsucK7hHtOg8rvWjd821aulDOrGaWlpaWlpaWlpaWlpaWlpx1Xu4WB2/c/b+rDydZB7OzgMvqub6mGBYXTh0Gr/qiaflpaWlpaWlpaWlpaWlvYZtKPea6FT2pR2/OuFTahyDxd29UJJFw5fF87pwjYUFfxVpzhaWlpaWlpaWlpaWlpa2j/Pyq1qe/Ggbb7Q60f9vHyhd2fFfzy0tLS0tLS0tLS0tLS0tP+ydloKzEed0qbB/K73pTv6fvw+g95r3S77pZXEt6OlpaWlpaWlpaWlpaWlfSntfplHdk7DxeJB80PfGG4O58pLKXmDPzy9Wz7IveRiUUG98MDMblpaWlpaWlpaWlpaWlra77XlqyY9f3+XrnVae7L7ljARbKX32n65kHuvbdsG7PNj6wm0tLS0tLS0tLS0tLS0tM+rjesJJe2hl6VIPU8bu4QFidCM7fS17b7eai3j5vaOhZaWlpaWlpaWlpaWlpb2h7QlbV/P7civrvdatwmfC8nD28WD3KGbW35m2GXf5r8QLS0tLS0tLS0tLS0tLe3raPPB7HCrbg89lqAf5pXkLfNLWj641huMTnYPduVpaWlpaWlpaWlpaWlpaV9Le0zf9vtlO74bLhaasV3b140b/LluPswvywsMccc/FBU8NmGclpaWlpaWlpaWlpaWlvYbbUlF7bvB/K7ajvxSn35cPuDPyx56NwDsVvYevtDjB3musw8tzWlpaWlpaWlpaWlpaWlpX1YbNri7PfF8q7zjfU7t1W+rBVN7m/f0/vv2wpRmhn0bWlpaWlpaWlpaWlpaWtqn1OYd/PLYekJTJl/XE1a087wyES3eMfeeo6WlpaWlpaWlpaWlpaX9S22ucs/3jp3S2l5q19ApbfrqvRZPdtcXzN3R8x0vYWZ3HREWy95paWlpaWlpaWlpaWlpaV9NO1hPuOZbtafGN6FTWl2Q2FZtt+KQq9zzzO6SlizeaGlpaWlpaWlpaWlpaWl/Tjvf6aUWJoLlZmzX/FFfy753bbvw0czu0Sd7NwWclpaWlpaWlpaWlpaWlvaltGGH/LxaBB9mdo/WE/LDyv3u6PNyYZvXKR6eME5LS0tLS0tLS0tLS0tL+7zaa5hfNi+d1db5+WHvfQ1BXB94T3+Q/aCbWzfEm5aWlpaWlpaWlpaWlpb277VT+/kcDnKHivPt+ELdMm/K3j8uZG1zVjx/kB8eqnKnpaWlpaWlpaWlpaWlpX1W7b7dE8+9zHdpg3teHrbJW+bdSfU8s7tLtyDx2MxuWlpaWlpaWlpaWlpaWtrn1g6aod+0x3SMPDdDvy0f5HPoeeRZScfOwxJEs55Qf3FaX/qgpaWlpaWlpaWlpaWlpX1cmz+wfw1q0nMJ+q791j4t/EvSNiO6q6UrpO/+IA9MGKelpaWlpaWlpaWlpaWlfVbt+ojusFqQe5l/PmyfzqHv0ob4tv39equ1UOX+wHoCLS0tLS0tLS0tLS0tLe1D2tB7bZRj+kIv6YP8LW2Z53+yGfde26U99C5/0m+clpaWlpaWlpaWlpaWlvZ5tOFkd77VJjy6m7A9yCZswh9TmXx3Vvw02JUPQ8dOtLS0tLS0tLS0tLS0tLSvp83ZLdv3N36eTpar4vOOf26X3iwYhEd02lDUTktLS0tLS0tLS0tLS0v7g9qpvdUhHfUOj+42uN/aLfPd0m98Xu1g3vVemwZl77S0tLS0tLS0tLS0tLS0L6XdD26bj51PbQn6dL/3Wtbmfutv7QJDfsQlbevT0tLS0tLS0tLS0tLS0r6WdvSfuvll4xHd51TlHrX3/iCnr7r5bWhGF8aCP1CTT0tLS0tLS0tLS0tLS0v7vbbuoW/qo/ftjvexHbk9p5ndOesnu3Pd/DzYpq8nu+fvJoLR0tLS0tLS0tLS0tLS0j6fNuO6hMZoo7L3sIdeMm5Q1L5pa9i347HgD1S509LS0tLS0tLS0tLS0tJ+rw0zuzOuuVB6zmhE2O39QwPysnzix8PjoW78D9cTaGlpaWlpaWlpaWlpaWmfVzvne4+1t1sdUsl6Xn84pbL3XOV+Tu8Te6+9lwdDS0tLS0tLS0tLS0tLS/uU2n3bB20/7r12797dekKtco/nyqt2l15w1HuNlpaWlpaWlpaWlpaWlvZHtKX9l6WdCDaNz2G32viFPg1HdM/5ZHfovVaW9m7f7qHT0tLS0tLS0tLS0tLS0j6rdlpq0ufUKe2mfV/D5Znd3Q0u4z9IXsOY01H3xyaM09LS0tLS0tLS0tLS0tI+p3bQKa47Rr5tm5vfPYc+t3Xw9062H9Mj9o+emqelpaWlpaWlpaWlpaWlvafNndJGE76mtR3vud57HvZeK6vv31XW5+5stLS0tLS0tLS0tLS0tLQvqB2tJxwGD6sl6L+WR1/SP7nmgWYZFwagzak7+uiZtLS0tLS0tLS0tLS0tLQ/pa1PvzUD70Z05/ld9e228918/iLM++q26VducCrfhpaWlpaWlpaWlpaWlpb2WbXd8sGo1dr6Qe7ce62kGvZT6ubWtUtfX8OgpaWlpaWlpaWlpaWlpX0d7X7wQZ87q9ULt3Pox2XHP/zi80Lujt7NL8vd2eIdD2lEGi0tLS0tLS0tLS0tLS3tj2iP7YXc+3tatGFT/Tp4n9EXeviDXAdDx+IX+gN76LS0tLS0tLS0tLS0tLS0z60NW+b7tJ4QitTzOfTbL07tVO88cjuM6N607dVHCwy0tLS0tLS0tLS0tLS0tLSDvm63md3thduO/yktB4SXiSUApe0Ul+vgj8sfpDyw409LS0tLS0tLS0tLS0tL+wPaeSlB77Id7LL/Slvm2/aLvgyGft+GeIeRYkdaWlpaWlpaWlpaWlpa2pfUDqrcr/fuPbdV7uM99Mxf7+aWteX/qMmnpaWlpaWlpaWlpaWlpR1px73XNoMi8Ld0svvzC33fNiCvW+bd63ba+Ik//12nOFpaWlpaWlpaWlpaWlraf1wrIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiLyr+R/AQAA//90sXxlD0gzJQAAAABJRU5ErkJggg==', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1390829437816304BD0B', '2025-12-27 23:05:36', 'sistema', 'Pagamento não realizado dentro do prazo', 0, '2025-12-27 22:35:35', '2025-12-28 16:34:04', 1, 'd26cb75942dbf5e0ad71d172ea83e3a5', '2025-12-28 16:32:11'),
+(48, 4, 3, 2, 2, '2025-12-29', '11:00:00', '11:20:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter13908306383763041119', '2025-12-27 23:10:04', NULL, NULL, 0, '2025-12-27 22:40:03', '2025-12-27 22:48:33', 0, NULL, NULL),
+(49, 4, 3, 2, 4, '2025-12-29', '11:30:00', '11:40:00', NULL, NULL, 'cancelado', NULL, NULL, 'expirado', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1397302139346304844E', '2025-12-27 23:11:27', 'sistema', 'Pagamento não realizado dentro do prazo', 0, '2025-12-27 22:41:23', '2025-12-28 16:34:05', 1, '9fef5e22225433058f41e0c23fbeff02', '2025-12-28 16:32:19'),
+(50, 4, 3, 2, 2, '2025-12-29', '13:30:00', '13:50:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.00, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter13973063187663048905', '2025-12-27 23:13:06', NULL, NULL, 0, '2025-12-27 22:43:03', '2025-12-27 22:45:18', 0, NULL, NULL);
+INSERT INTO `agendamentos` (`id`, `estabelecimento_id`, `cliente_id`, `profissional_id`, `servico_id`, `data`, `hora_inicio`, `hora_fim`, `hora_inicio_real`, `hora_fim_real`, `status`, `observacoes`, `pagamento_id`, `pagamento_status`, `pagamento_valor`, `pagamento_pix_qrcode`, `pagamento_pix_copia_cola`, `pagamento_expira_em`, `cancelado_por`, `motivo_cancelamento`, `qtd_reagendamentos`, `criado_em`, `atualizado_em`, `pagamento_lembrete_enviado`, `pagamento_token`, `pagamento_expira_adicional_em`) VALUES
+(51, 4, 3, 2, 2, '2025-12-29', '14:00:00', '14:20:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 1.02, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.025802BR5911DIRA93473616004Laje62250521mpqrinter13908368796163041C5D', '2025-12-27 23:19:42', NULL, NULL, 0, '2025-12-27 22:49:41', '2025-12-27 22:50:07', 0, NULL, NULL),
+(52, 4, 3, 2, 4, '2025-12-29', '14:30:00', '14:40:00', NULL, NULL, 'confirmado', NULL, NULL, 'pago', 5.00, 'iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX///8AAABVwtN+AAAKJElEQVR42uzdz3HjuBIHYLh40FEhKBSFZoWmUBSCjjqoyFfrMchuEPqzM95XNdL3u+yaQ5MffQPQaBQRERERERERERERERERERERERERERERERERERERERH5P2Y3rXMopf7v+eumz2kqZQgXSvn4+uny9YDj1x05+S31ny+lbNs7th3BkZaWlpaWlpaWlpaWlpb2/bTH9sJh+Wm7/PNQX5Zxp1L2//x3rPef0vfM318vnBf+tX3FDRItLS0tLS0tLS0tLS0t7e9rw4B8t4zQ5/H04Vv7646A26Rx9TWNvz/qhVMaoc/J2nAHLS0tLS0tLS0tLS0tLS1t0q5G/5u0hn6t2mOaf5i+nzi2y/RjXlTvz1DQ0tLS0tLS0tLS0tLS0v7H2rAEfkzj6ceF53VRPT6xDtkvSVt+aoROS0tLS0tLS0tLS0tLS/si2lWVe6haD9pNp0h9t6yyxyr3PCFRunvFy0/V5NPS0tLS0tLS0tLS0tLSvoK233ttrLj994VrujCv+J/ShW29sKpyr/MJ4cKQm7H9Sac4WlpaWlpaWlpaWlpaWtpnM93qHx5WvLO2GaFXbXhi7M4WtD8QWlpaWlpaWlpaWlpaWtpX0O7TYD/k0i5w315DX1W5d3qvzdrw/Zv2FLL7Ve60tLS0tLS0tLS0tLS0tO+h7Y3+p3bFvzdb8NluO/96wJB6z41tHXyvbn7zaMWflpaWlpaWlpaWlpaWlvZJ7a7fy7xz5PaQjgj76NSmXx/u7L60y/SxO3o9dOx0+w9LS0tLS0tLS0tLS0tLS/uq2pJ6mU/Ly8Y0fbA6YXusz55Sc/Nz+8TQam2estgtMxSrCYnpidkPWlpaWlpaWlpaWlpaWtrnu5mF0XLOub66sw97aMfwpbMIny2XtPd7aEfo5YkVf1paWlpaWlpaWlpaWlral9TuUme1soz+b3/PMVW5h6L21b7tod23nacspnZC4hqW9WlpaWlpaWlpaWlpaWlp30pb96HHPmhTu2Df0d7Itr69s5F9SmXyzYREmLKgpaWlpaWlpaWlpaWlpf0RbdjIfUkr3mMoai+pJj3UsIdfGfPbwwj91I75e1Xu4RW0tLS0tLS0tLS0tLS0tG+rDdvOd+2Kd65hz73XLi3/vLzsIyyZfy7d3MLG9CFfWPFpaWlpaWlpaWlpaWlpad9HG84viwv84WW5dfnUWvL3bOuZ3at+67nK/fNWUcEz3dFpaWlpaWlpaWlpaWlpaZ/R1hPBmt5rdVF92++sFk7Y/oU7pAF8HfMPne7o+cywS7sZ/OF8Ai0tLS0tLS0tLS0tLS3tC2v78wmx7D3PPxzaCYnDdzO2eT6hc+j3R7vtvLf3/UJLS0tLS0tLS0tLS0tL+0Pa0hktH1LrtGMakJ+TdrOseM/aVe+1U3si2LTs7F498WG/cVpaWlpaWlpaWlpaWlral9Tu0lB+23ZKC9qp3Yedq9yb+YTVEWGrqvjw0zH9ye7PftDS0tLS0tLS0tLS0tLSvrR2DKvvh24J+pA2po+h93nojn6uJQDhVO9eDUGv3/pzVe60tLS0tLS0tLS0tLS0tE9qc7vwadl23ayhd3qvXe898eu/Q//7Q3O1TWjv9lyVOy0tLS0tLS0tLS0tLS3tS2p3S036ZrqTzq/O8wn79ubaze3aTlnM7zykj8lTFidaWlpaWlpaWlpaWlpa2nfVrjrF5VfnKvd+p7i5Kj5Uuc9vD93R8+fmZnS/Ltzfh05LS0tLS0tLS0tLS0tL+6+0wbLrV7l3Stan+uy8s3tqX7ZburltUgP2ob4itHcrtLS0tLS0tLS0tLS0tLTvqg370G/PJ4Sa9IDrndl9St9zXpbMP9pC+qlzRNrm0Ro6LS0tLS0tLS0tLS0tLe3z2nt14+elKvxaOXlR/dTZGr5PZeIlraFv75SmD3+4s5uWlpaWlpaWlpaWlpaW9m/WTu2zQ++13Jrt0q6h533YQ50+WK3K5+/PUxZz3XxYlT/S0tLS0tLS0tLS0tLS0r6ZtrSr77ul1drqQLNwZvfYrs837dJXvddWJQAr/hP70GlpaWlpaWlpaWlpaWlp/5V23w6fP7tD9muqg1/t7F6N0Md2EmCFK3ndPlygpaWlpaWlpaWlpaWlpX1DbemseK9+s+K2y6Pi+V21ddrcHT1PH+Qnnrrf3xTe09LS0tLS0tLS0tLS0tK+m3a/nMi9raeN5Sr3w/ezy6Jt5hOmVruakAiF8VN/xb9TN09LS0tLS0tLS0tLS0tL+/vacGb33BjtkMreQ+/zTapyzyP0sa6hr75/as8YO6Uh/tze7Yk1dFpaWlpaWlpaWlpaWlraF9bmTeJ1bD/mfeg5n2m2YP99oNndVmurNfT+Mv1ES0tLS0tLS0tLS0tLS/tD2pKqvAOuN2QPiSP0fboQtmnHVfn8B/lcDgDbtqXp5fGKPy0tLS0tLS0tLS0tLS3tq2rzbMGN7uiX5czusTPBMLTTB0P7gTdarYXmbc/NJ9DS0tLS0tLS0tLS0tLSvpo2NDp70Kl86GjnO2rvtfz9eYIhzlDUfeu93mt3QktLS0tLS0tLS0tLS0v7W8nNwJuK884aetaOdck837HtaPMrzu3m8YcngtHS0tLS0tLS0tLS0tLSvp62nrA9F5jvlir3KcwWdOYThtCdLac+8VqfGNbQw1b3a56QCE8stLS0tLS0tLS0tLS0tLRvpq2/ObbzCWMue+/PJ8wL/Ksi9dX5ZWH6YJfuP7eV9SdaWlpaWlpaWlpaWlpa2p/Q5u7oq9Zp2XJZ+GN49kqbn5jfHhbV85h/ymeM0dLS0tLS0tLS0tLS0tK+lbYszc170wd5sJ+Tu6Pf3Yd+aKcsAm6ipaWlpaWlpaWlpaWlpf2vtKXMB4CV9sjt+WV1QB5ard3Iqf2e3M3t3H/FREtLS0tLS0tLS0tLS0tL2yt7nzqL6pvaKW11ZvehXSGfliPCVnvF8xp6mMO4lt8LLS0tLS0tLS0tLS0tLe1fr70xfdBZ8Y+t1g7/vPqaqtx/Xdi2+9AfdEePVe71Ai0tLS0tLS0tLS0tLS3tT2mP7YVDap22/75w7VS5X+rnhhH6aVmVX2XWrnBhhL57dCIYLS0tLS0tLS0tLS0tLe2rasP0QVjxDtMHpT2u6yO8rHciWL3jvLR3e1zlXmhpaWlpaWlpaWlpaWlpaZM29HULswXlJv9zWeDP+9DDEd1jZ0JiSnfkz6WlpaWlpaWlpaWlpaWl/S+0YQm895uf3/u2L/UBn8tG7tJqd8tW79X3lHQi2B/NJ9DS0tLS0tLS0tLS0tLS/v3a56vct2279FVR+2mZPsj8ZlE9Tx/0j0ijpaWlpaWlpaWlpaWlpf0jba/3Wnj2PpV9hzuGtm68tzF7tdU7a2Ortd/vFEdLS0tLS0tLS0tLS0tL+9drRURERERERERERERERERERERERERERERERERERERE/pb8LwAA///1OTfsqahxsQAAAABJRU5ErkJggg==', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654045.005802BR5911DIRA93473616004Laje62250521mpqrinter139083688027630420D2', '2025-12-27 23:21:12', NULL, NULL, 0, '2025-12-27 22:51:11', '2025-12-27 22:51:37', 0, NULL, NULL),
+(53, 4, 3, 2, 4, '2025-12-29', '15:00:00', '15:10:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 22:52:27', '2025-12-27 22:59:56', 0, NULL, NULL),
+(54, 4, 3, 2, 2, '2025-12-29', '15:30:00', '15:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 23:00:22', NULL, 0, NULL, NULL),
+(55, 4, 3, 2, 2, '2025-12-29', '16:00:00', '16:20:00', NULL, NULL, 'pendente', NULL, NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 23:01:03', NULL, 0, NULL, NULL),
+(56, 4, 3, 2, 2, '2025-12-29', '16:30:00', '16:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 23:04:55', '2025-12-27 23:04:55', 0, NULL, NULL),
+(57, 4, 3, 2, 2, '2025-12-29', '17:00:00', '17:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-27 23:09:57', '2025-12-27 23:09:57', 0, NULL, NULL),
+(58, 4, 3, 2, 2, '2025-12-29', '17:30:00', '17:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:07:11', '2025-12-28 13:07:12', 0, NULL, NULL),
+(59, 4, 3, 2, 3, '2026-01-02', '08:00:00', '08:25:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:10:20', '2025-12-28 13:10:20', 0, NULL, NULL),
+(60, 4, 3, 2, 2, '2026-01-02', '08:30:00', '08:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:10:49', NULL, 0, NULL, NULL),
+(61, 4, 3, 2, 2, '2026-01-02', '09:00:00', '09:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:16:44', NULL, 0, NULL, NULL),
+(62, 4, 3, 2, 2, '2026-01-02', '09:30:00', '09:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:17:24', NULL, 0, NULL, NULL),
+(63, 4, 3, 2, 2, '2026-01-02', '10:00:00', '10:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:19:04', '2025-12-28 13:19:05', 0, NULL, NULL),
+(64, 4, 3, 2, 3, '2026-01-02', '10:30:00', '10:55:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:19:58', NULL, 0, NULL, NULL),
+(65, 4, 3, 2, 2, '2026-01-02', '11:00:00', '11:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:20:42', NULL, 0, NULL, NULL),
+(66, 4, 3, 2, 2, '2026-01-02', '11:30:00', '11:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:22:15', NULL, 0, NULL, NULL),
+(67, 4, 3, 2, 2, '2026-01-02', '13:00:00', '13:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:26:53', NULL, 0, NULL, NULL),
+(68, 4, 3, 2, 2, '2026-01-02', '13:30:00', '13:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:27:24', NULL, 0, NULL, NULL),
+(69, 4, 3, 2, 2, '2026-01-02', '14:00:00', '14:20:00', NULL, NULL, 'finalizado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:29:36', '2025-12-28 15:16:46', 0, NULL, NULL),
+(70, 4, 5, 2, 2, '2026-01-02', '14:30:00', '14:50:00', NULL, NULL, 'cancelado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 13:36:36', '2025-12-28 13:37:29', 0, NULL, NULL),
+(71, 4, 5, 2, 2, '2026-01-03', '14:30:00', '14:50:00', NULL, NULL, 'cancelado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, 'profissional', NULL, 0, '2025-12-28 13:38:01', '2025-12-28 13:44:34', 0, NULL, NULL),
+(72, 4, 5, 2, 2, '2026-01-02', '16:00:00', '16:20:00', NULL, NULL, 'cancelado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, '', NULL, 0, '2025-12-28 13:45:04', '2025-12-28 14:05:41', 0, NULL, NULL),
+(73, 4, 5, 2, 2, '2026-01-02', '15:30:00', '15:50:00', NULL, NULL, 'finalizado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 14:05:57', '2025-12-28 15:16:14', 0, NULL, NULL),
+(74, 4, 5, 2, 2, '2026-01-02', '14:30:00', '14:50:00', NULL, NULL, 'finalizado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 15:28:23', '2025-12-28 15:29:43', 0, NULL, NULL),
+(75, 4, 5, 2, 2, '2026-01-03', '09:00:00', '09:20:00', NULL, NULL, 'cancelado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, 'profissional', NULL, 0, '2025-12-28 15:30:05', '2025-12-28 15:31:44', 0, NULL, NULL),
+(76, 4, 5, 2, 2, '2026-01-02', '15:00:00', '15:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 15:33:23', NULL, 0, NULL, NULL),
+(77, 4, 5, 2, 2, '2026-01-02', '16:00:00', '16:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 15:33:39', NULL, 0, NULL, NULL),
+(78, 4, 5, 2, 2, '2026-01-02', '16:30:00', '16:50:00', NULL, NULL, 'confirmado', '', NULL, 'pago', 1.00, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter139141465023630483BC', '2025-12-28 16:04:02', NULL, NULL, 0, '2025-12-28 15:34:01', '2025-12-28 15:34:53', 0, NULL, NULL),
+(79, 4, 5, 2, 2, '2026-01-02', '17:00:00', '17:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 15:35:25', NULL, 0, NULL, NULL),
+(80, 4, 5, 2, 2, '2026-01-02', '17:30:00', '17:50:00', NULL, NULL, 'cancelado', '', NULL, 'expirado', 1.00, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter13914210676763043D28', '2025-12-28 16:07:15', 'sistema', 'Pagamento não realizado dentro do prazo', 0, '2025-12-28 15:37:14', '2025-12-28 16:34:06', 1, '0161dd157102a416b8555ac64381fd8a', '2025-12-28 16:32:25'),
+(81, 4, 5, 2, 2, '2026-01-02', '17:30:00', '17:50:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 15:38:43', NULL, 0, NULL, NULL),
+(82, 4, 5, 2, 2, '2026-01-03', '08:00:00', '08:20:00', NULL, NULL, 'confirmado', '', NULL, 'nao_requerido', NULL, NULL, NULL, NULL, NULL, NULL, 0, '2025-12-28 15:40:32', NULL, 0, NULL, NULL),
+(83, 4, 5, 2, 2, '2026-01-03', '08:30:00', '08:50:00', NULL, NULL, 'confirmado', '', NULL, 'pago', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1391420892356304CF89', '2025-12-28 16:17:09', NULL, NULL, 0, '2025-12-28 15:47:08', '2025-12-28 15:47:36', 0, NULL, NULL),
+(84, 4, 5, 2, 2, '2026-01-03', '09:00:00', '09:20:00', NULL, NULL, 'cancelado', '', NULL, 'expirado', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1391442294456304660B', '2025-12-28 16:25:36', 'sistema', 'Pagamento não realizado dentro do prazo', 0, '2025-12-28 16:20:34', '2025-12-28 16:34:07', 1, 'ca96eabc11caccf4ff4c4bb8553a52b1', '2025-12-28 16:32:32'),
+(85, 4, 5, 2, 3, '2026-01-05', '08:00:00', '08:25:00', NULL, NULL, 'confirmado', '', NULL, 'pago', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter139812491146630429CC', '2025-12-28 20:22:16', NULL, NULL, 0, '2025-12-28 20:17:15', '2025-12-28 20:17:41', 0, 'a71d853ad9d2ac2461c64639bfc42399', NULL),
+(86, 4, 6, 2, 2, '2025-12-29', '10:30:00', '10:50:00', NULL, NULL, 'cancelado', 'Agendado via WhatsApp Bot', NULL, 'nao_requerido', 1.01, NULL, NULL, '2025-12-29 09:33:38', 'cliente', 'Cancelado via WhatsApp Bot', 0, '2025-12-29 09:03:38', '2025-12-29 10:12:08', 0, '14b05a8cf3dddf5325201c6e66c7379e', NULL),
+(87, 4, 6, 2, 2, '2025-12-29', '11:30:00', '11:50:00', NULL, NULL, 'cancelado', 'Agendado via WhatsApp Bot', NULL, 'pago', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter139857762708630424D4', '2025-12-29 09:14:41', 'cliente', 'Cancelado via WhatsApp Bot', 0, '2025-12-29 09:09:40', '2025-12-29 17:31:51', 0, 'd16dfc83c1e1d12d9b52cdde312107a9', NULL),
+(88, 4, 6, 2, 2, '2025-12-30', '15:00:00', '15:20:00', NULL, NULL, 'confirmado', 'Agendado via WhatsApp Bot', NULL, 'pago', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1392154424316304C199', '2025-12-29 10:01:38', NULL, NULL, 0, '2025-12-29 09:56:36', '2025-12-29 09:57:08', 0, 'a02ecdaa6d974561f43361a3662626c4', NULL),
+(89, 4, 6, 2, 3, '2026-01-03', '09:00:00', '09:25:00', NULL, NULL, 'cancelado', 'Agendado via WhatsApp Bot', NULL, 'expirado', 1.01, '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', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter13986242479063044F61', '2025-12-29 10:06:39', 'sistema', 'Pagamento não realizado dentro do prazo', 0, '2025-12-29 10:01:38', '2025-12-29 10:10:02', 1, '8f3e93d706eac1c4219d8b023e97dca4', '2025-12-29 10:10:01');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `assinaturas`
+--
+
+CREATE TABLE `assinaturas` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `plano_id` int(11) UNSIGNED NOT NULL,
+  `data_inicio` date NOT NULL,
+  `data_fim` date NOT NULL,
+  `status` enum('ativa','trial','cancelada','vencida','suspensa') DEFAULT 'trial',
+  `mercadopago_subscription_id` varchar(100) DEFAULT NULL,
+  `mercadopago_preapproval_id` varchar(100) DEFAULT NULL,
+  `valor_pago` decimal(10,2) DEFAULT NULL,
+  `forma_pagamento` varchar(50) DEFAULT NULL,
+  `auto_renovar` tinyint(1) DEFAULT 1,
+  `cancelada_em` datetime DEFAULT NULL,
+  `motivo_cancelamento` text DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `assinaturas`
+--
+
+INSERT INTO `assinaturas` (`id`, `estabelecimento_id`, `plano_id`, `data_inicio`, `data_fim`, `status`, `mercadopago_subscription_id`, `mercadopago_preapproval_id`, `valor_pago`, `forma_pagamento`, `auto_renovar`, `cancelada_em`, `motivo_cancelamento`, `criado_em`, `atualizado_em`) VALUES
+(2, 4, 5, '2025-12-10', '2026-01-28', 'ativa', '2026-02-27', NULL, 1.01, NULL, 1, NULL, NULL, '2025-12-10 17:06:18', '2025-12-29 09:57:09');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `avaliacoes`
+--
+
+CREATE TABLE `avaliacoes` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `agendamento_id` int(11) UNSIGNED NOT NULL,
+  `nota` tinyint(4) NOT NULL COMMENT '1 a 5 estrelas',
+  `comentario` text DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `bloqueios`
+--
+
+CREATE TABLE `bloqueios` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `profissional_id` int(11) UNSIGNED DEFAULT NULL,
+  `tipo` enum('dia','periodo','horario') NOT NULL DEFAULT 'dia',
+  `data_inicio` date NOT NULL,
+  `data_fim` date DEFAULT NULL,
+  `data` date NOT NULL,
+  `hora_inicio` time DEFAULT NULL,
+  `hora_fim` time DEFAULT NULL,
+  `dia_todo` tinyint(1) DEFAULT 0,
+  `motivo` varchar(255) DEFAULT NULL,
+  `criado_por` enum('profissional','estabelecimento') DEFAULT 'profissional',
+  `criado_em` timestamp NULL DEFAULT current_timestamp(),
+  `atualizado_em` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `servico_id` int(11) DEFAULT NULL,
+  `criado_por_tipo` enum('profissional','estabelecimento') DEFAULT NULL,
+  `criado_por_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `bloqueios`
+--
+
+INSERT INTO `bloqueios` (`id`, `profissional_id`, `tipo`, `data_inicio`, `data_fim`, `data`, `hora_inicio`, `hora_fim`, `dia_todo`, `motivo`, `criado_por`, `criado_em`, `atualizado_em`, `servico_id`, `criado_por_tipo`, `criado_por_id`) VALUES
+(7, 2, 'horario', '2025-12-13', '2025-12-13', '0000-00-00', '15:00:00', '16:00:00', 0, 'Preciso ir no centro', 'profissional', '2025-12-12 13:23:40', '2025-12-12 13:23:40', NULL, NULL, NULL),
+(9, 2, 'periodo', '2025-12-18', '2025-12-19', '0000-00-00', NULL, NULL, 0, 'Folga', 'profissional', '2025-12-12 13:37:29', '2025-12-12 13:37:29', NULL, NULL, NULL),
+(10, 2, 'dia', '2025-12-15', NULL, '0000-00-00', NULL, NULL, 0, 'areae', 'profissional', '2025-12-12 13:41:28', '2025-12-12 18:09:28', NULL, NULL, NULL),
+(11, 2, 'dia', '2025-12-22', NULL, '0000-00-00', NULL, NULL, 0, 'Folga', 'profissional', '2025-12-12 18:48:01', '2025-12-12 18:48:01', NULL, NULL, NULL),
+(13, NULL, 'dia', '2025-12-24', NULL, '0000-00-00', NULL, NULL, 0, '', 'profissional', '2025-12-13 12:36:06', '2025-12-13 12:36:06', 3, 'estabelecimento', 5),
+(15, 2, 'horario', '2025-12-23', '2025-12-23', '0000-00-00', '09:00:00', '11:06:00', 0, '', 'profissional', '2025-12-13 12:43:06', '2025-12-13 12:43:06', 2, 'profissional', 6),
+(17, 2, 'horario', '2025-12-25', '2025-12-25', '0000-00-00', '11:00:00', '13:00:00', 0, '', 'profissional', '2025-12-23 16:01:10', '2025-12-23 16:01:10', 2, 'profissional', 6),
+(18, 2, 'horario', '2025-12-25', '2025-12-25', '0000-00-00', '14:00:00', '15:00:00', 0, '', 'profissional', '2025-12-23 16:01:40', '2025-12-23 16:01:40', 3, 'profissional', 6),
+(19, 2, 'horario', '2025-12-25', '2025-12-25', '0000-00-00', '16:05:00', '17:06:00', 0, '', 'profissional', '2025-12-23 16:06:09', '2025-12-23 16:06:09', NULL, 'profissional', 6);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `bloqueios_backup`
+--
+
+CREATE TABLE `bloqueios_backup` (
+  `id` int(11) UNSIGNED NOT NULL DEFAULT 0,
+  `profissional_id` int(11) UNSIGNED NOT NULL,
+  `data` date NOT NULL,
+  `hora_inicio` time DEFAULT NULL,
+  `hora_fim` time DEFAULT NULL,
+  `dia_todo` tinyint(1) DEFAULT 0,
+  `motivo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `bot_conversas`
+--
+
+CREATE TABLE `bot_conversas` (
+  `id` int(11) NOT NULL,
+  `estabelecimento_id` int(11) NOT NULL,
+  `numero_whatsapp` varchar(20) NOT NULL,
+  `estado` varchar(50) NOT NULL DEFAULT 'menu',
+  `dados_temporarios` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`dados_temporarios`)),
+  `cliente_id` int(11) DEFAULT NULL,
+  `ultima_interacao` datetime NOT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `bot_conversas`
+--
+
+INSERT INTO `bot_conversas` (`id`, `estabelecimento_id`, `numero_whatsapp`, `estado`, `dados_temporarios`, `cliente_id`, `ultima_interacao`, `criado_em`) VALUES
+(1, 4, '154829729083489', 'menu', '[]', NULL, '2025-12-29 08:41:02', '2025-12-29 08:39:36'),
+(2, 4, '557588890006', 'menu', '[]', 6, '2025-12-30 09:32:11', '2025-12-29 08:41:19'),
+(3, 4, '', 'menu', '[]', NULL, '2025-12-30 07:56:35', '2025-12-29 18:03:55');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `clientes`
+--
+
+CREATE TABLE `clientes` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `cpf` varchar(14) DEFAULT NULL,
+  `whatsapp` varchar(20) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `foto` varchar(255) DEFAULT NULL,
+  `tipo` enum('novo','recorrente','vip') DEFAULT 'novo',
+  `total_agendamentos` int(11) DEFAULT 0,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `clientes`
+--
+
+INSERT INTO `clientes` (`id`, `estabelecimento_id`, `nome`, `cpf`, `whatsapp`, `email`, `foto`, `tipo`, `total_agendamentos`, `criado_em`, `atualizado_em`) VALUES
+(3, 4, 'Mazinho', '', '(75) 997058104', '', NULL, 'vip', 69, '2025-12-11 13:46:45', '2025-12-28 13:29:36'),
+(5, 4, 'Mary', '044.596.125-26', '75988890006', 'rafaeldiastecinfo@gmail.com', NULL, 'vip', 16, '2025-12-28 13:36:12', '2025-12-28 20:17:15'),
+(6, 4, 'Cliente WhatsApp', NULL, '557588890006', NULL, NULL, 'recorrente', 4, '2025-12-29 09:03:38', '2025-12-29 10:01:38');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `configuracoes`
+--
+
+CREATE TABLE `configuracoes` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `chave` varchar(100) NOT NULL,
+  `valor` text DEFAULT NULL,
+  `tipo` enum('texto','numero','booleano','json','arquivo') DEFAULT 'texto',
+  `grupo` varchar(50) DEFAULT 'geral' COMMENT 'Agrupa configurações (geral, smtp, notificacoes)',
+  `descricao` varchar(255) DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `configuracoes`
+--
+
+INSERT INTO `configuracoes` (`id`, `chave`, `valor`, `tipo`, `grupo`, `descricao`, `criado_em`, `atualizado_em`) VALUES
+(1, 'sistema_nome', 'iafila', 'texto', 'geral', 'Nome do sistema', '2025-12-06 02:15:45', '2025-12-06 14:23:21'),
+(2, 'sistema_email', 'doisr.sistemas@gmail.com', 'texto', 'geral', 'E-mail principal do sistema', '2025-12-06 02:15:45', '2025-12-06 14:23:21'),
+(3, 'sistema_telefone', '7599448068', 'texto', 'geral', 'Telefone de contato', '2025-12-06 02:15:45', '2025-12-06 14:23:21'),
+(4, 'sistema_endereco', 'Rua Nova Brasília, 162', 'texto', 'geral', 'Endereço completo', '2025-12-06 02:15:45', '2025-12-06 14:23:21'),
+(5, 'sistema_logo', '', 'arquivo', 'geral', 'Logo do sistema', '2025-12-06 02:15:45', NULL),
+(6, 'sistema_favicon', '', 'arquivo', 'geral', 'Favicon do sistema', '2025-12-06 02:15:45', NULL),
+(7, 'smtp_ativo', '0', 'booleano', 'smtp', 'Ativar envio de e-mails via SMTP', '2025-12-06 02:15:45', NULL),
+(8, 'smtp_host', '', 'texto', 'smtp', 'Servidor SMTP (ex: smtp.gmail.com)', '2025-12-06 02:15:45', NULL),
+(9, 'smtp_porta', '587', 'numero', 'smtp', 'Porta SMTP (587 para TLS, 465 para SSL)', '2025-12-06 02:15:45', NULL),
+(10, 'smtp_usuario', '', 'texto', 'smtp', 'Usuário SMTP (e-mail)', '2025-12-06 02:15:45', NULL),
+(11, 'smtp_senha', '', 'texto', 'smtp', 'Senha SMTP', '2025-12-06 02:15:45', NULL),
+(12, 'smtp_seguranca', 'tls', 'texto', 'smtp', 'Tipo de segurança (tls ou ssl)', '2025-12-06 02:15:45', NULL),
+(13, 'smtp_remetente_email', '', 'texto', 'smtp', 'E-mail do remetente', '2025-12-06 02:15:45', NULL),
+(14, 'smtp_remetente_nome', '', 'texto', 'smtp', 'Nome do remetente', '2025-12-06 02:15:45', NULL),
+(15, 'notif_email_ativo', '1', 'booleano', 'notificacoes', 'Enviar notificações por e-mail', '2025-12-06 02:15:45', NULL),
+(16, 'notif_email_destinatario', '', 'texto', 'notificacoes', 'E-mail para receber notificações do sistema', '2025-12-06 02:15:45', NULL),
+(17, 'notif_sistema_som', '1', 'booleano', 'notificacoes', 'Ativar som nas notificações do sistema', '2025-12-06 02:15:45', NULL),
+(20, 'mercadopago_sandbox', '0', 'texto', 'mercadopago', NULL, '2025-12-06 14:32:17', '2025-12-18 12:26:44'),
+(21, 'mercadopago_access_token_test', 'TEST-8383394053049490-120613-7960752b164bee3710a580fae67c765f-426420888', 'texto', 'mercadopago', NULL, '2025-12-06 15:41:29', '2025-12-18 12:26:44'),
+(22, 'mercadopago_public_key_test', 'TEST-77eeee04-0f59-4dbe-a0b3-66847ffd2f86', 'texto', 'mercadopago', NULL, '2025-12-06 15:41:29', '2025-12-18 12:26:44'),
+(23, 'mercadopago_access_token_prod', 'APP_USR-8383394053049490-120613-d828c32bc0d495191bb6a1dd77be362b-426420888', 'texto', 'mercadopago', NULL, '2025-12-06 15:41:29', '2025-12-18 12:26:44'),
+(24, 'mercadopago_public_key_prod', 'APP_USR-f07e3741-1415-4973-8645-e07b066a13c1', 'texto', 'mercadopago', NULL, '2025-12-06 15:41:29', '2025-12-18 12:26:44'),
+(25, 'mercadopago_webhook_url_test', 'https://iafila.doisr.com.br/webhook/mercadopago', 'texto', 'mercadopago', NULL, '2025-12-06 15:41:29', '2025-12-18 12:26:44'),
+(26, 'mercadopago_webhook_url_prod', 'https://iafila.doisr.com.br/webhook/mercadopago', 'texto', 'mercadopago', NULL, '2025-12-06 15:41:29', '2025-12-18 12:26:44'),
+(27, 'waha_api_url', 'https://zaptotal.doisrsistemas.com.br', 'texto', 'waha', 'URL da API WAHA', '2025-12-28 10:24:14', '2025-12-29 08:44:15'),
+(28, 'waha_api_key', 'b781f3e57f4e4c4ba3a67df819050e6e', 'texto', 'waha', 'API Key para autenticação na WAHA', '2025-12-28 10:24:14', '2025-12-29 08:44:15'),
+(29, 'waha_session_name', 'doisr', 'texto', 'waha', 'Nome da sessão WAHA para o SaaS', '2025-12-28 10:24:14', '2025-12-29 08:44:15'),
+(30, 'waha_webhook_url', '', 'texto', 'waha', 'URL do webhook para receber mensagens', '2025-12-28 10:24:14', '2025-12-29 08:44:15'),
+(31, 'waha_status', 'conectado', 'texto', 'waha', 'Status da conexão: desconectado, conectando, conectado', '2025-12-28 10:24:14', '2025-12-30 02:15:44'),
+(32, 'waha_numero_conectado', '557599448068@c.us', 'texto', 'waha', 'Número conectado no formato 5511999999999', '2025-12-28 10:24:14', '2025-12-30 02:15:44'),
+(33, 'waha_ativo', '0', 'texto', 'waha', 'Se a integração WAHA está ativa (0 ou 1)', '2025-12-28 10:24:14', '2025-12-29 08:44:15'),
+(42, 'waha_usar_para_estabelecimentos', '1', 'texto', 'waha', 'Se os estabelecimentos devem usar a mesma API WAHA do SaaS', '2025-12-28 11:22:25', NULL),
+(43, 'cron_token', 'b781f3e57f4e4c4ba3a67df819050e6e', 'texto', 'cron', 'Token de segurança para execução do cron', '2025-12-28 16:02:41', '2025-12-28 16:17:18');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `cron_logs`
+--
+
+CREATE TABLE `cron_logs` (
+  `id` int(11) NOT NULL,
+  `tipo` varchar(50) NOT NULL COMMENT 'Tipo do cron executado',
+  `registros_processados` int(11) DEFAULT 0,
+  `detalhes` text DEFAULT NULL,
+  `executado_em` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `cron_logs`
+--
+
+INSERT INTO `cron_logs` (`id`, `tipo`, `registros_processados`, `detalhes`, `executado_em`) VALUES
+(1, 'verificar_pagamentos', 5, '{\"lembretes_enviados\":5,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:30:39'),
+(2, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:32:03'),
+(3, 'verificar_pagamentos', 5, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":5,\"erros\":[]}', '2025-12-28 16:34:07'),
+(4, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:36:03'),
+(5, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:38:03'),
+(6, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:40:03'),
+(7, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:42:03'),
+(8, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:44:03'),
+(9, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:46:02'),
+(10, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:48:03'),
+(11, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:50:04'),
+(12, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:52:03'),
+(13, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:54:03'),
+(14, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:56:02'),
+(15, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 16:58:03'),
+(16, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:00:03'),
+(17, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:02:01'),
+(18, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:04:02'),
+(19, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:06:02'),
+(20, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:08:01'),
+(21, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:10:02'),
+(22, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:12:02'),
+(23, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:14:02'),
+(24, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:16:01'),
+(25, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:18:01'),
+(26, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:20:02'),
+(27, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:22:02'),
+(28, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:24:02'),
+(29, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:26:01'),
+(30, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:28:02'),
+(31, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:30:02'),
+(32, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:32:02'),
+(33, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:34:01'),
+(34, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:36:01'),
+(35, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:38:01'),
+(36, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:40:03'),
+(37, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:42:02'),
+(38, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:44:02'),
+(39, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:46:02'),
+(40, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:48:02'),
+(41, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:50:02'),
+(42, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:52:02'),
+(43, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:54:02'),
+(44, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:56:02'),
+(45, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 17:58:02'),
+(46, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:00:03'),
+(47, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:02:02'),
+(48, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:04:01'),
+(49, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:06:01'),
+(50, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:08:01'),
+(51, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:10:02'),
+(52, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:12:02'),
+(53, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:14:02'),
+(54, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:16:01'),
+(55, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:18:02'),
+(56, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:20:02'),
+(57, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:22:02'),
+(58, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:24:02'),
+(59, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:26:02'),
+(60, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:28:02'),
+(61, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:30:02'),
+(62, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:32:01'),
+(63, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:34:02'),
+(64, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:36:02'),
+(65, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:38:01'),
+(66, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:40:02'),
+(67, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:42:02'),
+(68, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:44:02'),
+(69, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:46:01'),
+(70, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:48:01'),
+(71, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:50:02'),
+(72, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:52:02'),
+(73, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:54:02'),
+(74, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:56:02'),
+(75, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 18:58:02'),
+(76, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:00:03'),
+(77, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:02:02'),
+(78, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:04:01'),
+(79, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:06:02'),
+(80, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:08:02'),
+(81, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:10:03'),
+(82, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:12:02'),
+(83, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:14:02'),
+(84, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:16:01'),
+(85, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:18:01'),
+(86, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:20:03'),
+(87, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:22:02'),
+(88, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:24:02'),
+(89, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:26:01'),
+(90, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:28:01'),
+(91, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:30:02'),
+(92, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:32:02'),
+(93, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:34:01'),
+(94, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:36:02'),
+(95, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:38:02'),
+(96, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:40:02'),
+(97, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:42:01'),
+(98, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:44:02'),
+(99, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:46:02'),
+(100, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:48:02'),
+(101, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:50:02'),
+(102, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:52:01'),
+(103, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:54:02'),
+(104, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:56:01'),
+(105, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 19:58:01'),
+(106, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:00:04'),
+(107, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:02:03'),
+(108, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:04:03'),
+(109, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:06:03'),
+(110, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:08:03'),
+(111, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:10:04'),
+(112, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:12:03'),
+(113, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:14:02'),
+(114, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:16:02'),
+(115, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:18:03'),
+(116, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:20:04'),
+(117, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:22:02'),
+(118, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:24:03'),
+(119, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:26:02'),
+(120, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:28:03'),
+(121, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:30:04'),
+(122, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:32:02'),
+(123, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:34:03'),
+(124, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:36:02'),
+(125, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:38:03'),
+(126, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:40:03'),
+(127, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:42:03'),
+(128, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:44:03'),
+(129, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:46:03'),
+(130, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:48:03'),
+(131, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:50:04'),
+(132, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:52:03'),
+(133, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:54:02'),
+(134, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:56:03'),
+(135, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 20:58:03'),
+(136, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:00:02'),
+(137, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:02:02'),
+(138, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:04:02'),
+(139, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:06:01'),
+(140, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:08:02'),
+(141, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:10:03'),
+(142, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:12:02'),
+(143, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:14:02'),
+(144, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:16:01'),
+(145, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:18:02'),
+(146, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:20:02'),
+(147, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:22:02'),
+(148, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:24:02'),
+(149, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:26:01'),
+(150, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:28:02'),
+(151, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:30:02'),
+(152, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:32:01'),
+(153, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:34:02'),
+(154, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:36:01'),
+(155, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:38:01'),
+(156, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:40:02'),
+(157, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:42:02'),
+(158, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:44:02'),
+(159, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:46:01'),
+(160, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:48:02'),
+(161, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:50:03'),
+(162, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:52:01'),
+(163, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:54:02'),
+(164, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:56:01'),
+(165, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 21:58:02'),
+(166, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:00:03'),
+(167, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:02:01'),
+(168, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:04:01'),
+(169, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:06:02'),
+(170, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:08:01'),
+(171, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:10:02'),
+(172, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:12:02'),
+(173, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:14:02'),
+(174, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:16:01'),
+(175, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:18:02'),
+(176, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:20:03'),
+(177, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:22:01'),
+(178, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:24:02'),
+(179, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:26:02'),
+(180, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:28:02'),
+(181, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:30:02'),
+(182, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:32:02'),
+(183, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:34:02'),
+(184, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:36:02'),
+(185, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:38:01'),
+(186, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:40:03'),
+(187, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:42:02'),
+(188, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:44:02'),
+(189, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:46:01'),
+(190, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:48:01'),
+(191, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:50:02'),
+(192, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:52:01'),
+(193, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:54:02'),
+(194, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:56:01'),
+(195, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 22:58:02'),
+(196, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:00:03'),
+(197, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:02:02'),
+(198, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:04:01'),
+(199, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:06:01'),
+(200, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:08:02'),
+(201, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:10:02'),
+(202, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:12:01'),
+(203, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:14:02'),
+(204, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:16:01'),
+(205, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:18:01'),
+(206, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:20:02'),
+(207, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:22:02'),
+(208, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:24:02'),
+(209, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:26:02'),
+(210, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:28:02'),
+(211, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:30:02'),
+(212, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:32:01'),
+(213, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:34:02'),
+(214, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:36:01'),
+(215, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:38:02'),
+(216, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:40:01'),
+(217, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:42:02'),
+(218, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:44:02'),
+(219, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:46:01'),
+(220, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:48:02'),
+(221, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:50:02'),
+(222, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:52:02'),
+(223, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:54:02'),
+(224, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:56:01'),
+(225, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-28 23:58:02'),
+(226, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:00:06'),
+(227, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:02:03'),
+(228, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:04:03'),
+(229, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:06:02'),
+(230, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:08:02'),
+(231, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:10:04'),
+(232, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:12:03'),
+(233, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:14:03'),
+(234, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:16:03'),
+(235, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:18:02'),
+(236, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:20:03'),
+(237, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:22:02'),
+(238, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:24:02'),
+(239, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:26:02'),
+(240, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:28:02'),
+(241, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:30:03'),
+(242, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:32:03'),
+(243, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:34:02'),
+(244, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:36:02'),
+(245, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:38:03'),
+(246, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:40:03'),
+(247, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:42:02'),
+(248, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:44:03'),
+(249, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:46:03'),
+(250, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:48:03'),
+(251, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:50:03'),
+(252, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:52:02'),
+(253, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:54:03'),
+(254, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:56:02'),
+(255, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 00:58:03'),
+(256, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:00:02'),
+(257, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:02:02'),
+(258, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:04:01'),
+(259, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:06:02'),
+(260, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:08:02'),
+(261, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:10:02'),
+(262, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:12:01'),
+(263, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:14:02'),
+(264, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:16:01'),
+(265, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:18:01'),
+(266, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:20:02'),
+(267, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:22:02'),
+(268, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:24:02'),
+(269, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:26:01'),
+(270, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:28:01'),
+(271, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:30:02'),
+(272, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:32:02'),
+(273, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:34:02'),
+(274, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:36:01'),
+(275, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:38:02'),
+(276, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:40:02'),
+(277, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:42:02'),
+(278, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:44:02'),
+(279, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:46:02'),
+(280, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:48:02'),
+(281, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:50:02'),
+(282, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:52:01'),
+(283, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:54:02'),
+(284, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:56:01'),
+(285, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 01:58:01'),
+(286, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:00:02'),
+(287, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:02:02'),
+(288, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:04:01'),
+(289, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:06:02'),
+(290, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:08:01'),
+(291, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:10:02'),
+(292, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:12:02'),
+(293, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:14:02'),
+(294, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:16:02'),
+(295, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:18:01'),
+(296, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:20:02'),
+(297, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:22:01'),
+(298, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:24:02'),
+(299, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:26:01'),
+(300, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:28:02'),
+(301, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:30:02'),
+(302, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:32:01'),
+(303, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:34:01'),
+(304, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:36:01'),
+(305, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:38:02'),
+(306, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:40:03'),
+(307, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:42:02'),
+(308, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:44:02'),
+(309, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:46:02'),
+(310, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:48:01'),
+(311, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:50:02'),
+(312, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:52:01'),
+(313, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:54:02'),
+(314, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:56:01'),
+(315, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 02:58:01'),
+(316, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:00:03'),
+(317, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:02:02'),
+(318, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:04:02'),
+(319, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:06:02'),
+(320, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:08:01'),
+(321, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:10:02'),
+(322, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:12:02'),
+(323, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:14:02'),
+(324, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:16:01'),
+(325, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:18:02'),
+(326, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:20:02'),
+(327, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:22:01'),
+(328, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:24:02'),
+(329, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:26:01'),
+(330, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:28:01'),
+(331, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:30:02'),
+(332, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:32:02'),
+(333, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:34:01'),
+(334, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:36:02'),
+(335, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:38:01'),
+(336, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:40:02'),
+(337, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:42:02'),
+(338, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:44:02'),
+(339, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:46:01'),
+(340, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:48:02'),
+(341, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:50:02'),
+(342, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:52:02'),
+(343, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:54:01'),
+(344, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:56:01'),
+(345, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 03:58:01'),
+(346, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:00:04'),
+(347, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:02:02'),
+(348, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:04:03'),
+(349, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:06:02'),
+(350, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:08:02'),
+(351, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:10:03'),
+(352, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:12:03'),
+(353, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:14:03'),
+(354, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:16:02'),
+(355, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:18:03'),
+(356, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:20:03'),
+(357, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:22:02'),
+(358, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:24:02'),
+(359, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:26:02'),
+(360, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:28:02'),
+(361, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:30:04'),
+(362, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:32:03'),
+(363, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:34:02'),
+(364, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:36:03'),
+(365, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:38:03'),
+(366, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:40:03'),
+(367, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:42:03'),
+(368, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:44:02'),
+(369, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:46:03'),
+(370, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:48:02'),
+(371, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:50:03'),
+(372, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:52:03'),
+(373, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:54:03'),
+(374, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:56:02'),
+(375, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 04:58:03'),
+(376, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:00:03'),
+(377, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:02:02'),
+(378, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:04:02'),
+(379, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:06:01'),
+(380, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:08:02'),
+(381, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:10:03'),
+(382, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:12:02'),
+(383, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:14:02'),
+(384, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:16:02'),
+(385, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:18:01'),
+(386, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:20:02'),
+(387, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:22:02'),
+(388, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:24:01'),
+(389, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:26:01'),
+(390, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:28:02');
+INSERT INTO `cron_logs` (`id`, `tipo`, `registros_processados`, `detalhes`, `executado_em`) VALUES
+(391, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:30:02'),
+(392, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:32:02'),
+(393, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:34:02'),
+(394, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:36:01'),
+(395, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:38:02'),
+(396, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:40:02'),
+(397, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:42:01'),
+(398, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:44:02'),
+(399, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:46:02'),
+(400, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:48:01'),
+(401, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:50:02'),
+(402, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:52:02'),
+(403, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:54:02'),
+(404, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:56:01'),
+(405, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 05:58:02'),
+(406, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:00:02'),
+(407, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:02:01'),
+(408, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:04:01'),
+(409, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:06:01'),
+(410, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:08:01'),
+(411, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:10:03'),
+(412, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:12:02'),
+(413, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:14:01'),
+(414, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:16:01'),
+(415, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:18:01'),
+(416, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:20:02'),
+(417, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:22:02'),
+(418, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:24:01'),
+(419, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:26:01'),
+(420, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:28:02'),
+(421, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:30:02'),
+(422, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:32:01'),
+(423, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:34:02'),
+(424, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:36:01'),
+(425, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:38:01'),
+(426, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:40:02'),
+(427, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:42:02'),
+(428, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:44:02'),
+(429, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:46:01'),
+(430, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:48:02'),
+(431, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:50:02'),
+(432, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:52:02'),
+(433, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:54:02'),
+(434, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:56:01'),
+(435, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 06:58:02'),
+(436, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:00:02'),
+(437, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:02:01'),
+(438, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:04:02'),
+(439, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:06:01'),
+(440, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:08:02'),
+(441, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:10:03'),
+(442, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:12:01'),
+(443, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:14:02'),
+(444, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:16:01'),
+(445, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:18:02'),
+(446, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:20:02'),
+(447, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:22:01'),
+(448, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:24:02'),
+(449, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:26:01'),
+(450, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:28:01'),
+(451, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:30:02'),
+(452, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:32:02'),
+(453, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:34:02'),
+(454, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:36:01'),
+(455, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:38:01'),
+(456, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:40:02'),
+(457, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:42:01'),
+(458, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:44:02'),
+(459, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:46:01'),
+(460, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:48:02'),
+(461, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:50:02'),
+(462, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:52:02'),
+(463, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:54:02'),
+(464, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:56:01'),
+(465, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 07:58:01'),
+(466, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:00:04'),
+(467, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:02:03'),
+(468, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:04:02'),
+(469, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:06:02'),
+(470, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:08:02'),
+(471, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:10:03'),
+(472, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:12:03'),
+(473, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:14:02'),
+(474, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:16:03'),
+(475, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:18:03'),
+(476, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:20:03'),
+(477, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:22:02'),
+(478, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:24:03'),
+(479, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:26:03'),
+(480, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:28:02'),
+(481, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:30:04'),
+(482, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:32:03'),
+(483, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:34:03'),
+(484, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:36:03'),
+(485, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:38:02'),
+(486, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:40:04'),
+(487, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:42:02'),
+(488, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:44:03'),
+(489, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:46:03'),
+(490, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:48:03'),
+(491, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:50:04'),
+(492, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:52:03'),
+(493, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:54:03'),
+(494, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:56:02'),
+(495, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 08:58:02'),
+(496, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:00:02'),
+(497, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:02:02'),
+(498, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:04:02'),
+(499, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:06:02'),
+(500, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:08:02'),
+(501, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:10:02'),
+(502, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:12:02'),
+(503, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:14:02'),
+(504, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:16:01'),
+(505, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:18:02'),
+(506, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:20:02'),
+(507, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:22:02'),
+(508, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:24:01'),
+(509, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:26:01'),
+(510, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:28:02'),
+(511, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:30:02'),
+(512, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:32:01'),
+(513, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:34:02'),
+(514, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:36:01'),
+(515, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:38:01'),
+(516, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:40:03'),
+(517, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:42:02'),
+(518, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:44:02'),
+(519, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:46:02'),
+(520, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:48:02'),
+(521, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:48:06'),
+(522, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:50:02'),
+(523, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:52:02'),
+(524, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:54:02'),
+(525, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:56:01'),
+(526, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 09:58:02'),
+(527, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:00:03'),
+(528, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:02:02'),
+(529, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:04:01'),
+(530, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:06:01'),
+(531, 'verificar_pagamentos', 1, '{\"lembretes_enviados\":1,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:08:04'),
+(532, 'verificar_pagamentos', 1, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":1,\"erros\":[]}', '2025-12-29 10:10:03'),
+(533, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:12:02'),
+(534, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:14:02'),
+(535, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:16:01'),
+(536, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:18:01'),
+(537, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:20:02'),
+(538, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:22:01'),
+(539, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:24:02'),
+(540, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:26:01'),
+(541, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:28:02'),
+(542, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:30:02'),
+(543, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:32:02'),
+(544, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:34:15'),
+(545, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:36:01'),
+(546, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:38:02'),
+(547, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:40:03'),
+(548, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:42:02'),
+(549, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:44:02'),
+(550, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:46:02'),
+(551, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:48:02'),
+(552, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:50:02'),
+(553, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:52:02'),
+(554, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:54:02'),
+(555, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:56:01'),
+(556, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 10:58:01'),
+(557, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:00:02'),
+(558, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:02:02'),
+(559, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:04:02'),
+(560, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:06:02'),
+(561, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:08:01'),
+(562, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:10:02'),
+(563, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:12:02'),
+(564, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:14:02'),
+(565, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:16:02'),
+(566, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:18:02'),
+(567, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:20:02'),
+(568, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:22:02'),
+(569, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:24:02'),
+(570, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:26:01'),
+(571, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:28:01'),
+(572, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:30:02'),
+(573, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:32:02'),
+(574, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:34:02'),
+(575, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:36:01'),
+(576, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:38:02'),
+(577, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:40:02'),
+(578, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:42:02'),
+(579, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:44:02'),
+(580, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:46:01'),
+(581, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:48:01'),
+(582, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:50:02'),
+(583, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:52:02'),
+(584, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:54:02'),
+(585, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:56:01'),
+(586, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 11:58:02'),
+(587, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:00:04'),
+(588, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:02:03'),
+(589, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:04:03'),
+(590, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:06:03'),
+(591, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:08:03'),
+(592, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:10:04'),
+(593, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:12:03'),
+(594, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:14:02'),
+(595, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:16:03'),
+(596, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:18:02'),
+(597, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:20:03'),
+(598, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:22:03'),
+(599, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:24:02'),
+(600, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:26:02'),
+(601, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:28:03'),
+(602, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:30:04'),
+(603, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:32:03'),
+(604, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:34:02'),
+(605, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:36:03'),
+(606, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:38:02'),
+(607, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:40:03'),
+(608, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:42:02'),
+(609, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:44:03'),
+(610, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:46:02'),
+(611, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:48:03'),
+(612, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:50:03'),
+(613, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:52:02'),
+(614, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:54:03'),
+(615, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:56:02'),
+(616, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 12:58:02'),
+(617, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:00:03'),
+(618, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:02:02'),
+(619, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:04:02'),
+(620, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:06:01'),
+(621, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:08:02'),
+(622, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:10:02'),
+(623, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:12:02'),
+(624, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:14:02'),
+(625, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:16:01'),
+(626, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:18:02'),
+(627, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:20:02'),
+(628, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:22:01'),
+(629, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:24:01'),
+(630, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:26:01'),
+(631, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:28:01'),
+(632, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:30:02'),
+(633, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:32:02'),
+(634, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:34:02'),
+(635, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:36:01'),
+(636, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:38:02'),
+(637, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:40:03'),
+(638, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:42:02'),
+(639, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:44:01'),
+(640, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:46:02'),
+(641, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:48:01'),
+(642, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:50:02'),
+(643, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:52:02'),
+(644, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:54:01'),
+(645, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:56:02'),
+(646, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 13:58:01'),
+(647, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:00:03'),
+(648, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:02:01'),
+(649, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:04:02'),
+(650, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:06:01'),
+(651, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:08:01'),
+(652, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:10:02'),
+(653, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:12:02'),
+(654, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:14:01'),
+(655, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:16:02'),
+(656, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:18:01'),
+(657, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:20:02'),
+(658, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:22:01'),
+(659, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:24:02'),
+(660, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:26:01'),
+(661, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:28:02'),
+(662, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:30:02'),
+(663, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:32:01'),
+(664, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:34:02'),
+(665, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:36:01'),
+(666, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:38:02'),
+(667, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:40:03'),
+(668, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:42:01'),
+(669, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:44:01'),
+(670, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:46:02'),
+(671, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:48:02'),
+(672, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:50:02'),
+(673, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:52:01'),
+(674, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:54:01'),
+(675, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:56:01'),
+(676, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 14:58:01'),
+(677, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:00:03'),
+(678, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:02:01'),
+(679, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:04:01'),
+(680, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:06:02'),
+(681, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:08:02'),
+(682, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:10:03'),
+(683, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:12:01'),
+(684, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:14:02'),
+(685, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:16:02'),
+(686, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:18:01'),
+(687, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:20:02'),
+(688, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:22:02'),
+(689, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:24:01'),
+(690, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:26:01'),
+(691, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:28:01'),
+(692, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:30:02'),
+(693, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:32:02'),
+(694, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:34:02'),
+(695, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:36:01'),
+(696, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:38:01'),
+(697, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:40:03'),
+(698, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:42:02'),
+(699, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:44:02'),
+(700, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:46:01'),
+(701, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:48:02'),
+(702, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:50:02'),
+(703, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:52:01'),
+(704, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:54:01'),
+(705, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:56:01'),
+(706, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 15:58:02'),
+(707, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:00:04'),
+(708, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:02:03'),
+(709, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:04:03'),
+(710, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:06:03'),
+(711, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:08:02'),
+(712, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:10:03'),
+(713, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:12:03'),
+(714, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:14:03'),
+(715, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:16:03'),
+(716, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:18:02'),
+(717, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:20:04'),
+(718, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:22:02'),
+(719, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:24:03'),
+(720, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:26:02'),
+(721, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:28:03'),
+(722, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:30:04'),
+(723, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:32:03'),
+(724, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:34:03'),
+(725, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:36:03'),
+(726, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:38:03'),
+(727, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:40:03'),
+(728, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:42:03'),
+(729, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:44:03'),
+(730, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:46:03'),
+(731, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:48:03'),
+(732, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:50:03'),
+(733, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:52:03'),
+(734, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:54:03'),
+(735, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:56:02'),
+(736, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 16:58:03'),
+(737, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:00:02'),
+(738, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:02:02'),
+(739, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:04:02'),
+(740, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:06:02'),
+(741, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:08:01'),
+(742, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:10:03'),
+(743, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:12:02'),
+(744, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:14:02'),
+(745, 'limpar_conversas_bot', 0, NULL, '2025-12-29 17:15:02'),
+(746, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:16:02'),
+(747, 'limpar_conversas_bot', 0, NULL, '2025-12-29 17:18:02'),
+(748, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:18:02'),
+(749, 'limpar_conversas_bot', 0, NULL, '2025-12-29 17:19:03'),
+(750, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:20:02'),
+(751, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:22:01'),
+(752, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:24:02'),
+(753, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:26:02'),
+(754, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:28:02'),
+(755, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:30:02'),
+(756, 'limpar_conversas_bot', 0, NULL, '2025-12-29 17:30:52'),
+(757, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:32:02'),
+(758, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:34:01'),
+(759, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:36:01'),
+(760, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:38:01'),
+(761, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:40:03'),
+(762, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:42:02'),
+(763, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:44:02'),
+(764, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:46:01'),
+(765, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:48:01'),
+(766, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:50:02'),
+(767, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:52:01'),
+(768, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:54:01'),
+(769, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:56:01'),
+(770, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 17:58:02'),
+(771, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:00:03'),
+(772, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:02:02'),
+(773, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:04:01'),
+(774, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:06:01'),
+(775, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:08:02'),
+(776, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:10:03'),
+(777, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:12:02'),
+(778, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:14:02'),
+(779, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:16:02'),
+(780, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:18:02'),
+(781, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:20:02');
+INSERT INTO `cron_logs` (`id`, `tipo`, `registros_processados`, `detalhes`, `executado_em`) VALUES
+(782, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:22:02'),
+(783, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:24:02'),
+(784, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:26:01'),
+(785, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:28:01'),
+(786, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:30:02'),
+(787, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:32:02'),
+(788, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:34:02'),
+(789, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:36:02'),
+(790, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:38:02'),
+(791, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:40:03'),
+(792, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:42:02'),
+(793, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:44:02'),
+(794, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:46:02'),
+(795, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:48:01'),
+(796, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:50:02'),
+(797, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:52:01'),
+(798, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:54:02'),
+(799, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:56:02'),
+(800, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 18:58:02'),
+(801, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:00:03'),
+(802, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:02:02'),
+(803, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:04:02'),
+(804, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:06:01'),
+(805, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:08:01'),
+(806, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:10:02'),
+(807, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:12:02'),
+(808, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:14:02'),
+(809, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:16:01'),
+(810, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:18:02'),
+(811, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:20:02'),
+(812, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:22:01'),
+(813, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:24:02'),
+(814, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:26:01'),
+(815, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:28:02'),
+(816, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:30:02'),
+(817, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:32:01'),
+(818, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:34:02'),
+(819, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:36:01'),
+(820, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:38:02'),
+(821, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:40:02'),
+(822, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:42:02'),
+(823, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:44:02'),
+(824, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:46:02'),
+(825, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:48:02'),
+(826, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:50:02'),
+(827, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:52:01'),
+(828, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:54:02'),
+(829, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:56:02'),
+(830, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 19:58:01'),
+(831, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:00:04'),
+(832, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:02:02'),
+(833, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:04:03'),
+(834, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:06:03'),
+(835, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:08:03'),
+(836, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:10:04'),
+(837, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:12:03'),
+(838, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:14:03'),
+(839, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:16:03'),
+(840, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:18:03'),
+(841, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:20:04'),
+(842, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:22:03'),
+(843, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:24:03'),
+(844, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:26:03'),
+(845, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:28:02'),
+(846, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:30:04'),
+(847, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:32:03'),
+(848, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:34:03'),
+(849, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:36:03'),
+(850, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:38:03'),
+(851, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:40:04'),
+(852, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:42:02'),
+(853, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:44:03'),
+(854, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:46:03'),
+(855, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:48:03'),
+(856, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:50:03'),
+(857, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:52:03'),
+(858, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:54:03'),
+(859, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:56:03'),
+(860, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 20:58:03'),
+(861, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:00:03'),
+(862, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:02:02'),
+(863, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:04:01'),
+(864, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:06:02'),
+(865, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:08:02'),
+(866, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:10:02'),
+(867, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:12:02'),
+(868, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:14:02'),
+(869, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:16:01'),
+(870, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:18:02'),
+(871, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:20:03'),
+(872, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:22:02'),
+(873, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:24:02'),
+(874, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:26:02'),
+(875, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:28:02'),
+(876, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:30:02'),
+(877, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:32:02'),
+(878, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:34:02'),
+(879, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:36:02'),
+(880, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:38:01'),
+(881, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:40:03'),
+(882, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:42:02'),
+(883, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:44:02'),
+(884, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:46:02'),
+(885, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:48:02'),
+(886, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:50:02'),
+(887, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:52:01'),
+(888, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:54:02'),
+(889, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:56:02'),
+(890, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 21:58:02'),
+(891, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:00:02'),
+(892, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:02:01'),
+(893, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:04:02'),
+(894, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:06:02'),
+(895, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:08:02'),
+(896, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:10:02'),
+(897, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:12:02'),
+(898, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:14:02'),
+(899, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:16:01'),
+(900, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:18:02'),
+(901, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:20:02'),
+(902, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:22:02'),
+(903, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:24:02'),
+(904, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:26:02'),
+(905, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:28:01'),
+(906, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:30:02'),
+(907, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:32:01'),
+(908, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:34:02'),
+(909, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:36:02'),
+(910, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:38:02'),
+(911, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:40:03'),
+(912, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:42:01'),
+(913, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:44:02'),
+(914, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:46:01'),
+(915, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:48:02'),
+(916, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:50:02'),
+(917, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:52:02'),
+(918, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:54:01'),
+(919, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:56:01'),
+(920, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 22:58:02'),
+(921, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:00:03'),
+(922, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:02:02'),
+(923, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:04:02'),
+(924, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:06:02'),
+(925, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:08:01'),
+(926, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:10:02'),
+(927, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:12:02'),
+(928, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:14:02'),
+(929, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:16:02'),
+(930, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:18:02'),
+(931, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:20:02'),
+(932, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:22:02'),
+(933, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:24:02'),
+(934, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:26:02'),
+(935, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:28:01'),
+(936, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:30:02'),
+(937, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:32:02'),
+(938, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:34:02'),
+(939, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:36:02'),
+(940, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:38:01'),
+(941, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:40:02'),
+(942, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:42:01'),
+(943, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:44:01'),
+(944, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:46:01'),
+(945, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:48:02'),
+(946, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:50:03'),
+(947, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:52:01'),
+(948, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:54:02'),
+(949, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:56:01'),
+(950, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-29 23:58:01'),
+(951, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:00:06'),
+(952, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:02:02'),
+(953, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:04:03'),
+(954, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:06:03'),
+(955, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:08:02'),
+(956, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:10:04'),
+(957, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:12:02'),
+(958, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:14:03'),
+(959, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:16:02'),
+(960, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:18:02'),
+(961, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:20:03'),
+(962, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:22:03'),
+(963, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:24:03'),
+(964, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:26:02'),
+(965, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:28:03'),
+(966, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:30:04'),
+(967, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:32:03'),
+(968, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:34:03'),
+(969, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:36:03'),
+(970, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:38:02'),
+(971, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:40:03'),
+(972, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:42:03'),
+(973, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:44:03'),
+(974, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:46:03'),
+(975, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:48:03'),
+(976, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:50:04'),
+(977, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:52:03'),
+(978, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:54:02'),
+(979, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:56:02'),
+(980, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 00:58:02'),
+(981, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:00:03'),
+(982, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:02:02'),
+(983, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:04:02'),
+(984, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:06:02'),
+(985, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:08:01'),
+(986, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:10:02'),
+(987, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:12:01'),
+(988, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:14:02'),
+(989, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:16:01'),
+(990, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:18:01'),
+(991, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:20:02'),
+(992, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:22:02'),
+(993, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:24:01'),
+(994, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:26:01'),
+(995, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:28:01'),
+(996, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:30:02'),
+(997, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:32:02'),
+(998, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:34:02'),
+(999, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:36:02'),
+(1000, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:38:01'),
+(1001, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:40:02'),
+(1002, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:42:02'),
+(1003, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:44:02'),
+(1004, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:46:02'),
+(1005, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:48:01'),
+(1006, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:50:02'),
+(1007, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:52:02'),
+(1008, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:54:02'),
+(1009, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:56:02'),
+(1010, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 01:58:01'),
+(1011, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:00:03'),
+(1012, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:02:01'),
+(1013, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:04:02'),
+(1014, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:06:02'),
+(1015, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:08:02'),
+(1016, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:10:02'),
+(1017, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:12:02'),
+(1018, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:14:02'),
+(1019, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:16:02'),
+(1020, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:18:02'),
+(1021, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:20:02'),
+(1022, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:22:02'),
+(1023, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:24:02'),
+(1024, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:26:01'),
+(1025, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:28:01'),
+(1026, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:30:02'),
+(1027, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:32:02'),
+(1028, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:34:01'),
+(1029, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:36:02'),
+(1030, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:38:01'),
+(1031, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:40:02'),
+(1032, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:42:01'),
+(1033, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:44:02'),
+(1034, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:46:02'),
+(1035, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:48:02'),
+(1036, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:50:02'),
+(1037, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:52:02'),
+(1038, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:54:02'),
+(1039, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:56:01'),
+(1040, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 02:58:02'),
+(1041, 'limpar_conversas_bot', 0, NULL, '2025-12-30 03:00:03'),
+(1042, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:00:03'),
+(1043, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:02:02'),
+(1044, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:04:02'),
+(1045, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:06:01'),
+(1046, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:08:01'),
+(1047, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:10:02'),
+(1048, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:12:01'),
+(1049, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:14:02'),
+(1050, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:16:01'),
+(1051, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:18:02'),
+(1052, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:20:02'),
+(1053, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:22:02'),
+(1054, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:24:02'),
+(1055, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:26:02'),
+(1056, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:28:01'),
+(1057, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:30:03'),
+(1058, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:32:02'),
+(1059, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:34:02'),
+(1060, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:36:02'),
+(1061, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:38:02'),
+(1062, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:40:02'),
+(1063, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:42:02'),
+(1064, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:44:02'),
+(1065, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:46:02'),
+(1066, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:48:02'),
+(1067, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:50:02'),
+(1068, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:52:02'),
+(1069, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:54:01'),
+(1070, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:56:02'),
+(1071, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 03:58:02'),
+(1072, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:00:04'),
+(1073, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:02:03'),
+(1074, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:04:03'),
+(1075, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:06:02'),
+(1076, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:08:03'),
+(1077, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:10:04'),
+(1078, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:12:02'),
+(1079, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:14:03'),
+(1080, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:16:03'),
+(1081, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:18:02'),
+(1082, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:20:03'),
+(1083, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:22:03'),
+(1084, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:24:02'),
+(1085, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:26:03'),
+(1086, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:28:03'),
+(1087, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:30:03'),
+(1088, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:32:03'),
+(1089, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:34:02'),
+(1090, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:36:02'),
+(1091, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:38:02'),
+(1092, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:40:04'),
+(1093, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:42:02'),
+(1094, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:44:03'),
+(1095, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:46:03'),
+(1096, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:48:02'),
+(1097, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:50:03'),
+(1098, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:52:03'),
+(1099, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:54:03'),
+(1100, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:56:02'),
+(1101, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 04:58:03'),
+(1102, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:00:03'),
+(1103, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:02:02'),
+(1104, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:04:01'),
+(1105, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:06:02'),
+(1106, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:08:01'),
+(1107, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:10:03'),
+(1108, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:12:01'),
+(1109, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:14:02'),
+(1110, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:16:02'),
+(1111, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:18:01'),
+(1112, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:20:02'),
+(1113, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:22:02'),
+(1114, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:24:01'),
+(1115, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:26:01'),
+(1116, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:28:02'),
+(1117, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:30:02'),
+(1118, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:32:01'),
+(1119, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:34:02'),
+(1120, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:36:02'),
+(1121, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:38:02'),
+(1122, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:40:02'),
+(1123, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:42:01'),
+(1124, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:44:02'),
+(1125, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:46:02'),
+(1126, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:48:02'),
+(1127, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:50:02'),
+(1128, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:52:02'),
+(1129, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:54:02'),
+(1130, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:56:02'),
+(1131, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 05:58:02'),
+(1132, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:00:03'),
+(1133, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:02:02'),
+(1134, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:04:01'),
+(1135, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:06:02'),
+(1136, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:08:02'),
+(1137, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:10:02'),
+(1138, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:12:01'),
+(1139, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:14:02'),
+(1140, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:16:01'),
+(1141, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:18:01'),
+(1142, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:20:02'),
+(1143, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:22:01'),
+(1144, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:24:01'),
+(1145, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:26:01'),
+(1146, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:28:02'),
+(1147, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:30:02'),
+(1148, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:32:01'),
+(1149, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:34:01'),
+(1150, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:36:01'),
+(1151, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:38:01'),
+(1152, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:40:02'),
+(1153, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:42:02'),
+(1154, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:44:02'),
+(1155, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:46:02'),
+(1156, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:48:01'),
+(1157, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:50:02'),
+(1158, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:52:02'),
+(1159, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:54:02'),
+(1160, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:56:01'),
+(1161, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 06:58:02'),
+(1162, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:00:02'),
+(1163, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:02:02'),
+(1164, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:04:02'),
+(1165, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:06:02'),
+(1166, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:08:02'),
+(1167, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:10:02'),
+(1168, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:12:01'),
+(1169, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:14:02'),
+(1170, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:16:02');
+INSERT INTO `cron_logs` (`id`, `tipo`, `registros_processados`, `detalhes`, `executado_em`) VALUES
+(1171, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:18:02'),
+(1172, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:20:02'),
+(1173, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:22:02'),
+(1174, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:24:02'),
+(1175, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:26:02'),
+(1176, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:28:02'),
+(1177, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:30:02'),
+(1178, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:32:02'),
+(1179, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:34:01'),
+(1180, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:36:02'),
+(1181, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:38:02'),
+(1182, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:40:02'),
+(1183, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:42:02'),
+(1184, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:44:02'),
+(1185, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:46:01'),
+(1186, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:48:02'),
+(1187, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:50:02'),
+(1188, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:52:01'),
+(1189, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:54:02'),
+(1190, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:56:02'),
+(1191, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 07:58:01'),
+(1192, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:00:04'),
+(1193, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:02:03'),
+(1194, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:04:02'),
+(1195, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:06:03'),
+(1196, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:08:03'),
+(1197, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:10:04'),
+(1198, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:12:02'),
+(1199, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:14:03'),
+(1200, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:16:03'),
+(1201, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:18:03'),
+(1202, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:20:04'),
+(1203, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:22:03'),
+(1204, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:24:03'),
+(1205, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:26:03'),
+(1206, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:28:03'),
+(1207, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:30:04'),
+(1208, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:32:02'),
+(1209, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:34:03'),
+(1210, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:36:02'),
+(1211, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:38:03'),
+(1212, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:40:03'),
+(1213, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:42:03'),
+(1214, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:44:03'),
+(1215, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:46:03'),
+(1216, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:48:03'),
+(1217, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:50:04'),
+(1218, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:52:03'),
+(1219, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:54:03'),
+(1220, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:56:03'),
+(1221, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 08:58:03'),
+(1222, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:00:03'),
+(1223, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:02:01'),
+(1224, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:04:02'),
+(1225, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:06:02'),
+(1226, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:08:02'),
+(1227, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:10:03'),
+(1228, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:12:01'),
+(1229, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:14:01'),
+(1230, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:16:02'),
+(1231, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:18:02'),
+(1232, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:20:02'),
+(1233, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:22:02'),
+(1234, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:24:02'),
+(1235, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:26:02'),
+(1236, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:28:01'),
+(1237, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:30:02'),
+(1238, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:32:02'),
+(1239, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:34:02'),
+(1240, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:36:01'),
+(1241, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:38:02'),
+(1242, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:40:02'),
+(1243, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:42:02'),
+(1244, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:44:02'),
+(1245, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:46:01'),
+(1246, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:48:02'),
+(1247, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:50:02'),
+(1248, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:52:02'),
+(1249, 'verificar_pagamentos', 0, '{\"lembretes_enviados\":0,\"agendamentos_cancelados\":0,\"erros\":[]}', '2025-12-30 09:54:02');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `disponibilidade`
+--
+
+CREATE TABLE `disponibilidade` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `profissional_id` int(11) UNSIGNED NOT NULL,
+  `dia_semana` tinyint(4) NOT NULL COMMENT '0=Domingo, 6=Sábado',
+  `hora_inicio` time NOT NULL,
+  `hora_fim` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `estabelecimentos`
+--
+
+CREATE TABLE `estabelecimentos` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `usuario_id` int(11) UNSIGNED DEFAULT NULL,
+  `plano_id` int(11) UNSIGNED DEFAULT NULL,
+  `mp_access_token_test` varchar(255) DEFAULT NULL,
+  `mp_public_key_test` varchar(255) DEFAULT NULL,
+  `mp_access_token_prod` varchar(255) DEFAULT NULL,
+  `mp_public_key_prod` varchar(255) DEFAULT NULL,
+  `mp_webhook_url` varchar(255) DEFAULT NULL,
+  `mp_sandbox` tinyint(1) DEFAULT 1,
+  `agendamento_requer_pagamento` enum('nao','valor_total','taxa_fixa') DEFAULT 'nao',
+  `agendamento_taxa_fixa` decimal(10,2) DEFAULT 0.00,
+  `agendamento_tempo_expiracao_pix` int(11) DEFAULT 30 COMMENT 'Minutos',
+  `evolution_api_url` varchar(255) DEFAULT NULL,
+  `evolution_api_key` varchar(255) DEFAULT NULL,
+  `evolution_instance_name` varchar(100) DEFAULT NULL,
+  `whatsapp_numero` varchar(20) DEFAULT NULL,
+  `whatsapp_conectado` tinyint(1) DEFAULT 0,
+  `notificar_whatsapp` tinyint(1) DEFAULT 1,
+  `notificar_email` tinyint(1) DEFAULT 1,
+  `data_cadastro` datetime DEFAULT current_timestamp(),
+  `nome` varchar(200) NOT NULL,
+  `cnpj_cpf` varchar(18) DEFAULT NULL,
+  `endereco` text DEFAULT NULL,
+  `cep` varchar(9) DEFAULT NULL,
+  `cidade` varchar(100) DEFAULT NULL,
+  `estado` varchar(2) DEFAULT NULL,
+  `whatsapp` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `logo` varchar(255) DEFAULT NULL,
+  `plano` enum('trimestral','semestral','anual') DEFAULT 'trimestral',
+  `plano_vencimento` date DEFAULT NULL,
+  `status` enum('ativo','inativo','suspenso','cancelado') DEFAULT 'ativo',
+  `tempo_minimo_agendamento` int(11) DEFAULT 60 COMMENT 'Minutos antes do serviço',
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `limite_reagendamentos` tinyint(4) DEFAULT 3 COMMENT 'Quantidade máxima de reagendamentos permitidos por agendamento',
+  `permite_reagendamento` tinyint(1) DEFAULT 1 COMMENT 'Se permite reagendamento de agendamentos',
+  `usar_intervalo_fixo` tinyint(1) DEFAULT 1,
+  `intervalo_agendamento` int(11) DEFAULT 30 COMMENT 'Intervalo em minutos quando usar_intervalo_fixo = 1 (5, 10, 15, 30)',
+  `dias_antecedencia_agenda` int(11) DEFAULT 30 COMMENT 'Quantos dias para frente o cliente pode agendar (0 = sem limite)',
+  `waha_api_url` varchar(255) DEFAULT NULL COMMENT 'URL da API WAHA do estabelecimento',
+  `waha_api_key` varchar(255) DEFAULT NULL COMMENT 'API Key WAHA do estabelecimento',
+  `waha_session_name` varchar(100) DEFAULT NULL COMMENT 'Nome da sessão WAHA',
+  `waha_webhook_url` varchar(255) DEFAULT NULL COMMENT 'URL do webhook WAHA',
+  `waha_status` enum('desconectado','conectando','conectado','erro') DEFAULT 'desconectado' COMMENT 'Status da conexão WAHA',
+  `waha_numero_conectado` varchar(20) DEFAULT NULL COMMENT 'Número conectado via WAHA',
+  `waha_ativo` tinyint(1) DEFAULT 0 COMMENT 'Se WAHA está ativo para este estabelecimento',
+  `waha_bot_ativo` tinyint(1) DEFAULT 0 COMMENT 'Se o bot de agendamento está ativo',
+  `bot_timeout_minutos` int(11) DEFAULT 30 COMMENT 'Tempo em minutos para expirar sessão do bot (padrão: 30)',
+  `whatsapp_api_tipo` enum('evolution','waha','nenhum') DEFAULT 'nenhum' COMMENT 'Qual API WhatsApp usar',
+  `agendamento_tempo_adicional_pix` int(11) DEFAULT 5 COMMENT 'Minutos adicionais após expiração do PIX para enviar lembrete'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `estabelecimentos`
+--
+
+INSERT INTO `estabelecimentos` (`id`, `usuario_id`, `plano_id`, `mp_access_token_test`, `mp_public_key_test`, `mp_access_token_prod`, `mp_public_key_prod`, `mp_webhook_url`, `mp_sandbox`, `agendamento_requer_pagamento`, `agendamento_taxa_fixa`, `agendamento_tempo_expiracao_pix`, `evolution_api_url`, `evolution_api_key`, `evolution_instance_name`, `whatsapp_numero`, `whatsapp_conectado`, `notificar_whatsapp`, `notificar_email`, `data_cadastro`, `nome`, `cnpj_cpf`, `endereco`, `cep`, `cidade`, `estado`, `whatsapp`, `email`, `logo`, `plano`, `plano_vencimento`, `status`, `tempo_minimo_agendamento`, `criado_em`, `atualizado_em`, `limite_reagendamentos`, `permite_reagendamento`, `usar_intervalo_fixo`, `intervalo_agendamento`, `dias_antecedencia_agenda`, `waha_api_url`, `waha_api_key`, `waha_session_name`, `waha_webhook_url`, `waha_status`, `waha_numero_conectado`, `waha_ativo`, `waha_bot_ativo`, `bot_timeout_minutos`, `whatsapp_api_tipo`, `agendamento_tempo_adicional_pix`) VALUES
+(2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'nao', 0.00, 30, NULL, NULL, NULL, NULL, 0, 1, 1, '2025-12-10 15:11:36', 'Barbearia do Perfil', '30016264000100', '126 Rua da Maçonaria', '45490-000', 'Laje', 'BA', '(75) 98889-0006', 'rafaeldiastecinfo@gmail.com', '3f1910611744789aee75ca0b4b437574.png', 'trimestral', '2026-01-31', 'ativo', 60, '2025-12-10 15:11:36', '2025-12-10 15:29:55', 3, 1, 1, 30, 30, NULL, NULL, NULL, NULL, 'desconectado', NULL, 0, 0, 30, 'nenhum', 5),
+(4, NULL, NULL, 'APP_USR-8383394053049490-120613-d828c32bc0d495191bb6a1dd77be362b-426420888', 'APP_USR-f07e3741-1415-4973-8645-e07b066a13c1', 'APP_USR-8383394053049490-120613-d828c32bc0d495191bb6a1dd77be362b-426420888', 'APP_USR-f07e3741-1415-4973-8645-e07b066a13c1', NULL, 0, 'taxa_fixa', 1.01, 5, NULL, NULL, NULL, NULL, 0, 1, 1, '2025-12-10 17:06:18', 'modelo barber', '', '', '', '', '', '75998913210', 'modelo@gmail.com', NULL, 'trimestral', NULL, 'ativo', 60, '2025-12-10 17:06:18', '2025-12-30 09:29:45', 3, 1, 1, 30, 15, NULL, NULL, 'est_4_modelo_barber', 'https://iafila.doisr.com.br/webhook_waha/estabelecimento/4', 'conectado', '557598913210@c.us', 1, 1, 10, 'waha', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `feriados`
+--
+
+CREATE TABLE `feriados` (
+  `id` int(11) NOT NULL,
+  `estabelecimento_id` int(11) DEFAULT NULL,
+  `nome` varchar(100) NOT NULL,
+  `data` date NOT NULL,
+  `tipo` enum('nacional','facultativo','municipal','personalizado') DEFAULT 'nacional',
+  `recorrente` tinyint(1) DEFAULT 1 COMMENT '1=Repete todo ano, 0=Data única',
+  `ativo` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `feriados`
+--
+
+INSERT INTO `feriados` (`id`, `estabelecimento_id`, `nome`, `data`, `tipo`, `recorrente`, `ativo`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'Confraternização Universal', '2026-01-01', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(2, NULL, 'Tiradentes', '2026-04-21', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(3, NULL, 'Dia do Trabalho', '2026-05-01', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(4, NULL, 'Independência do Brasil', '2026-09-07', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(5, NULL, 'Nossa Senhora Aparecida', '2026-10-12', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(6, NULL, 'Finados', '2026-11-02', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(7, NULL, 'Proclamação da República', '2026-11-15', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(8, NULL, 'Dia da Consciência Negra', '2026-11-20', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 15:29:23'),
+(9, NULL, 'Natal', '2026-12-25', 'nacional', 1, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(10, NULL, 'Sexta-feira Santa', '2026-04-03', 'nacional', 0, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(11, NULL, 'Carnaval - Segunda', '2026-02-16', 'facultativo', 0, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(12, NULL, 'Carnaval - Terça', '2026-02-17', 'facultativo', 0, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(13, NULL, 'Corpus Christi', '2026-06-04', 'facultativo', 0, 1, '2025-12-27 14:28:23', '2025-12-27 14:28:23'),
+(14, 4, 'Feriado de Laje', '2025-12-31', 'municipal', 0, 1, '2025-12-27 19:16:56', '2025-12-27 19:16:56');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `horarios_estabelecimento`
+--
+
+CREATE TABLE `horarios_estabelecimento` (
+  `id` int(11) NOT NULL,
+  `estabelecimento_id` int(11) NOT NULL,
+  `dia_semana` tinyint(4) NOT NULL COMMENT '0=Domingo, 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado',
+  `ativo` tinyint(1) DEFAULT 1 COMMENT '1=Ativo, 0=Inativo (fechado)',
+  `hora_inicio` time NOT NULL,
+  `hora_fim` time NOT NULL,
+  `criado_em` timestamp NULL DEFAULT current_timestamp(),
+  `atualizado_em` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `almoco_ativo` tinyint(1) DEFAULT 0 COMMENT 'Se 1, tem intervalo de almoço',
+  `almoco_inicio` time DEFAULT NULL COMMENT 'Início do intervalo de almoço',
+  `almoco_fim` time DEFAULT NULL COMMENT 'Fim do intervalo de almoço'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Horários de funcionamento do estabelecimento por dia da semana';
+
+--
+-- Despejando dados para a tabela `horarios_estabelecimento`
+--
+
+INSERT INTO `horarios_estabelecimento` (`id`, `estabelecimento_id`, `dia_semana`, `ativo`, `hora_inicio`, `hora_fim`, `criado_em`, `atualizado_em`, `almoco_ativo`, `almoco_inicio`, `almoco_fim`) VALUES
+(1, 2, 0, 0, '08:00:00', '18:00:00', '2025-12-12 01:59:37', '2025-12-12 01:59:37', 0, NULL, NULL),
+(3, 2, 1, 1, '08:00:00', '18:00:00', '2025-12-12 01:59:37', '2025-12-12 01:59:37', 0, NULL, NULL),
+(5, 2, 2, 1, '08:00:00', '18:00:00', '2025-12-12 01:59:37', '2025-12-12 01:59:37', 0, NULL, NULL),
+(7, 2, 3, 1, '08:00:00', '18:00:00', '2025-12-12 01:59:37', '2025-12-12 01:59:37', 0, NULL, NULL),
+(9, 2, 4, 1, '08:00:00', '18:00:00', '2025-12-12 01:59:37', '2025-12-12 01:59:37', 0, NULL, NULL),
+(11, 2, 5, 1, '08:00:00', '18:00:00', '2025-12-12 01:59:37', '2025-12-12 01:59:37', 0, NULL, NULL),
+(13, 2, 6, 1, '08:00:00', '14:00:00', '2025-12-12 01:59:37', '2025-12-12 01:59:37', 0, NULL, NULL),
+(309, 4, 0, 0, '08:00:00', '18:00:00', '2025-12-28 19:19:38', '2025-12-28 19:19:38', 0, '12:00:00', '13:00:00'),
+(310, 4, 1, 1, '08:00:00', '18:00:00', '2025-12-28 19:19:38', '2025-12-28 19:19:38', 1, '12:00:00', '13:30:00'),
+(311, 4, 2, 1, '08:00:00', '18:00:00', '2025-12-28 19:19:38', '2025-12-28 19:19:38', 1, '12:00:00', '13:00:00'),
+(312, 4, 3, 1, '08:00:00', '18:00:00', '2025-12-28 19:19:38', '2025-12-28 19:19:38', 1, '12:00:00', '13:00:00'),
+(313, 4, 4, 1, '08:00:00', '18:00:00', '2025-12-28 19:19:38', '2025-12-28 19:19:38', 1, '12:00:00', '13:00:00'),
+(314, 4, 5, 1, '08:00:00', '18:00:00', '2025-12-28 19:19:38', '2025-12-28 19:19:38', 1, '12:00:00', '13:00:00'),
+(315, 4, 6, 1, '08:00:00', '17:00:00', '2025-12-28 19:19:38', '2025-12-28 19:19:38', 1, '12:00:00', '13:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `logs`
+--
+
+CREATE TABLE `logs` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `usuario_id` int(11) UNSIGNED DEFAULT NULL,
+  `acao` varchar(100) NOT NULL COMMENT 'Tipo de ação (login, logout, criar, editar, excluir)',
+  `tabela` varchar(50) DEFAULT NULL COMMENT 'Tabela afetada pela ação',
+  `registro_id` int(11) DEFAULT NULL COMMENT 'ID do registro afetado',
+  `dados_antigos` text DEFAULT NULL COMMENT 'JSON com dados antes da alteração',
+  `dados_novos` text DEFAULT NULL COMMENT 'JSON com dados após a alteração',
+  `ip` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `logs`
+--
+
+INSERT INTO `logs` (`id`, `usuario_id`, `acao`, `tabela`, `registro_id`, `dados_antigos`, `dados_novos`, `ip`, `user_agent`, `criado_em`) VALUES
+(1, 1, 'login', 'usuarios', 1, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 23:19:53'),
+(2, 1, 'criar', 'usuarios', 2, NULL, '{\"nome\":\"Rafael de Andrade Dias\",\"email\":\"rafaeldiaswebdev@gmail.com\",\"telefone\":\"75988890006\",\"nivel\":\"admin\",\"status\":\"ativo\",\"senha\":\"102030\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 23:22:40'),
+(3, 1, 'logout', 'usuarios', 1, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 23:22:45'),
+(4, 2, 'login', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 23:22:58'),
+(5, 2, 'login', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 23:45:43'),
+(6, 2, 'login', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-06 14:13:54'),
+(7, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.39.246', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-06 15:14:32'),
+(8, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 14:02:05'),
+(9, 2, 'atualizar', 'clientes', 1, '{\"id\":\"1\",\"estabelecimento_id\":\"1\",\"nome\":\"Rodnei\",\"cpf\":\"\",\"whatsapp\":\"(75) 98889-0006\",\"telefone\":\"\",\"email\":\"\",\"foto\":null,\"tipo\":\"novo\",\"total_agendamentos\":\"0\",\"criado_em\":\"2025-12-06 16:19:15\",\"atualizado_em\":null,\"estabelecimento_nome\":\"Barbearia do Bruxo\"}', '{\"nome\":\"Rodney\",\"cpf\":\"\",\"whatsapp\":\"(75) 98889-0006\",\"telefone\":\"\",\"email\":\"\",\"tipo\":\"novo\"}', '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 14:12:08'),
+(10, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:09:39'),
+(11, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:10:28'),
+(12, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:11:45'),
+(14, 3, 'login', 'usuarios', 3, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:33:23'),
+(15, 3, 'login', 'usuarios', 3, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:33:52'),
+(16, 3, 'login', 'usuarios', 3, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:36:54'),
+(17, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:37:17'),
+(18, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:38:16'),
+(19, NULL, 'login', 'usuarios', 4, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:38:21'),
+(20, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 15:47:37'),
+(21, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 17:06:54'),
+(22, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-10 17:07:15'),
+(23, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 09:17:37'),
+(24, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 09:59:00'),
+(25, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 09:59:05'),
+(26, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 10:07:27'),
+(27, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 10:09:10'),
+(28, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 11:33:15'),
+(29, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 11:33:21'),
+(30, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 11:40:21'),
+(31, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 11:40:28'),
+(32, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:06:26'),
+(33, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:11:01'),
+(34, 3, 'login', 'usuarios', 3, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:11:13'),
+(35, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:12:17'),
+(36, 2, 'login', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:12:23'),
+(37, 3, 'login', 'usuarios', 3, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:15:02'),
+(38, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:30:58'),
+(39, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:33:55'),
+(40, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:34:04'),
+(41, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:49:32'),
+(42, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 14:49:38'),
+(43, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 15:49:22'),
+(44, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 15:49:34'),
+(45, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 16:34:51'),
+(46, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 16:35:03'),
+(47, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 17:17:10'),
+(48, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 17:17:18'),
+(49, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 17:19:02'),
+(50, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 17:19:12'),
+(51, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 17:36:14'),
+(52, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 17:36:19'),
+(53, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 17:37:04'),
+(54, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 19:17:45'),
+(55, 2, 'login', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 19:17:56'),
+(56, 2, 'logout', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 19:21:29'),
+(57, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 19:21:42'),
+(58, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 19:22:05'),
+(59, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 19:22:12'),
+(60, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 22:19:05'),
+(61, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 22:21:03'),
+(62, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 22:21:22'),
+(63, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 22:27:26'),
+(64, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 22:27:42'),
+(65, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 23:08:57'),
+(66, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 23:09:06'),
+(67, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-11 23:09:27'),
+(68, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:06:18'),
+(69, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:08:16'),
+(70, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:08:27'),
+(71, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:31:55'),
+(72, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:32:02'),
+(73, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:32:22'),
+(74, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.38.208', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:32:31'),
+(75, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 10:35:57'),
+(76, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.153', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 15:08:51'),
+(77, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 15:09:10'),
+(78, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 15:54:00'),
+(79, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 15:54:07'),
+(80, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 16:48:09'),
+(81, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-12 16:48:14'),
+(82, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-13 07:26:42'),
+(83, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.153', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-13 07:33:18'),
+(84, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.36.153', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-13 07:57:44'),
+(85, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.153', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-13 07:57:53'),
+(86, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 07:49:30'),
+(87, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 07:49:39'),
+(88, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:13:20'),
+(89, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:18:49'),
+(90, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:25:30'),
+(91, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:25:40'),
+(92, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:40:43'),
+(93, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:40:50'),
+(94, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:47:21'),
+(95, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:47:27'),
+(96, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:48:04'),
+(97, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 08:48:18'),
+(98, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 11:01:00'),
+(99, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.37.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 11:01:10'),
+(100, 2, 'logout', 'usuarios', 2, NULL, NULL, '177.128.136.185', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 11:54:39'),
+(101, 5, 'login', 'usuarios', 5, NULL, NULL, '177.128.136.185', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 11:55:00'),
+(102, 5, 'logout', 'usuarios', 5, NULL, NULL, '177.128.136.185', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 12:26:26'),
+(103, 2, 'login', 'usuarios', 2, NULL, NULL, '177.128.136.185', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 12:26:36'),
+(104, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 12:27:33'),
+(105, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 12:27:39'),
+(106, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 12:27:43'),
+(107, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 12:27:51'),
+(108, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 14:18:00'),
+(109, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-18 14:18:08'),
+(110, 5, 'login', 'usuarios', 5, NULL, NULL, '189.0.152.246', 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', '2025-12-23 07:37:38'),
+(111, 5, 'logout', 'usuarios', 5, NULL, NULL, '189.0.152.246', 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', '2025-12-23 07:41:40'),
+(112, 5, 'login', 'usuarios', 5, NULL, NULL, '189.0.152.246', 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', '2025-12-23 07:41:45'),
+(113, 5, 'logout', 'usuarios', 5, NULL, NULL, '189.0.152.246', 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', '2025-12-23 07:42:56'),
+(114, 6, 'login', 'usuarios', 6, NULL, NULL, '189.0.152.246', 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', '2025-12-23 07:43:09'),
+(115, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 12:56:19'),
+(116, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 15:00:45'),
+(117, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 15:00:51'),
+(118, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 17:35:32'),
+(119, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 17:58:29'),
+(120, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 17:58:37'),
+(121, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 19:38:38'),
+(122, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-23 19:38:47'),
+(123, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 09:46:12'),
+(124, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 10:08:29'),
+(125, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 10:08:47'),
+(126, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 10:09:23'),
+(127, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 10:09:33'),
+(128, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 10:14:39'),
+(129, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 10:14:46'),
+(130, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 16:01:51'),
+(131, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-26 16:23:01'),
+(132, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 10:11:32'),
+(133, 6, 'logout', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 10:12:25'),
+(134, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 10:12:36'),
+(135, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 10:24:06'),
+(136, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 10:40:50'),
+(137, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 10:40:58'),
+(138, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 16:16:06'),
+(139, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 16:17:07'),
+(140, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 20:34:58'),
+(141, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 20:41:54'),
+(142, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 20:41:58'),
+(143, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 20:42:02'),
+(144, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:02:00'),
+(145, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:02:06'),
+(146, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:10:51'),
+(147, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:11:04'),
+(148, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:19:42'),
+(149, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:19:51'),
+(150, 6, 'logout', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:20:16'),
+(151, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 21:20:26'),
+(152, 5, 'logout', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 22:55:43'),
+(153, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-27 22:55:49'),
+(154, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 09:35:15'),
+(155, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 10:28:43'),
+(156, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 11:16:12'),
+(157, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 11:16:18'),
+(158, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 13:06:19'),
+(159, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 13:13:30'),
+(160, 6, 'login', 'usuarios', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 15:40:08'),
+(161, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 19:29:04'),
+(162, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-28 19:49:14'),
+(163, 2, 'login', 'usuarios', 2, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 07:36:27'),
+(164, 2, 'logout', 'usuarios', 2, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 08:46:47'),
+(165, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 08:47:10'),
+(166, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 17:29:32'),
+(167, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 21:54:48'),
+(168, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 21:55:58'),
+(169, 5, 'logout', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 22:08:45'),
+(170, 2, 'login', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 22:08:56'),
+(171, 2, 'logout', 'usuarios', 2, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 22:09:35'),
+(172, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-29 22:09:48'),
+(173, 6, 'login', 'usuarios', 6, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-30 09:20:44'),
+(174, 5, 'login', 'usuarios', 5, NULL, NULL, '170.239.36.72', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-30 09:21:17'),
+(175, 5, 'login', 'usuarios', 5, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-30 09:27:53');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `notificacoes`
+--
+
+CREATE TABLE `notificacoes` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `usuario_id` int(11) UNSIGNED DEFAULT NULL COMMENT 'NULL = notificação para todos',
+  `tipo` enum('info','sucesso','aviso','erro') DEFAULT 'info',
+  `titulo` varchar(255) NOT NULL,
+  `mensagem` text NOT NULL,
+  `link` varchar(255) DEFAULT NULL COMMENT 'Link para ação relacionada',
+  `lida` tinyint(1) DEFAULT 0,
+  `data_leitura` datetime DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `notificacoes_config`
+--
+
+CREATE TABLE `notificacoes_config` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `tipo` enum('confirmacao','cancelamento','reagendamento','lembrete_1dia','lembrete_1hora','pagamento','feedback') NOT NULL,
+  `template` text NOT NULL COMMENT 'Template com variáveis: {cliente}, {servico}, {data}, {hora}, etc',
+  `ativo` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `notificacoes_config`
+--
+
+INSERT INTO `notificacoes_config` (`id`, `estabelecimento_id`, `tipo`, `template`, `ativo`) VALUES
+(8, 2, 'confirmacao', 'Olá {cliente}! ✅ Seu agendamento foi confirmado!\\n\\n📅 Data: {data}\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}\\n\\nNos vemos em breve!', 1),
+(9, 2, 'cancelamento', 'Olá {cliente}. ❌ Seu agendamento foi cancelado.\\n\\n📅 Data: {data}\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n\\nQualquer dúvida, entre em contato!', 1),
+(10, 2, 'reagendamento', 'Olá {cliente}! 🔄 Seu agendamento foi reagendado.\\n\\n📅 Nova Data: {data}\\n🕐 Novo Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}', 1),
+(11, 2, 'lembrete_1dia', 'Olá {cliente}! 🔔 Lembrete: você tem um agendamento amanhã!\\n\\n📅 Data: {data}\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}\\n\\nTe esperamos!', 1),
+(12, 2, 'lembrete_1hora', 'Olá {cliente}! ⏰ Seu agendamento é daqui a 1 hora!\\n\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}\\n\\nEstamos te esperando!', 1),
+(13, 2, 'pagamento', 'Olá {cliente}! 💰 Pagamento confirmado!\\n\\n✅ Valor: R$ {valor}\\n📅 Agendamento: {data} às {hora}\\n\\nObrigado pela preferência!', 1),
+(14, 2, 'feedback', 'Olá {cliente}! 🌟 Como foi sua experiência?\\n\\nGostaríamos de saber sua opinião sobre o atendimento de {profissional}.\\n\\nAvalie aqui: {link}', 1),
+(22, 4, 'confirmacao', 'Olá {cliente}! ✅ Seu agendamento foi confirmado!\\n\\n📅 Data: {data}\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}\\n\\nNos vemos em breve!', 1),
+(23, 4, 'cancelamento', 'Olá {cliente}. ❌ Seu agendamento foi cancelado.\\n\\n📅 Data: {data}\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n\\nQualquer dúvida, entre em contato!', 1),
+(24, 4, 'reagendamento', 'Olá {cliente}! 🔄 Seu agendamento foi reagendado.\\n\\n📅 Nova Data: {data}\\n🕐 Novo Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}', 1),
+(25, 4, 'lembrete_1dia', 'Olá {cliente}! 🔔 Lembrete: você tem um agendamento amanhã!\\n\\n📅 Data: {data}\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}\\n\\nTe esperamos!', 1),
+(26, 4, 'lembrete_1hora', 'Olá {cliente}! ⏰ Seu agendamento é daqui a 1 hora!\\n\\n🕐 Horário: {hora}\\n💇 Serviço: {servico}\\n👤 Profissional: {profissional}\\n\\nEstamos te esperando!', 1),
+(27, 4, 'pagamento', 'Olá {cliente}! 💰 Pagamento confirmado!\\n\\n✅ Valor: R$ {valor}\\n📅 Agendamento: {data} às {hora}\\n\\nObrigado pela preferência!', 1),
+(28, 4, 'feedback', 'Olá {cliente}! 🌟 Como foi sua experiência?\\n\\nGostaríamos de saber sua opinião sobre o atendimento de {profissional}.\\n\\nAvalie aqui: {link}', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `pagamentos`
+--
+
+CREATE TABLE `pagamentos` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `assinatura_id` int(11) UNSIGNED DEFAULT NULL,
+  `agendamento_id` int(11) DEFAULT NULL,
+  `plano_id` int(11) UNSIGNED NOT NULL,
+  `mercadopago_id` varchar(100) DEFAULT NULL,
+  `tipo` enum('pix','cartao','boleto','assinatura','agendamento') NOT NULL DEFAULT 'pix',
+  `valor` decimal(10,2) NOT NULL,
+  `status` enum('pending','approved','rejected','cancelled','refunded','in_process') DEFAULT 'pending',
+  `status_detail` varchar(100) DEFAULT NULL,
+  `qr_code` text DEFAULT NULL,
+  `qr_code_base64` text DEFAULT NULL,
+  `payment_data` text DEFAULT NULL,
+  `criado_em` datetime DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `pagamentos`
+--
+
+INSERT INTO `pagamentos` (`id`, `estabelecimento_id`, `assinatura_id`, `agendamento_id`, `plano_id`, `mercadopago_id`, `tipo`, `valor`, `status`, `status_detail`, `qr_code`, `qr_code_base64`, `payment_data`, `criado_em`, `atualizado_em`) VALUES
+(1, 4, NULL, NULL, 6, '1325685424', 'pix', 1.00, 'pending', 'pending_waiting_transfer', '00020126580014br.gov.bcb.pix0136b76aa9c2-2ec4-4110-954e-ebfe34f05b6152040000530398654041.005802BR5911DI68804Up616004TVWo62230519mpqrinter13256854246304500E', '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', '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.135.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-18T11:24:58.000-04:00\",\"external_charge_id\":\"01KCS10XMTP7HCMYWYFYJ3NKZS\",\"id\":\"1325685424-001\",\"last_updated\":\"2025-12-18T11:24:58.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\"}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-18T11:24:58.408-04:00\",\"execution_id\":\"01KCS10XM1BDZ2M60307QQ5ERS\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-18T11:24:58.000-04:00\",\"date_last_updated\":\"2025-12-18T11:24:58.000-04:00\",\"date_of_expiration\":\"2025-12-19T11:24:58.000-04:00\",\"deduction_schema\":null,\"description\":\"Assinatura Plano Teste 2 - AgendaPro\",\"differential_pricing_id\":null,\"external_reference\":\"PLANO_6_EST_4\",\"fee_details\":[],\"financing_group\":null,\"id\":1325685424,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":false,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"identification\":{\"number\":null,\"type\":null},\"entity_type\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"last_name\":null,\"id\":\"2153563569\",\"type\":null,\"first_name\":null,\"email\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"RaDicO gd ZgPlotZ SSas\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_holder_name\":null,\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":{\"number\":null,\"type\":null},\"is_end_consumer\":null,\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"infringement_notification\":{\"status\":null,\"type\":null},\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136b76aa9c2-2ec4-4110-954e-ebfe34f05b6152040000530398654041.005802BR5911DI68804Up616004TVWo62230519mpqrinter13256854246304500E\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQAAAAB79iscAAAODklEQVR4Xu3XQbYbtw5FUc0g859lZqC\\/ggsUQIAlp\\/Hor3LObcgkAYK7Xs+v94Py96uffHPQngvac0F7LmjPBe25oD0XtOeC9lzQngvac0F7LmjPBe25oD0XtOeC9lzQngvac0F7LmjPBe25oD0XtOeC9lzQngvac0F7LmjPBe25oD0XtOeC9lzQngvac0F7LmjPBe25oD0XtOdSta+ev\\/45s5\\/YZl9e+2fIp6qdWTX6cmi9m9WWmIx2VO0M7WxDi1ZtaNGqDS1ataFFqza0aNX2zdo8z60NeV2Dx31tr1JU85qNWgrX7V7Ib6ktaDNoFbRoFbRoFbRoFbRoFbRolYdr8\\/7trezLt3Pb8IM3q7t329aDdnralFbdvdu2HrTT06a06u7dtvWgnZ42pVV377atB+30tCmtunu3bT1op6dNadXdu23rQTs9bUqr7t5tWw\\/a6WlTWnX3btt60E5Pm9Kqu3fb1oN2etqUVt2927aeP1BrJ9nnMcXyk6nGKNS+9uG7HwtatApatApatApatApatApatMofra3vZJ+dxY2m8AGRyospbXJtXqpo0XaGB+0StLdtPgRtqWbzUkWLtjM8aJegvW3zIWhLNZuXKlq0neEZ2rb1Ics7DZ+FNr2uWpaW3VkGLdq5RTufTaYHLVoFLVoFLVoFLVoF7ZdrWxbAb\\/yZDLQ\\/9TMZaH\\/qZzLQ\\/tTPZKD9qZ\\/JQPtTP5OB9qd+JgPtT\\/1MBtqf+pkMtD\\/1MxmP1+7zt1+ok+p9xTbZ51srxIDaklPy\\/6cx5UPQolXQolXQolXQolXQolXQolWerI23M3Zcn7BMz+5uTcoWvE9ZvmX3fR60u6CdL9ox2pIhQ2sFa0Hbzyxod0E7X7RjtCVDhtYK1oK2n1nQ7vJf19aZXiyUPHN8fsGyyuba13ivdahluTbe9ZZco0WroEWroEWroEWroEWroEWrPEvbOuoTs5DVhqrVuLb7Fr+badU941rarqNuC2iX6p5xLW3XUbcFtEt1z7iWtuuo2wLapbpnXEvbddRtAe1S3TOupe066raAdqnuGdfSdh11W0C7VPeMa2m7jrotoF2qe8a1tF1H3RbQLtU941rarqNuC2iX6p5xLW3XUbeFL9BGdhR\\/dil4cvCSvFEHLKkD2qdFFa2fLUF7LUvQqq+lDkCLFi3aOgAtWrRo6wC0X6OtlLyQL7YzSxZi5SPiCyqlJXm7P4FtY7IHrQUtWgUtWgUtWgUtWgUtWgXtg7VNZicNOqq2WmQ+Pc4aoH5p3l2+JQubu+tOHX7hjRatXXijRWsX3mjR2oU3WrR24Y0WrV14o0VrF97frPUJ8VimVT+0ZDXi1UDtqjmguccNtNOD1u\\/dUqL6oQUtWrWgRasWtGjVghatWtCiVctv1NbenB6TnGLbHJIty5nfiLRP+zzKk2do0aLdnPmNyI5SC2g\\/PYE2ztCiRbs58xuRHaUW0H56Am2coUX7WfuuT\\/jM5dbdED2bW0u7Vs+WlSdaBh4t2rL1yddSuXrUhnapZtCiVdCiVdCiVdCiVdB+jdZK9dnMcjXH1bffqyeNE5rb9saYl1BvyfV+iAVtf2g3D21OjwForSXX+yEWtP2h3Ty0OT0GoLWWXO+HWND2h3bz0Ob0GIDWWnK9H2JB2x\\/azUOb02PAb9F+Guyr7IvmmvgMy3DbmWUW8kZ7vJLRoo1r1xKtn6FFqzO0aHWGFq3O0KLVGdqnaVvHvLUexFk076BesMSq3s1mW1m1fQZatFffNeBaor0KFrTZgbY8hHY5Ww\\/iDC1atGjrGVq0\\/1dtti0X8u0PsmXlad+8TN49OT4ytxa0GbSRAUWLFu2QzSfRokWLFm19DC3a79JGmmeczW+p5Mz8yLyWzWObLQm1oM2gjdRbaNHqFlq0uoUWrW6hRatbaNHq1hO0WZyDPfGs39hVrbCssmr\\/1gH5LZZ416vLULReQItWBbRoVUCLVgW0aFVAi1YFtE\\/XtnFeyFs2LtK+Kqd4bEobNf8EtdlaWiGDFq2CFq2CFq2CFq2CFq2CFq3yXG3GZ+bgALRC9exQeS0B8X2Nd3vN1xa0S59vI2jRKmjRKmjRKmjRKmjRKmgfo62DLTl92XpT87THdqu8Fh858LuqBe3OOPuGBy1atOvWm6Zib5x9w4MWLdp1601TsTfOvuFBixbtuvWmqdgbZ9\\/woP1KbXj8gq2W6q9uNHfEt+0zJnlA\\/Wzd37xtq6X6qxto0aK9ztb9zdu2Wqq\\/uoEWLdrrbN3fvG2rpfqrG2jRor3O1v3N27Zaqr+6gRbtb9O2W\\/PHE7JMq2ay6tv5Gbu+TJ2HFq2CFq2CFq2CFq2CFq2CFq3yXO1OYbl6Y7t81e21ioqW\\/Ycv+JqlirYGbeT22as3tmjV14L25hraa4l2TEbbcvXGFq36WtDeXEN7LdGOyf9d7ctl7b4\\/0bbtJ6rN2Fa5rR85+\\/yh5Qzt\\/m20s8PP0KLVGVq0OkOLVmdo0eoMLVqdfaHWnq2TYlwWat+SnDEoGRsQ32fxG0vL7seDFq2CFq2CFq2CFq2CFq2CFq3yZG0kO9qFnOmxtyOtGoILtfuC1zVg+Yt4YfyVrmUJWrQKWrQKWrQKWrQKWrQKWrTKM7T2tnUsqWf5og2JG\\/u78aW1+f1hO+7GyoM2gzaze\\/GF9mY77sbKgzaDNrN78YX2ZjvuxsqDNoM2s3vxhfZmO+7GyoM2gzaze\\/H1zVpL3S6oevXt4xq04q1luVHPosWT28bIoEUbhXW3tKEtZ2jRokVbz9CiRYu2nqH9Vm0dvEA9f1Vebls1U+8uqd9i+Tyqqq4l2nbiQYtWQYtWQYtWQYtWQYtWQfsMbUzys0greDUm1U9bvqrK5ud6wc4scaOeZdCijWqu0aJV0KJV0KJV0KJV0KJVnqZdOnLc+IKU2Y30LM96Gj7TUO3G8nO1XEu0\\/wTtG60F7RutBe0brQXtG60F7RutBe37aVq\\/0IzLz4C+q9FPG2+ivDkfisLu7tqy7nQht2jRaosWrbZo0WqLFq22aNFqixattl+u3Y9rzy5D\\/Iml+faravMyb1TbKN9eS9uhRasdWrTaoUWrHVq02qFFqx1atNo9R5tX25kXchszs9reaaj2uXmjvdaa0bYz70OLVn1o0aoPLVr1oUWrPrRo1Yf26VpL3cbMVq3vLJT95+aLdrZA21eNoEWroEWroEWroEWroEWroEWr\\/Ana\\/f2lagX\\/edWvylVNm3Lzzaunb6+1bdcdWrTaoUWrHVq02qFFqx1atNqhRavdk7Tv68X05BPxdk0OtrvxLfXDX9eU1rxLezfnWdCiVdCiVdCiVdCiVdCiVdCiVZ6rbW35olfzLCnLF+SZH+Qqt8tZu1ufbG\\/42bVEi9ZT76NFi7Zu0aJFi7Zu0aJF+xxtm55DMjE9h9Tm\\/FIrJC8mjz\\/Gsh1fGj8etGgVtGgVtGgVtGgVtGgVtGiVJ2tj3FWMSVHNpLs2x3ZXqCirLg\\/ltj3pawvaaG4FtGgjaNEqaNEqaNEqaNEqaB+irfff162YlE9YIX\\/G92Xy2dnnhUjT5oCcgrYGbQZtHxV9XoigRaugRaugRaugRaug\\/SLtrmO3Hc2xqtoo5Oe2ebdD8y\\/SqmhbAa2f5zto13m3Q9HW5lihRRvT0aJF26poWwGtn+c7aNd5t0P\\/pdZSL7RVJt7OwamtsrjmI\\/LZTA6Yze2r0KLN5mup+C20aHULLVrdQotWt9Ci1S20aHXrCdq4Wrdx1dJWV11pLXWAVef26lSz\\/Vs\\/vAXtboBV5\\/bqVLP9ixYt2rK66kpr2fHa9upUs\\/2LFi3asrrqSmvZ8dr26lSz\\/YsWLdqyuupKa9nx2vbqVLP9i\\/YLtO8VYJ5A7asRnx6fO1qWKU3mLdkXP5s\\/37VU9ldfaG0e2hdam4f2hdbmoX2htXloX2htHtoXWpuH9vV92nahARqlTapnllZYUlvC7YknR8Gruc4haEtqC1q0aNHWFrRo0aKtLWjRov12bUzPmVUbZ3v8bZY+f+\\/zgPzcWKHdB22kbtEqnwegvX2sBW2kbtEqnwegvX2sBW2kbtEqnwegvX2sBW2kbr9Vu0u7NdwxuP34jdelyBetkMbYtr6s1qBFq6BFq6BFq6BFq6BFq6BFqzxXax01CYitzWw3fLW8WD1xo23zWpuyO\\/OgRaugRaugRaugRaugRaugRas8WZvnsbVbdUi05Ns7aLZkXzsbX5+jos\\/XGbRoFbRoFbRoFbRoFbRoFbRolYdrc9Iw2rjI7lpr2Q3IG7sB426sPGgzc0De2A0Yd2PlQZuZA\\/LGbsC4GysP2swckDd2A8bdWHnQZuaAvLEbMO7GyoM2Mwfkjd2AcTdWHrSZOSBv7AaMu7HyoM3MAXljN2DcjZUHbWYOyBu7AeNurDxoM3NA3tgNGHdj5fnTtC1x1TYJaAPyzAvRXKfYXTub35JT0LYBeeaFaK5T0LagRXsVvPmF1prRvtBaM9oXWmtG+0JrzWhfX6qt1Xp1aiPt7Q+raB7jow+tt0TQvtH6DbRodQMtWt1Ai1Y30KLVDbRP17Ztc\\/v0bFlknt12wddr2fyJ7EG726KdbWjRokVbt2jRokVbt2jRfr+2xdraY7uqZffYcq2RM7mtfTYvH7KgRaugRaugRaugRaugRaugRas8V\\/v9QXsuaM8F7bmgPRe054L2XNCeC9pzQXsuaM8F7bmgPRe054L2XNCeC9pzQXsuaM8F7bmgPRe054L2XNCeC9pzQXsuaM8F7bmgPRe054L2XNCeC9pzQXsuaM8F7bmgPRe054L2XNCey8O0\\/wO9LbHf4zYXcQAAAABJRU5ErkJggg==\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/sandbox\\/payments\\/1325685424\\/ticket?caller_id=2153563569&hash=a6bbce40-9476-4907-808a-2a772e0ad7a4\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-18 12:24:57', '2025-12-18 12:26:16'),
+(2, 4, NULL, NULL, 6, '137802603007', 'pix', 1.00, 'approved', 'accredited', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter13780260300763045E28', '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', '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.135.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-18T11:26:55.000-04:00\",\"external_charge_id\":\"01KCS14FR5WMF5HEGXQ1N1J64E\",\"id\":\"137802603007-001\",\"last_updated\":\"2025-12-18T11:26:55.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\"}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-18T11:26:55.254-04:00\",\"execution_id\":\"01KCS14FQFCHT72EYY3CST1M7G\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-18T11:27:15.000-04:00\",\"date_created\":\"2025-12-18T11:26:55.000-04:00\",\"date_last_updated\":\"2025-12-18T11:27:15.000-04:00\",\"date_of_expiration\":\"2025-12-19T11:26:55.000-04:00\",\"deduction_schema\":null,\"description\":\"Assinatura Plano Teste 2 - AgendaPro\",\"differential_pricing_id\":null,\"external_reference\":\"PLANO_6_EST_4\",\"fee_details\":[{\"amount\":0.01,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":137802603007,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-18T11:27:15.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"1670874902\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"is_end_consumer\":null,\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120650117714,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter13780260300763045E28\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAJ8ElEQVR42uzdzZHiyhIGUBEseokJmIJpYBqmYAJLFgR6cXsoKbOqBMybvjdi4HyrGTVIR+zqL3MQERERERERERERERERERERERERERERERERERERERGR\\/zDbsc2h\\/tD+n6vX739u7p+5ff\\/v6\\/vfx38+cct3HIZVud3pfoPb9+fP8yeGdMeYIy0tLS0tLS0tLS0tLS3t52mP9YXDMJR7T9\\/81oYLq8IfhmE3P+bcf0R4\\/83Mn97\\/+JhES0tLS0tLS0tLS0tLS\\/v\\/a8PDijY+ff\\/PeHodhs\\/7eYR+ut\\/oF39TLox3zmYe86\\/G8ZJ+kKjd329+oaWlpaWlpaWlpaWlpaWlnbXl3tPDwnxCSb5wC7MFu3mFfHnd\\/vv9L7S0tLS0tLS0tLS0tLS0\\/7l2KLu8dzOu2TferKGPaZU9LqoXy9DZN05LS0tLS0tLS0tLS0tLS9vf5R4OZpc\\/r8vDhrSGng+DhzX026ML+1r7R3vyaWlpaWlpaWlpaWlpaWnfQdurvRYqpe3Sin+5sCoXTulCWPGPF\\/b3C5d0YR02FfxRpThaWlpaWlpaWlpaWlpa2t\\/Pwq2+R+jrUk181xmhl0H9mI5657PiPx5aWlpaWlpaWlpaWlpa2r9Zu5s3mPcqpe3mPelhyXzVOZge36dTe61ZZb\\/Wkvh2tLS0tLS0tLS0tLS0tLQfqG2W4\\/NB8339PiGhOvpYP2zdmT6YblDe\\/5wmJL6erfjT0tLS0tLS0tLS0tLS0v6mNt4qnOw+p0dfav7Y6QhWLKtQzW2cf5BedfQxdSF7YYROS0tLS0tLS0tLS0tLS\\/ue2jBbcErTB1PCJ0ot82t5dG\\/b+6NSaxk31nccaGlpaWlpaWlpaWlpaWl\\/SDuk5euSW3iZXHstZ5s2kue3iwe5QzW3hU\\/kSQBaWlpaWlpaWlpaWlpa2o\\/S5urowdKsocct6PtxIXnJfJpxOMwdwZoZisVVeVpaWlpaWlpaWlpaWlraz9IeZ8s58Ztj56EY261+3bjAn\\/fNh\\/5leYIhrvgH\\/msdxmlpaWlpaWlpaWlpaWlpn2jDgPySioFPI+6yCf5ann6cB\\/CXeQ29aQA2bXsfOyP03BEslDQfaGlpaWlpaWlpaWlpaWk\\/WFu2oC8nfz6cVN8m\\/jk8PeSQ3n9bX9ilnmFPQ0tLS0tLS0tLS0tLS0v7ltq8gp\\/5YX0+zydU2+TLfMKCdhx7HdGqO+bac7S0tLS0tLS0tLS0tLS0f6jNu9zzvb\\/qLehhk\\/otVErb3WuvjfU2+WtdHT3XXruGnt2lRVjc9k5LS0tLS0tLS0tLS0tL+2naR\\/MJzeRAWDLP7crifEJnmX7s9+we0kb6L1paWlpaWlpaWlpaWlran9OOD2qphY5guRjbLQ\\/qy7bvJ7XXLotD9qYLOC0tLS0tLS0tLS0tLS3tR2mbwX5vE3zo2d2bT3j0sM3c4St+ZZ+WzMd6gmGgpaWlpaWlpaWlpaWlpf1Q7a3fv2yZnx92aPcQTPzFFf8GcR1eCi0tLS0tLS0tLS0tLS3ti9rd3FB7rDuChR3n6\\/6F3vi73HEash\\/qam7lBtMPsn9plzstLS0tLS0tLS0tLS0t7btqt\\/WaeK5lvuk09Cq4a3jd5qR67tndpJmQeK1nNy0tLS0tLS0tLS0tLS3te2ubwX7QHudT42HFv5o+aM6h5xX\\/cOw8TEFU8wnlE6flqQ9aWlpaWlpaWlpaWlpa2te1eYB9nle8q13uocN2zmnmX5O2atFdLM1G+uYHeaHDOC0tLS0tLS0tLS0tLS3tu2qb+YSJH2YLci3zXw\\/bpnPom7QIv64\\/39Re6+1yf2E+gZaWlpaWlpaWlpaWlpb2JW2ovdbLMY3QhzQgf\\/SV5mR3bik29reV\\/069cVpaWlpaWlpaWlpaWlra99GGk92Xfv+uY6fDdiersAh\\/TNvkm7Pip86qfGg6dqKlpaWlpaWlpaWlpaWl\\/TxtzmZevl+F0f9haVf8ZZ5gqMqlNxMF4RGNNmxqp6WlpaWlpaWlpaWlpaX9Qe2uvtU+HfUuWde4IfXvmk52j3PP7oUK5qfOHcd62zstLS0tLS0tLS0tLS0t7Udpt53b5mPnu84W9H37lQVtrrf+VU8w5Edc07I+LS0tLS0tLS0tLS0tLe1naXt\\/avqXNXvS69F\\/pX30g4RKcWPQ5i0DtLS0tLS0tLS0tLS0tLR\\/qC1r6Kvy6G294n2sW26PaVN7GKE\\/PNmd982PnWX6UM3tSEtLS0tLS0tLS0tLS0v7YdqMaxIKo8V77+\\/dyXo9uxc3ta\\/qPezrflvwF3a509LS0tLS0tLS0tLS0tI+14ae3Rl3q5fMhzzirluEVe8fCpAP8xA\\/Hh4P+8Z\\/cz6BlpaWlpaWlpaWlpaWlvZ9tXm2YOxrp1vt05b1PP9wStve8y73S3qfXjW31+YTaGlpaWlpaWlpaWlpaWnfTbut66Bt+7XXOvfurfgPaZd709AstwVfqL1GS0tLS0tLS0tLS0tLS\\/sj2qH+5lB3BNv1z2HX2jhC33VbdI\\/5ZHeovTbM5d2erqHT0tLS0tLS0tLS0tLS0r6lNoz+c7uuVdAe6jX3UB19O\\/fsHusbXPs\\/SJ7DGNNR96c9u2lpaWlpaWlpaWlpaWlp31I73Af7TaW45WPkOb0V\\/+YTw+OT7ce5odnlYc9uWlpaWlpaWlpaWlpaWtrXtblS2thp19Xscg+r7Jdyg0bbeVTsGTbWtdfCD0JLS0tLS0tLS0tLS0tL+4HaXB19qL8ZZhyuqZZ5tULeNDTL73+oz6E3j6ClpaWlpaWlpaWlpaWl\\/Re05elTMfBOi+44ni5vtx4fpqm9Nm1NL7XXFm5wGp6GlpaWlpaWlpaWlpaWlvZdtc30QVNqbUiF0ao191x7bZg553rNPT\\/i8mgOg5aWlpaWlpaWlpaWlpb2c7TbzoD+UHNCqbXNrL2m0mm\\/LuTq6Av9y8a0b745h05LS0tLS0tLS0tLS0tL+1PaY33hMK94n+sW3ed5U3tVLrwzQs8\\/yK3TdKw5K\\/54DZ2WlpaWlpaWlpaWlpaW9r21Ycl8W5cuL8fI8zn0aVH9VHf1zi23w\\/TBKs8nNMnzD7S0tLS0tLS0tLS0tLS0tGkL+q4+mB7alX2Ve+\\/bXfFxC0DYN99wyh6CodPjm5aWlpaWlpaWlpaWlpb239Hm4XOTdX6fcpB7m2qvnetvhRH6tTMJ8LR\\/GS0tLS0tLS0tLS0tLS3tG2v7u9yX7z3Wu9xzrbZwDv1cH3Wf+PVB9tfnE2hpaWlpaWlpaWlpaWlpX9Q+qb12TNvEw8nuXyP0bSrGtilf6bxus8oeh\\/jjD1WKo6WlpaWlpaWlpaWlpaX9O7UiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiJ\\/S\\/4XAAD\\/\\/+R0jjgHocaNAAAAAElFTkSuQmCC\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/137802603007\\/ticket?caller_id=1670874902&hash=18ba3900-cec3-4221-8561-f0066c95844f\",\"transaction_id\":\"PIXE18236120202512181527s08bb2ce58b\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120650117714,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":0.99,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":\"PIXE18236120202512181527s08bb2ce58b\"}}', '2025-12-18 12:26:55', '2025-12-18 12:27:17'),
+(3, 4, 2, NULL, 5, '138451704968', 'pix', 1.00, 'approved', 'accredited', '00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1384517049686304D660', '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', '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.135.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-18T12:35:01.000-04:00\",\"external_charge_id\":\"01KCS516FXAER8JAF4F172BQG4\",\"id\":\"138451704968-001\",\"last_updated\":\"2025-12-18T12:35:01.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\"}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-18T12:35:01.766-04:00\",\"execution_id\":\"01KCS516F5M3WVAKPX5KX110KQ\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-18T12:35:23.000-04:00\",\"date_created\":\"2025-12-18T12:35:01.000-04:00\",\"date_last_updated\":\"2025-12-18T12:35:23.000-04:00\",\"date_of_expiration\":\"2025-12-19T12:35:01.000-04:00\",\"deduction_schema\":null,\"description\":\"Assinatura Plano teste - AgendaPro\",\"differential_pricing_id\":null,\"external_reference\":\"PLANO_5_EST_4\",\"fee_details\":[{\"amount\":0.01,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":138451704968,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-18T12:35:23.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"2153563569\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"is_end_consumer\":null,\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120607091671,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1384517049686304D660\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKDUlEQVR42uzdQXLiuhYGYFMMGLIElsLSyNJYCkvIkAGFX3WC7HMkOfG9ybtVDd8\\/6So3sT97JunoaBAREREREREREREREREREREREREREREREREREREREZH\\/MIexzVv9o9Ofq7d0afNxYffx+\\/OfX9zzHT9+8ZnL4wb3j9+\\/z7\\/4zL4jONPS0tLS0tLS0tLS0tLSvp72XF94G4Zy7+kvM65oP3OcH\\/Pef0R4\\/\\/3Mv5UL569JtLS0tLS0tLS0tLS0tLT\\/XhseVrTx6ac\\/4+ltGj5PI\\/RLGrLvyy\\/GB2c\\/j\\/k343hNHyRqT4+bX2lpaWlpaWlpaWlpaWlpaWdtuff0sDCfUJIv3MOC+HlNrfrH+19paWlpaWlpaWlpaWlpaf9z7VCqvI8zLlR538M9jt2y701eVC+WoVM3TktLS0tLS0tLS0tLS0tL269yDxuzy39vy8OGx0bubWcz+L4sqocJht6FU639UU0+LS0tLS0tLS0tLS0tLe0zaHu910KntGNa8S8XYpV7uLAvF4Z04fS4cE0XtqGo4Eed4mhpaWlpaWlpaWlpaWlp\\/3kWbhVG6EVbjdDLoH6cR+jNXvFfDy0tLS0tLS0tLS0tLS3t36w9zgXmvU5px7kmfTfPOGw6G9Pj+3R6rzWr7LdaEt+OlpaWlpaWlpaWlpaWlvaltGEf+jUdLhY3mp\\/afegLh3g3T2+mD6YblPd\\/TxMSu+\\/qE2hpaWlpaWlpaWlpaWlpV2rLEDw2Nw87u9\\/To6+JP6bx9CY0bxsfRe3Nhdx7bVs3YB\\/XzifQ0tLS0tLS0tLS0tLS0j6rNs4nDGkNfUhF6uPcy\\/wWJiRObbv05VZrGdfccaClpaWlpaWlpaWlpaWl\\/SXtkJavS+7h0bn3WrMIXwrJmwPA4kbuTgPyeMfQjI2WlpaWlpaWlpaWlpaW9gW1uTv6wsOGugT9NC4kL5nf0vTBvdygt0jeWZWnpaWlpaWlpaWlpaWlpX0t7Xm2NEXqOdd6PT+8bpwtOKYF\\/oXzy\\/KK\\/zBvhl93wjgtLS0tLS0tLS0tLS0t7TfaIRW1hwXue10EP\\/VeOw\\/TRu7rvIbeHAA2nRkWRuhxQN7U2Xc+IC0tLS0tLS0tLS0tLS3ta2nDAnezJp5vlVe8w+g\\/Vrkf69u8pVX5Q33hmM4M+za0tLS0tLS0tLS0tLS0tE+pzSv4Q5pPaI4r29eD\\/TyfsKAdxy9PRCsr\\/rcV8wm0tLS0tLS0tLS0tLS0tCu1uco933tXl6CHXmr30CntmHqvHdIL5u7ou7R5\\/BbO7C5HhMWyd1paWlpaWlpaWlpaWlraV9P25xN2qbl53jW+CZ3SyoTEtmibGYe3zhREft3ydjtaWlpaWlpaWlpaWlpa2t\\/Tjl\\/0Ugsngk2neof\\/3oXC8LIgntuFh1ZrvUO88wdZs4ZOS0tLS0tLS0tLS0tLS\\/uU2mFeIb8uFsGHM7t78wn5YcMX3dGnPzmlJfOxnmAYaGlpaWlpaWlpaWlpaWlfVHvP55c1\\/GwJzdDzfEKoIYjzA2\\/pgxw63dzyI2hpaWlpaWlpaWlpaWlpf0V7rIfPYSN3s7M7lKDHA8CasvePC1l7zzu784D8tKrKnZaWlpaWlpaWlpaWlpb2WbWHek089zLfp97n4\\/ywTZ5gGOud6vnM7ibNhMS6M7tpaWlpaWlpaWlpaWlpaZ9b2wz2g\\/bcLXuvpg\\/yPvTQ+W2aLfj4d5emIKr5hPKLy\\/LUBy0tLS0tLS0tLS0tLS3tem0eYL93atJzCfq+HmtfZv4taasjuoulKaT\\/\\/CCnVSN0WlpaWlpaWlpaWlpaWtpn1zbzCRM\\/zBY0B5pdy6PDfEJYEN\\/2D0ALa+i9KvcV8wm0tLS0tLS0tLS0tLS0tKu0ofdaL+c0Qh\\/SgHyXlsybvd\\/TiLs5UqxXN97MCtDS0tLS0tLS0tLS0tLSvo427Oy+piO3N+HRzQnb+QbjXPb+nurm85p7PLO7WZUPh45daGlpaWlpaWlpaWlpaWlfT5sTBvubevQ\\/5Kr1MPrPB5o17dVzZ7WMa7a609LS0tLS0tLS0tLS0tL+ovaYbnVJNekL53eFe4\\/zEP9WLOeOthmhhzseH++zXbHiT0tLS0tLS0tLS0tLS0v7lNpD57Z52\\/mxW4K+qf9kQZv7re\\/qCYb8iFta1qelpaWlpaWlpaWlpaWlfS1t77\\/y+WWncayP6L7Xo\\/9K+9UHuTzq5qdTwMN8wriqJp+WlpaWlpaWlpaWlpaW9nttWUPflEcf6hXvc33k9pjO7A4r5Nuvdnbnuvmxs0xfdnaP350IRktLS0tLS0tLS0tLS0v7fNqMaxJ2jcd7n9LkwLFeQ+8XtW\\/qGvZt\\/1jwFVXutLS0tLS0tLS0tLS0tLTfa8OaeMZVFzJ\\/7C6qx\\/cf5gbkwzzEj5vHQ934P5xPoKWlpaWlpaWlpaWlpaV9Xm0zW9DTTrfK8wkff9KbPrjVVe7X9D7bur36sHY+gZaWlpaWlpaWlpaWlpb2CbXDbPksUu\\/1Xvvq3mHFf0hV7s2BZvlY8IXea7S0tLS0tLS0tLS0tLS0\\/x\\/tUJ8Iduzvw+7z96XsPS+ZZ+2YWq2FZ65ZQ6elpaWlpaWlpaWlpaWlfUptXuDOndIm7dsDly80Z3aP6byvTWd+YJqyGNtubkN96BgtLS0tLS0tLS0tLS0t7WtpwwnbYypSX9hG3tuH\\/tYtah\\/Tiv\\/yzvbzfKDZdcWZ3bS0tLS0tLS0tLS0tLS0K7VhQN4kVLnHnOZB\\/eHx9ErbedT0\\/nmE3nwQWlpaWlpaWlpaWlpaWtoX1DbNzfNfTqkXuKsV8lPadn6c19D3\\/RXyU+f9aWlpaWlpaWlpaWlpaWl\\/W1uePjUD7x3RHcbT5e2245dpeq81HckXbnAZvg0tLS0tLS0tLS0tLS0t7bNqe9MHudXalxu5c++1Yea812vuTTO25TkMWlpaWlpaWlpaWlpaWtrX0R46A\\/q8SXyce69dy67xsp4fWqdNC\\/yhO\\/rC+WWlO1u84ykdkUZLS0tLS0tLS0tLS0tL+yvac30hr6E3\\/cZLUXvVLrwzQs8f5N45dCyO0FesodPS0tLS0tLS0tLS0tLSPrc24A6d1uUf0wG38LCwqH6pT\\/XOR27nM8auqb16lTz\\/QEtLS0tLS0tLS0tLS0tLO+8aL6eTNRMM04r\\/JU0HhJeJJQBD94i03gcZVqz409LS0tLS0tLS0tLS0tL+SNsMn5tMNelhlf09LZlv6xF979Dv0D\\/91l\\/Wp6WlpaWlpaWlpaWlpaV9FW2nyr060Czfe6yr3Ptvl\\/nL3dyydvgXNfm0tLS0tLS0tLS0tLS0tD1tv\\/faplMEvks7uz9H6Id+A\\/JwANi4pI1D\\/PFnneJoaWlpaWlpaWlpaWlpaf9yrYiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyN+S\\/wUAAP\\/\\/sNS1UFFAPP8AAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/138451704968\\/ticket?caller_id=2153563569&hash=82fe2520-4d61-48d9-b1c6-b9ecc3c348bd\",\"transaction_id\":\"PIXE18236120202512181635s0835940ee0\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120607091671,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":0.99,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":\"PIXE18236120202512181635s0835940ee0\"}}', '2025-12-18 13:35:02', '2025-12-18 13:35:24'),
+(4, 4, NULL, 34, 0, '139723862150', 'agendamento', 1.00, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T20:16:29.015-04:00\",\"external_charge_id\":\"01KDH50KT1YNHEJ2MPK3CNTBVG\",\"id\":\"139723862150-001\",\"last_updated\":\"2025-12-27T20:16:29.015-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T20:16:29.002-04:00\",\"execution_id\":\"01KDH50KSBMV7MS4CXJ12SN4RJ\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T20:16:29.013-04:00\",\"date_last_updated\":\"2025-12-27T20:16:29.013-04:00\",\"date_of_expiration\":\"2025-12-28T20:16:28.843-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #34\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_34\",\"fee_details\":[],\"financing_group\":null,\"id\":139723862150,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter139723862150630419CE\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKE0lEQVR42uzdwXEivxIH4KE4+EgIhEJoEBqhEAJHDhTzajFiuiUNsM+uf9XC9zvtjrHmwzdJrdYgIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIi\\/2HWY5td\\/aHtn6fn6z9Xt08srg++rv\\/b\\/\\/nEJY84\\/PnEdw63AS7Xzx+nTwxhxJw9LS0tLS0tLS0tLS0tLe3naff1g90wlLHvvzmLG4ZhM73m2H9F+P6riX\\/\\/\\/vvHJFpaWlpaWlpaWlpaWlra\\/18bXla08e3bP\\/PpZWf6\\/HV99TXfU\\/ZVeTDeOKtpzr8Yx1P6g0Tt9jb4iZaWlpaWlpaWlpaWlpaWdtKWse8vC+sJJfnBJawWbKYd8vl9++v3P9HS0tLS0tLS0tLS0tLS\\/ufaoVR5byZcqPKe2UMPc\\/hF3lQvlqFTN05LS0tLS0tLS0tLS0tLS9uvcg8Hs8uPl+Vlw63Kfdk5DB720C+PHmxr7Y9q8mlpaWlpaWlpaWlpaWlp30Hb670WOqVt0o5\\/eXDvvXZID8KOf3ywvT04pQfLUFTwo05xtLS0tLS0tLS0tLS0tLR\\/n5mhygz9VPbQmxl6mdSP6ah3Piv+66GlpaWlpaWlpaWlpaWl\\/Ze1m6nAvNcpbVOfGg83gs0sSOy7vdeaXfZzLYnfjpaWlpaWlpaWlpaWlpb2o7ThZad0uVg8aL5tz6Hfk7ujN29vlg\\/uA1z\\/F4sKyoPX6hNoaWlpaWlpaWlpaWlpaZ9oh9TLPM\\/Q8x3c+WT3jDZYFqGb2zhVufe6o4\\/pFrKn6wm0tLS0tLS0tLS0tLS0tO+q7TRGWwRcKFIfp17m9z30Uvb+ZMQh3He2ezDiQEtLS0tLS0tLS0tLS0v7S9ohbV+HDe77q3Pvtd4m\\/G7qT36ov13Ylf9KU\\/BlfdR7mf9CtLS0tLS0tLS0tLS0tLSfo80Hs8NvNnvosQR9O84kb5nfVxx2041gYYXiXBfSj39xspuWlpaWlpaWlpaWlpaW9t20+8lyrMfOx85P9X5++Lpxgz\\/XzfdqCLZ1r7ayBHF69YZxWlpaWlpaWlpaWlpaWton2pJ4ofaQ5tOlHfm999p+uB\\/8Pk176M0FYJfyYOzM0Lf1Nn3Yt6elpaWlpaWlpaWlpaWl\\/VhtKEFvlg96N2xvp0+sE\\/+YvuDYOXYelizuDzbpzrCnoaWlpaWlpaWlpaWlpaV9S23ewZ\\/l5\\/WEqky+rCfMaMfx4Y1o+1T2vn52fxktLS0tLS0tLS0tLS0t7SvaXOWex\\/7qT7CHWzP0ZSh739UXgJUv2HRHP05\\/kHO4s7tcERbL3mlpaWlpaWlpaWlpaWlpP037aD1h3z01HpuhlwWJuJ4wu+fe3NmdC+m\\/aGlpaWlpaWlpaWlpaWl\\/Tzs+6KUWbgQby9nv8OM4hy8b4r3ea0MaoDdlb24Bp6WlpaWlpaWlpaWlpaX9KO2Qhpopgg93dvfWEx69bDXd8BV\\/ZZu2zMd6gWGgpaWlpaWlpaWlpaWlpf1Q7SXcX9b0Xss3bG9SM\\/S8nhBqCCJ\\/7O74N4jz8FJoaWlpaWlpaWlpaWlpaV\\/Ubm4XascZdy5q792wnS8Aa8rerw\\/u2l36gwzTAPkS76dV7rS0tLS0tLS0tLS0tLS076pd13viuZf5qt97LVh6zdD39Z3dTZoFidfu7KalpaWlpaWlpaWlpaWlfW9tM9kP2n237L1aPmjOoYcd\\/yEdOw9LEMvOteBf049paWlpaWlpaWlpaWlpaX+kzRPs47TjPVPlvqrn2oeJf07a6oruYmkK6Vdlm\\/6FGTotLS0tLS0tLS0tLS0t7btrm\\/WEOz+sFuRe5t8vW6dz6KtpQ3wR9ty3c3vovSr3F9YTaGlpaWlpaWlpaWlpaWlf0uYrusdOEXin99oinMOe+ZUw497VN4INnbrxZlWAlpaWlpaWlpaWlpaWlvZztOFk96l\\/f9e+c8N2J4uwCR+6o686Z8UPnV35cOnYgZaWlpaWlpaWlpaWlpb287Q5q2k7\\/s7Pt5PlqvhTqknP7dKrBYPmFUEb1h9oaWlpaWlpaWlpaWlpaX9Ru0lDHVJNenN\\/V+Z\\/dU52j9MMfaaDedN7bXP7PssXdvxpaWlpaWlpaWlpaWlpad9Su+4Mm4+db+pOaWP3V2a0ud\\/6V73AkF9xTtv6tLS0tLS0tLS0tLS0tLSfpe39KN9fth3jZWTXvm6XevZfaR\\/9QQ63uvll+T5hPWF8qSaflpaWlpaWlpaWlpaWlva5tuyhL8qr1\\/WO976+crv8eFnP0PPJ7ksoah+nVzRT\\/DCHv3dz29PS0tLS0tLS0tLS0tLSfpg245qEU+O9svexX+XeL2pf1DXsy\\/614C9UudPS0tLS0tLS0tLS0tLSPteGO7szrnqQ+WPaVN+kT6ynCXm8szsMcOh3MH95PYGWlpaWlpaWlpaWlpaW9n21Yx67r70PtU0l67nKPT\\/IVe6n9H1i77Xd8GJoaWlpaWlpaWlpaWlpad9VO0yW7yL1Xu+1zti9Hf8hVbnHc+WheduhfuemXqGgpaWlpaWlpaWlpaWlpf25NvRe+0oz9DE3RutXuTcT7FXh5y3zrB1Tq7XwzldOdtPS0tLS0tLS0tLS0tLSvrG2s8G9CNpdvee+m7Tl6y5yR7Wwh95bshjrbm67hBhoaWlpaWlpaWlpaWlpaT9PO3Zm\\/51j5MuxTVhP6BW1j2nHf\\/5k+356xemFG8ZpaWlpaWlpaWlpaWlpaf9Guxi76VW5h132Uxmg0XZeFe8MG+vea6E7Gy0tLS0tLS0tLS0tLS3tB2pzd\\/Sh\\/s176g3xaod8m46db9Ie+jpdgDam7ui9d9LS0tLS0tLS0tLS0tLS\\/pa2vP3UGTtPn0OntEt\\/Uz2k6b12KWXiZZt+ZoDD8DS0tLS0tLS0tLS0tLS0tO+qbZYPmlZrQ2qMVu2579oy+W\\/Osd5zz684PVrDoKWlpaWlpaWlpaWlpaX9HO26M6Hf1ZzQam01ac+pdVq8s3u2O3ruzhZH3NaF9LS0tLS0tLS0tLS0tLS0P9fu6we7qVNac0X3cSpqr9qFd2bo+Q9y6Vw61pwVf7yHTktLS0tLS0tLS0tLS0v73tqwZb7uryeU5YNmU\\/1Q3+qdr9wOV3Qv8p3d\\/QUGWlpaWlpaWlpaWlpaWlraoA2nxvd12Xu4ruyrjL1tq+JjCcBQd4ob0vcprzi\\/UOVOS0tLS0tLS0tLS0tLS\\/tTbcT1b\\/hapju77we516n32rH+rTBDP4cHu0n7+P4yWlpaWlpaWlpaWlpaWto31s5Wuc+MPdZV7rlXWzmHnvnNisOys03\\/ynoCLS0tLS0tLS0tLS0tLe2L2ie91\\/apTDyc7P6eoa9TM7ZVugBs6JSJH\\/tT\\/PGXOsXR0tLS0tLS0tLS0tLS0v6bWhERERERERERERERERERERERERERERERERERERERkX8l\\/wsAAP\\/\\/91YCLfLN8kwAAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139723862150\\/ticket?caller_id=2612895764&hash=cc1aa501-faf2-4248-8ef2-2bf862b42f90\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 21:16:31', '2025-12-27 21:16:31');
+INSERT INTO `pagamentos` (`id`, `estabelecimento_id`, `assinatura_id`, `agendamento_id`, `plano_id`, `mercadopago_id`, `tipo`, `valor`, `status`, `status_detail`, `qr_code`, `qr_code_base64`, `payment_data`, `criado_em`, `atualizado_em`) VALUES
+(5, 4, NULL, 35, 0, '139723574332', 'agendamento', 1.00, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T20:18:03.741-04:00\",\"external_charge_id\":\"01KDH53GA3MKMSPGRYZY4X4ZBD\",\"id\":\"139723574332-001\",\"last_updated\":\"2025-12-27T20:18:03.741-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T20:18:03.726-04:00\",\"execution_id\":\"01KDH53G9DKXDX2BFPK7PWGSKD\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T20:18:03.738-04:00\",\"date_last_updated\":\"2025-12-27T20:18:03.738-04:00\",\"date_of_expiration\":\"2025-12-28T20:18:03.561-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #35\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_35\",\"fee_details\":[],\"financing_group\":null,\"id\":139723574332,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1397235743326304539C\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKCklEQVR42uzdTXIquRIG0CIYMGQJLIWlwdJYCkvwkAFBdTRGVZmS+LltR0dcON\\/kva5rq055JqWUGkREREREREREREREREREREREREREREREREREREREROR\\/zGZss69\\/aPfv0\\/P1\\/67H8TA\\/WF1\\/\\/vrgkkcchkUZ7nj7+cv157\\/mnxjKiE0OtLS0tLS0tLS0tLS0tLSfpz3UD\\/bDUMaefjPjrpZz+ZXt\\/Jqv\\/ivC969nfvz+RyRaWlpaWlpaWlpaWlpa2v+uDS8r2vj23b\\/z6WWaPi8K\\/3gb6PvBujwYb5z1POdfjOMp\\/UGaOf94\\/QlaWlpaWlpaWlpaWlpaWtp59v899vSysJ5Qkh9cwmrBdq6Q36\\/bX7\\/\\/REtLS0tLS0tLS0tLS0v7v2uHsst7O+PCLu9LGGPb3fa9yEX1Yhk6+8ZpaWlpaWlpaWlpaWlpaWn7u9zDwezyz8vysuF2kHtZxg6HwUMN\\/fLowa7W\\/mhPPi0tLS0tLS0tLS0tLS3tO2h7vddCp7RtqviXB3GXe3gQKv7xwe724JQeLMOmgh91iqOlpaWlpaWlpaWlpaWl\\/fPcGWpX19CbGXqZ1I\\/pqHc+K\\/7roaWlpaWlpaWlpaWlpaX9m7XbeYN5r1Padj41HlYcpu7om\\/73dHqvNVX2cy2JX0dLS0tLS0tLS0tLS0tL+4HaPNSuPmi+axvDjZ3u6M39ZcvO8sG0QnH9r7ipoDx4XPGnpaWlpaWlpaWlpaWlpf0jbX+Gnt+eT3ZPydpxtixCN7dx3uXe644+plvI\\/uN6Ai0tLS0tLS0tLS0tLS3t36\\/Nh8SHVEMf5or3at7lPoYa+mFuxvY1f3+1IJHXEwKuGXGgpaWlpaWlpaWlpaWlpf0l7ZDK12N95VfTey1nM28kH+uD3Oc0o7\\/0t4mHKvsy\\/4VoaWlpaWlpaWlpaWlpaT9Hmw9m5xu2m13reT2hl1wyn1Yccr\\/1sEIxPKjK09LS0tLS0tLS0tLS0tJ+lvYwW77qsXNOnXr+Jq0\\/hPvLhrriv+hvk5+OnZdXvHbDOC0tLS0tLS0tLS0tLS3tE21Jtcs9zLi3c6u1b85hmA5yn+YaenMB2CW0KC\\/fn\\/lDKNOP8wNaWlpaWlpaWlpaWlpa2o\\/V3l0+yL3Mm4p3mP3HXm3beqR9+v5N\\/WCb7gx7GlpaWlpaWlpaWlpaWlrat9RuO4fEn64nVNvky3rCHe043rkRLY6Ye8\\/R0tLS0tLS0tLS0tLS0v5Qm3e557FXd496l2bo07b3fX0BWPnA6RbwsJF+mHGr8AcJNXdaWlpaWlpaWlpaWlpa2s\\/UdtYTorZzajw2Qy8LEnE9oV+mj0sQ+XPL161oaWlpaWlpaWlpaWlpaX9POz7opRZuBMsbyS95Ul+2fTe919b1ye47U\\/bmFnBaWlpaWlpaWlpaWlpa2o\\/Shgr56e4m+HBnd2894dHLAi7+yi6VzMd6gWGgpaWlpaWlpaWlpaWlpf1Q7SXcXxZ6r93n55ft2z0EY7iUe5dG3HS6uTWXeNPS0tLS0tLS0tLS0tLS\\/ly7rafP4SB3vlA7H7uOF4A1296vD6Yp+77eN18GyJd4P93lTktLS0tLS0tLS0tLS0v7rtpNXRPPvczDJvXYey1Yes3QD\\/Wd3U2aBYnX7uympaWlpaWlpaWlpaWlpX1vbacZ+qQ9pD3suRn6tHzQnENvKv7X\\/12lJYhqPaH8xPH+0gctLS0tLS0tLS0tLS0t7evaPMH+mive1S73cMN2znHmn5O2uqK7WJqN9NMf5IUZOi0tLS0tLS0tLS0tLS3tu2vvX9EdVguaC81O5dVhPSEUxJf9C9BCDb23y\\/2F9QRaWlpaWlpaWlpaWlpa2pe0ofdaL4c0Qx\\/ShHyVSubN2e9pxp2vFAs19CZ\\/0m+clpaWlpaWlpaWlpaWlvZ9tOFkdx5qEV7d3LDdH2AqwucbwZqz4sdOVT5cOnakpaWlpaWlpaWlpaWlpf08bc56LsdP\\/Hw72dCp+D9pl547q2XcdNR9mDcV0NLS0tLS0tLS0tLS0tL+lnabhjqmPem9+7vytveAOxfLId0gdmeGnke8fs\\/yhYo\\/LS0tLS0tLS0tLS0tLe1bajedYfOx823dKa28etnvvZa1ud\\/6ql5gyK84p6o8LS0tLS0tLS0tLS0tLe1naXv\\/9Oj+smvF\\/1LP\\/ivtoz\\/I8bZvfhma0Y3zgxf25NPS0tLS0tLS0tLS0tLSPteWGvqivHpTV7wP9ZXbeYae85VuAc\\/t0hdpij925vDn8ooDLS0tLS0tLS0tLS0tLe2HaTOuSTg1HsfepcWBbef+ss6m9kW9h33Zvxb8hV3utLS0tLS0tLS0tLS0tLTPteHO7oyrHgwt55wGiNu+y4Q8fl0Y4NjvYP7yegItLS0tLS0tLS0tLS0t7ftqm9WCnnYaKq8nlG3vzfLBud7lfkrf0+vm9tp6Ai0tLS0tLS0tLS0tLS3te2rD3H7T7732qDt66L02pF3u8Vx5aN4WDpr3eq\\/R0tLS0tLS0tLS0tLS0v6KNvReW3X2sOd+48+vCFsXfi6ZZ+2YWq2Fd75yspuWlpaWlpaWlpaWlpaW9gO0Y+qUNmn3N1zz4DQPsMgd1UINfaiXD0oNPb5zP3\\/Py+sJtLS0tLS0tLS0tLS0tLTvo20q\\/sO8ST0fI192mpuH9YTepvYxVfzvn2w\\/pFdsnvdyp6WlpaWlpaWlpaWlpaV9rs2d0no3fG3n+fSU3azd3N6+qHuvNVmEO8PG+i8UurPR0tLS0tLS0tLS0tLS0n6gNndHH+rfnFIXuKsK+S4dO9+mGvomXYA2pu7ovXfS0tLS0tLS0tLS0tLS0v6Wtrz91Bk7T59Dp7QJdzdVA\\/Lrg1V9NLyX4\\/A0tLS0tLS0tLS0tLS0tLTvqu0tH+RWa0NqjFbV3HPvtcDpdXPrrVDsumV3WlpaWlpaWlpaWlpaWtpP0W46E\\/p9zQmt1taz9pxap30\\/aLqjN1sGcnf0U+ccOi0tLS0tLS0tLS0tLS3tb2kP9YP93Clt6PQbL5vaq3bhnRl6\\/oNcOpeOxRn6CzV0WlpaWlpaWlpaWlpaWtr31oYC96ZeTzjclgPO9Sb1b+2xvtU7X7kdlg8WnfbqMeEgOy0tLS0tLS0tLS0tLS0t7byesKr3pIc7u6eK\\/zEtB+QL0M7pHPqdBYN1+oMML1T8aWlpaWlpaWlpaWlpaWl\\/pO31XstZpju7p4PcoWS+rGf0Q5qhn8OD\\/ax9fH8ZLS0tLS0tLS0tLS0tLe0ba+\\/ucr8z9ljvcg8\\/EUbM\\/F7vtXjU\\/eX1BFpaWlpaWlpaWlpaWlraF7VPeq8d0jbxcLL7e4a+Sc3Ywpy\\/+dymyh6n+OMvdYqjpaWlpaWlpaWlpaWlpf07tSIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIn9L\\/gkAAP\\/\\/Dn2ElFHMUKwAAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139723574332\\/ticket?caller_id=2612895764&hash=11773598-06bf-41aa-a67d-a492aab60edb\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 21:18:05', '2025-12-27 21:18:05'),
+(6, 4, NULL, 37, 0, '139725530120', 'agendamento', 1.00, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T20:30:04.208-04:00\",\"external_charge_id\":\"01KDH5SFWRTRZHJXEPP6KW00QZ\",\"id\":\"139725530120-001\",\"last_updated\":\"2025-12-27T20:30:04.208-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T20:30:04.193-04:00\",\"execution_id\":\"01KDH5SFW2VXW49F99PCKT5DMC\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T20:30:04.205-04:00\",\"date_last_updated\":\"2025-12-27T20:30:04.205-04:00\",\"date_of_expiration\":\"2025-12-28T20:30:04.028-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #37\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_37\",\"fee_details\":[],\"financing_group\":null,\"id\":139725530120,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1397255301206304502A\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKB0lEQVR42uzdTXLiTBIGYBEsvOQIHEVHg6NxFI7gJQsCTTR2SZlVxU9Pu7+IhufdzDdqu\\/TIu\\/rLHEREREREREREREREREREREREREREREREREREREREROQ\\/zHZqs69\\/aPfr6fn6n5vlx87D8HH9j8Ovn7jkEYdhVX7u+D3A5frzn8tPDPWIcw60tLS0tLS0tLS0tLS0tO+nPdQP9sNQxp5\\/M+OulnP5lXF5zWf\\/FeH7Nwt\\/\\/v7DfRItLS0tLS0tLS0tLS0t7f+vDS8r2vj23a\\/59DpMn3fLDP34PdAXf1MelDn8Zpnzr6bplP4gUbv7HvxES0tLS0tLS0tLS0tLS0u7aMvY88vCekKzhz5975DPqwXjskN+e9\\/++v0nWlpaWlpaWlpaWlpaWtr\\/XDuUU97jggunvC9hjLF77HuVN9WLZeicG6elpaWlpaWlpaWlpaWlpe2fcg8Xs8s\\/r8vLhs5F7n06wz58H5O\\/\\/WBXa\\/\\/oTD4tLS0tLS0tLS0tLS0t7Stoe7XXQqW0Me34lwercMo9PAg7\\/vHB7vvBKT1Yh0MFf1QpjpaWlpaWlpaWlpaWlpb293NjqOsMfZ6yj50ZepnUT+mqd74r\\/uOhpaWlpaWlpaWlpaWlpf2XteNywLxXKW3s9O\\/aL9XRt\\/3v6dRea3bZz7Ukfh0tLS0tLS0tLS0tLS0t7Rtq81C7+qL5rv6ecDG9ZNV\\/e7N8MA9w\\/X\\/xUEF5cH\\/Hn5aWlpaWlpaWlpaWlpb2N7Wrzgw99+Be5y3wkqYjWLGsQjW3aXlFrzr6lLqQPTFDp6WlpaWlpaWlpaWlpaV9ee0xLR\\/M6XTYnvfQD0sxtvkeer\\/U2kenLfhUjzjQ0tLS0tLS0tLS0tLS0v6Qdkjb11Pd8qupvZazXQ6SNw3A5hl3syvfm\\/Pnkua0tLS0tLS0tLS0tLS0tG+lzRezmx3yz873HNJPTPUAYct8XnHYLx3BmhWK4dauPC0tLS0tLS0tLS0tLS3te2kPi+WzHjtXRw\\/F2C7151Y7\\/vktu3TKfag\\/97AsQZye7TBOS0tLS0tLS0tLS0tLS\\/tAWxJPuef+XWMqtbb5HmoVxi6XwXMDsEt5MHVm6LkjWC5pTktLS0tLS0tLS0tLS0v7ttrrUM0p94+bHbbDTfVt4n+Gt4fs0\\/dv6wdj6hn2MLS0tLS0tLS0tLS0tLS0L6kdO5fEH64nVMfky3rCDe009TqiVSPm2nO0tLS0tLS0tLS0tLS0tH+ozafcmxl6PoIe7n5fQqW0MdVeC3fFz\\/3q6MOC+wh\\/kLDnTktLS0tLS0tLS0tLS0v7ntrOekK1h17fGl+FSmllQSKuJzQrDp0H63SzfSp8WlpaWlpaWlpaWlpaWtqf0k53aqmFjmBTufsd\\/vkjHAwvG+K59tomXfUebk7Zmy7gtLS0tLS0tLS0tLS0tLRvpQ2H2k83D8GHnt299YR7Lwu4+Cu7tGU+1QsMAy0tLS0tLS0tLS0tLS3tm2ovoX\\/ZtFRWu83PL9u3Zwim0JR7l0ZsjgCEY+8DLS0tLS0tLS0tLS0tLe3Pacd6+hwucn9NyHfda9exAVhz7P36YJ6y7+tz82WA3MT74Sl3WlpaWlpaWlpaWlpaWtpX1W7rPfFcy3yTNrin5WWrMPtviqEf6p7dTZoFied6dtPS0tLS0tLS0tLS0tLSvra2mewH7aHejg\\/F0Oflg+YeerPjf\\/3fj7QEUa0nlJ843l76oKWlpaWlpaWlpaWlpaV9Xpsn2J\\/Ljnd1yj102M45Lvxz0lYtuoulOUi\\/WbbpH87QaWlpaWlpaWlpaWlpaWlfXdusJ8z8sFrQNDQ7lVeH9YSwIb7uN0ALe+i9U+5PrCfQ0tLS0tLS0tLS0tLS0j6lDbXXerm5h36+9ythD31btxQLe+hNfqfeOC0tLS0tLS0tLS0tLS3t62jDze481Cq8uumw3R9g3oTPHcF6d8X39a58aDp2pKWlpaWlpaWlpaWlpaV9P23OZtmOn\\/m5O9mmnv1vH5ZLz5XVwgCzNnwdLS0tLS0tLS0tLS0tLe0Pasc01DGdSW\\/6dzVjT8sM\\/Vwsh9RSrJmhN7XXxu\\/vWT+x409LS0tLS0tLS0tLS0tL+5LabWfYfO187FRKa1YL9re0ud76R73AkF9xTrvytLS0tLS0tLS0tLS0tLTvpe39U+5ftptiM7KhXg4YOusJ9\\/4gx+9z83MX8LCeMD11Jp+WlpaWlpaWlpaWlpaW9rG27KGvyqu39Y73oW653c+lFEMPXcBzufR4bn7qbNOHam4HWlpaWlpaWlpaWlpaWto302Zck1AYLY+9CosDY6d\\/WedQ+6o+w77utwV\\/4pQ7LS0tLS0tLS0tLS0tLe1jbejZnXHVg6HlnNMA8dh3mZBPoWd3GODYr2D+9HoCLS0tLS0tLS0tLS0tLe3raqc8dl87D7VLR9aH5Rx8Xj4416fcT+l7Yu21\\/fBkaGlpaWlpaWlpaWlpaWlfVTsslq9D6r3aa\\/2xP5Yd\\/1UunVaOvc\\/fE4q3Het3jvUKBS0tLS0tLS0tLS0tLS3tX9AOdUewsX8Pu8\\/fFH7eMs\\/aKZVa+0xT\\/Id76LS0tLS0tLS0tLS0tLS0L6wt7bo+O4fUmw3u\\/GDbbxEW9tB7SxZTXc1tv3zPw9DS0tLS0tLS0tLS0tLSvqo2\\/GY4pJ6vka\\/7VdF7O\\/7NTwz3b7Yfllec7vbspqWlpaWlpaWlpaWlpaV9Xpsn5FOnXVdzyj3ssp\\/KAI2286r5+\\/MMvanORktLS0tLS0tLS0tLS0v7htpcHX2ofzPssp\\/rV5\\/Tr8Rr52PaQ992dsibV9DS0tLS0tLS0tLS0tLS\\/gVtefupHrtp6BUqpV1ubqqXVD27y9H0sE1\\/e1d+oKWlpaWlpaWlpaWlpaV9U22zfNCUWhtSYbRqzz3XXhsWTq+aW3jF6d4aBi0tLS0tLS0tLS0tLS3t+2i3nQn9vubsh7kY+mbRnlPptFXo2T12jwz0qqOfOvfQaWlpaWlpaWlpaWlpaWl\\/SnuoH+xTAfJx0YZN9UuYst+coec\\/yKXTdKy5K35\\/D52WlpaWlpaWlpaWlpaW9rW1YYN7u6wnnEIt87J80GyqH+uu3rnldlg+WOX1hCbhIjstLS0tLS0tLS0tLS0tLW1d122sL6aHdmUfZexdeyo+HgEI5+YbTjlDMHR6fNPS0tLS0tLS0tLS0tLS\\/h1tnj43WefvKRe5w5b5up7RD2mGfg4P9ov2fv8yWlpaWlpaWlpaWlpaWtoX1vZPuQ\\/pCPo5vaw65d6v1Zb5vdpr8ar70+sJtLS0tLS0tLS0tLS0tLRPah\\/UXjukY+LhZvfXDH2birFtyq+EjmA3vydO8acfqhRHS0tLS0tLS0tLS0tLS\\/tvakVERERERERERERERERERERERERERERERERERERERP6V\\/C8AAP\\/\\/STIA44Bg9HMAAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139725530120\\/ticket?caller_id=2612895764&hash=5eb4c1d6-11a2-4f00-93ea-680a2e0fda2c\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 21:30:06', '2025-12-27 21:30:06'),
+(7, 4, NULL, 38, 0, '139723954882', 'agendamento', 1.00, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T20:33:40.567-04:00\",\"external_charge_id\":\"01KDH6035W9A474AP8PV3KRB6N\",\"id\":\"139723954882-001\",\"last_updated\":\"2025-12-27T20:33:40.567-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T20:33:40.550-04:00\",\"execution_id\":\"01KDH60358WG7EQF4Y8N0RHDP3\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T20:33:40.565-04:00\",\"date_last_updated\":\"2025-12-27T20:33:40.565-04:00\",\"date_of_expiration\":\"2025-12-28T20:33:40.393-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #38\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_38\",\"fee_details\":[],\"financing_group\":null,\"id\":139723954882,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1397239548826304FA08\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKB0lEQVR42uzdTZLiuhIGUBEMGLIElsLSqKXVUlgCQwaE\\/aLpkp0pi5\\/uqncjGs43utdNyQdmklKpIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIv9hduMyH+2HDr+eXq7\\/uR3Hz18Phuv\\/ba6fDw+mEUtZ1eGOXwMM18+f5k+UOuIin7S0tLS0tLS0tLS0tLS076f9bB98lFLHnv7yqg0PVpVfStnPrzn1XxG+\\/3bmx+9\\/j0RLS0tLS0tLS0tLS0tL+\\/fa8LKqjW8\\/\\/JpPr8P0ub5sc311mfnb+onx6xPbec6\\/Gsdz+kHynP93zrS0tLS0tLS0tLS0tLS0tLO2jj29LKwn1OQHQ1gt2M875Lf37a\\/f\\/0xLS0tLS0tLS0tLS0tL+59rS63y3s+4UOU9hDH23bLvVd5Ur5bSqRunpaWlpaWlpaWlpaWlpaXtV7mHg9n1n9f1ZaU92R0Og2\\/rpnpeYFg8OLTab9Xk09LS0tLS0tLS0tLS0tK+grbXey10StunHf\\/6YBWq3MODsOMfHxy+HpzTg3UoKvhWpzhaWlpaWlpaWlpaWlpa2j\\/PjaGuM\\/Rpyr7vzNDrpH6cZ+iLs+I\\/HlpaWlpaWlpaWlpaWlraf1m7nwvMe53S9nNNetgyn7qj7\\/rfp9N7bbHLfmkl8dvR0tLS0tLS0tLS0tLS0r63NtywXeai9rHTKW5MYzfHzuvbF8sH0wpF\\/f6ntCCxebTjT0tLS0tLS0tLS0tLS0v7h9ohDPXRffs6b4Hf1NbOar0Huffaum3APj47Q6elpaWlpaWlpaWlpaWlfXltePs5fKitch\\/DHnooex\\/rOfR+q7VN51rwxYiFlpaWlpaWlpaWlpaWlvaHtCVtX9cM4cvk3ms5u7mQfHEBWJ7RD\\/0y8bDLvs6\\/EC0tLS0tLS0tLS0tLS3t+2jzwexg6VWtb9Lsv5e8ZX5JO+RDHaB3sruzK09LS0tLS0tLS0tLS0tL+17az9lymvlD59j5ua0QKOnzJd1fVtod\\/1W69Lvp1VaXIM7P3jBOS0tLS0tLS0tLS0tLS\\/tAW1JRe2gGPqQi+KkEffs11CqMXQ+D5wvAprL3MEOPE\\/K2zn7s\\/IC0tLS0tLS0tLS0tLS0tO+l7S8fxEPi+fOHeYFhl\\/in9AXHpI277PnBPt0Z9jC0tLS0tLS0tLS0tLS0tC+p3XcOiXeOkef1hKZMvq4n3NCO440b0eKIufccLS0tLS0tLS0tLS0tLe03tbnKPY+9aUvQA38IndL2qfdaOCt+6XdHLzNuurO7XhEWy95paWlpaWlpaWlpaWlpad9N21lPGPJQ7anxVeiUVhck1lW7WHH4KOXmnd25kH5DS0tLS0tLS0tLS0tLS\\/tz2vFOL7VwI9hYz36Hf96EwvC6IZ7bhU8z9DBAb8q+uAWclpaWlpaWlpaWlpaWlvattKGo\\/XyzCD7c2d1bT8gvK3e6o09\\/ckhb5mO7wFBoaWlpaWlpaWlpaWlpad9UO7T3l435trEFP7\\/sY1lDENcHPtIPUnf8F4hLeSq0tLS0tLS0tLS0tLS0tE9q9+30ORzkDv3GF8eu4wVgi7L364OsHfLJ7jwhPzxV5U5LS0tLS0tLS0tLS0tL+6raXbsnnnuZb+tqQe69Fiylf1I939m9yGJB4rk7u2lpaWlpaWlpaWlpaWlpX1u7mOwH7We7HR+aoU\\/LB\\/kceuj8lksGNmkJYt0pKti0B9lpaWlpaWlpaWlpaWlpaf9SmyfYp05Nei5B37Zz7ePMvyRtc0V3tSwK6bfzNv3DGTotLS0tLS0tLS0tLS0t7atrF+sJEz+sFuRe5r9ftkvn0LdpQ3zdfn6xh96rcn9iPYGWlpaWlpaWlpaWlpaW9ilt6L3Wy8099Mv9P1n1e69t0x76In\\/Sb5yWlpaWlpaWlpaWlpaW9nW04WR3HmoVXr24YTsPMM5l76dUN5\\/33IdQB7\\/YlQ+Xjh1paWlpaWlpaWlpaWlpad9Pm7Odt+Mnfr6dLFfF5x3\\/2C590Xtt8YqgDUXttLS0tLS0tLS0tLS0tLQ\\/qN2noY6pJr13f1cue1+c7B7nO7tvdDA\\/dkYcvy4de7jjT0tLS0tLS0tLS0tLS0v7ktpdZ9h87HzfKUE\\/zKsFD7Snm4X0nVdc0rY+LS0tLS0tLS0tLS0tLe17aXv\\/lO8vO8xD1QdDO\\/tvtPd+kONX3fw6NKMb5wdP1OTT0tLS0tLS0tLS0tLS0j7W1j30VX31rt3x\\/myv3K7\\/3Guddvtkd66bHzvb9KGb2yctLS0tLS0tLS0tLS0t7ZtpM26RcGo8jn1IiwNhC3x7p6h91dawr\\/vXgj9R5U5LS0tLS0tLS0tLS0tL+1gb7uzOuOZB5ocq79Ip+64T8vjtwgDHfgfzp9cTaGlpaWlpaWlpaWlpaWlfV7tYLehpp6HyekJefzimsvdc5X5O36fXze259QRaWlpaWlpaWlpaWlpa2lfT7to+aLt+77V7Y4feayVVuecLzcb2WvAbvddoaWlpaWlpaWlpaWlpaf8\\/2tLeCLbvn8Pu87e17H0xZQ\\/aMbVaC+988mQ3LS0tLS0tLS0tLS0tLe3raXPvtdwpbdJ+fOEWD85ze\\/VV7qgW9tBLu3yQf6ExHXV\\/7oZxWlpaWlpaWlpaWlpaWtpX04b9+U2qWl8cI1+3zc0vN3f8c+p6wu2T7Z\\/pFQ\\/v7KalpaWlpaWlpaWlpaWlfVIbJuS9G772d3bZz3WAhbbzqlW4M6w3Yv4BaWlpaWlpaWlpaWlpaWnfSpu7o5f2L6e0Ve7NDvkhHTvfz3vo23aHPHdH772TlpaWlpaWlpaWlpaWlvantPXtUzPw3hXdYT5dv916vJuh\\/bpDvgDs5gDH8jC0tLS0tLS0tLS0tLS0tK+qfbB8UKp27B\\/kzr3XMueYurkt2qXfXsOgpaWlpaWlpaWlpaWlpX0f7a4zoc+HxMfUam07ay+pddq0wR+6oy\\/uL8vd2eKIh3RFGi0tLS0tLS0tLS0tLS3tj2g\\/2wcfc6e00uk3Xovam3bhnRl6\\/kGG\\/tHwkh7c30OnpaWlpaWlpaWlpaWlpX1tbdgy3329Ol4RduVf2iL139pje6t3vnI73zGW26v3FhhoaWlpaWlpaWlpaWlpaWmDtk726wZ\\/\\/ES4rmxTxz4sq+JjCUDe8c+c8IrLE1XutLS0tLS0tLS0tLS0tLQ\\/oB0713WFTDXpYZf9lLbM1+2MvnQu\\/c6LAOWpG8ZpaWlpaWlpaWlpaWlpaV9Te7PKfToknsce2yr3\\/HXH+Rz6qT3q3uvmlrXlr2vyaWlpaWlpaWlpaWlpaWkzrt97bdUpAt+kk92\\/Z+i71IwtbJkP7YR8oY1T\\/PF7neJoaWlpaWlpaWlpaWlpaf9xrYiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIyL+S\\/wUAAP\\/\\/SRLYb\\/PXFrwAAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139723954882\\/ticket?caller_id=2612895764&hash=6ef8b5fb-44d0-4bcc-8dbf-f5eabf041cbd\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 21:33:42', '2025-12-27 21:33:42'),
+(8, 4, NULL, 39, 0, '139077910701', 'agendamento', 1.00, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T20:36:04.806-04:00\",\"external_charge_id\":\"01KDH64G1FF74BNE7AVZ6YW8SC\",\"id\":\"139077910701-001\",\"last_updated\":\"2025-12-27T20:36:04.806-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T20:36:04.792-04:00\",\"execution_id\":\"01KDH64G0TQGBR0PYYH2RG1DXW\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T20:36:04.803-04:00\",\"date_last_updated\":\"2025-12-27T20:36:04.803-04:00\",\"date_of_expiration\":\"2025-12-28T20:36:04.635-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #39\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_39\",\"fee_details\":[],\"financing_group\":null,\"id\":139077910701,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1390779107016304951D\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKAklEQVR42uzdQXL6OBYHYFMsWHIEjsLRyNE4CkfIkgWFpkKw\\/Z4kB3qS6qqG77eZGjd\\/+XN2kp70BhEREREREREREREREREREREREREREREREREREREREfkXsyttPuofHb6eXsb\\/t\\/\\/6xer2YHP7\\/fHrF9c84vD1i++c7gNcb7\\/\\/nH\\/xnW1HcKSlpaWlpaWlpaWlpaWlfT\\/tsX7wMQzj2NO\\/zLic\\/fyaz\\/4rwvdvZ\\/5lfHD8mURLS0tLS0tLS0tLS0tL+\\/9rw8tGbXz74Ws+ve5Mnze3V9\\/yPWXfjg\\/KnbOd5\\/yrUs7pDxK1h\\/vgZ1paWlpaWlpaWlpaWlpa2lk7jj29LKwnjMkPrmG1YD\\/vkC\\/v29++\\/0xLS0tLS0tLS0tLS0tL+69rh7HKez\\/jQpX3tb+HHubwq7ypPlqGTt04LS0tLS0tLS0tLS0tLS1tv8o9HMwe\\/\\/N6fNkwH+Te1IfBwx769acHh1r7q5p8WlpaWlpaWlpaWlpaWtpX0PbuXgs3pe3Tjv9nfffaKT0IO\\/7xweH+4JwerENRwa9uiqOlpaWlpaWlpaWlpaWl\\/edZGOo2Q1+Pt4nvOzP0cVJf0lHvfFb8z0NLS0tLS0tLS0tLS0tL+1\\/W7ucC895Nafv61HiZlw8WFiSO3bvXml32Sy2JX0dLS0tLS0tLS0tLS0tL+1ba8Rx6VYKeD5of6u8JN8Ut3I4+vr1ZPpgGGMvkP9OCxOZRfQItLS0tLS0tLS0tLS0t7ZPacQp+DUOFk92f9fT5M\\/FL0saEAXbzg3z32rq+gL08u55AS0tLS0tLS0tLS0tLS\\/uq2hIOiQ9pD32Yi9Rzt7FLWJA41P3L+letbTptwUs94kBLS0tLS0tLS0tLS0tL+0faIW1fl9Sua+jcvdZswpf67rVhrhsPm\\/DX8RWn9M6wy77OfyFaWlpaWlpaWlpaWlpa2vfR5oPZucN2qXGbNPvvJW+ZTysOH90WYZdOIf3Dk920tLS0tLS0tLS0tLS0tK+qPaa5feA3zcXOdVV8+Nxqxz+\\/5ZCq3If6c4+pqOC5DuO0tLS0tLS0tLS0tLS0tA+0Qypq33b6d+3nq9aGscp9PLd9nvfQmwZgU8+wkmbogR+36cO+PS0tLS0tLS0tLS0tLS3t22pDCfpCmvWBevYf72rb1\\/\\/6I33\\/rn6wTz3DHoaWlpaWlpaWlpaWlpaW9iW1eQd\\/kZ\\/XE6oy+XE9YUFbSq8jWjVivnuOlpaWlpaWlpaWlpaWlvaX2lzlnseODbXzUe\\/DfYd8Knv\\/qBuAjR\\/Yux19mHGbsE0f9txpaWlpaWlpaWlpaWlpad9Tu7ie0LToLmnLvKR2ZXE9obPnXh1dz587ft2GlpaWlpaWlpaWlpaWlvbvtOWHu9SGNEMPl7Fd86R+LPtu7l7b1oXnC1P2pgs4LS0tLS0tLS0tLS0tLe1bacflg7LYLjv37O6tJ\\/z0su3c4Sv+k0PaMi\\/1AsNAS0tLS0tLS0tLS0tLS\\/um2mu\\/f9m0Yd\\/w88s+2hqCEppyH9KIu85tbk0Tb1paWlpaWlpaWlpaWlra32v394baccZdF7W3D3IDsKbs\\/fZgmrJ\\/1HXz4wC5iffDKndaWlpaWlpaWlpaWlpa2lfV7uo98XyX+TbdfV7ml63C7L+5DP1Y9+xu0ixIPNezm5aWlpaWlpaWlpaWlpb2tbXNZD9oj6mGPV+GPi0fNOfQmx3\\/2\\/9u0hLEulNUsJn\\/My0tLS0tLS0tLS0tLS3tr7R5gv0573hXR71Dh+2c08y\\/JG3Vonu0NIX00x\\/kiRk6LS0tLS0tLS0tLS0tLe2ra5v1hIkfVguahmbn8dVhPWHcEF+FPfdDZxt9scr9ifUEWlpaWlpaWlpaWlpaWtqntOHutV6OaYY+pAn5Jm2ZN2e\\/pxl301KsVzferArQ0tLS0tLS0tLS0tLS0r6PNpzsPvf7dx07HbabBYmPefmg6QjWOyseiuAn\\/hPrCbS0tLS0tLS0tLS0tLS0r6rNCZP9VT37n35xrHf8H1yXnm9W62nD19HS0tLS0tLS0tLS0tLS\\/qF2n4Y6pZr0Xv+uXPZe5in+ZbQcUwexZoZ+6ozYlL3T0tLS0tLS0tLS0tLS0r6VdtcZNh8733dL0FeLd69lbb5vfVMvMORXXNK2Pi0tLS0tLS0tLS0tLS3te2l7\\/2mxf1mz4x\\/4UfvTH+R0r5ufuoCH9YTyVE0+LS0tLS0tLS0tLS0tLe1j7biHvhpfvat3vI91y+2yNKlfh5PdzUHuXDdfOtv048nu8qgjGC0tLS0tLS0tLS0tLS3t62kzrkm4GC2P3eyhDxnXKWpf1TXs635b8Ceq3GlpaWlpaWlpaWlpaWlpH2tDz+6Mqx4MLafXImz6\\/qZndxjg1L\\/B\\/On1BFpaWlpaWlpaWlpaWlra19WWPHZfOw11SCXrw1wHn5cPLnWV+zl9T+82t+fWE2hpaWlpaWlpaWlpaWlpX1A7zJbvIvXe3WudsfODVb467fa58Vz5qN2mg+a9u9doaWlpaWlpaWlpaWlpaf9EG+5e26QZeskXozXnsMd\\/0lS5nzo9xrK2pKvWPtMU\\/+HJblpaWlpaWlpaWlpaWlral9TmKvdekXqzwR3WE8o89irfqBb20HtLFqW+ze1j\\/p4ndvxpaWlpaWlpaWlpaWlpaV9Nu6uvLg9F6gvHyEtdtd47h17qOvifTrYf54Zm5yc6jNPS0tLS0tLS0tLS0tLS\\/kNtL6HKPSb07N7d397cvdZk+v48Q2\\/+ILS0tLS0tLS0tLS0tLS0b6ht9tDzv5xSb3BXO+SHdOx8n\\/bQd6kBWkm3o\\/feSUtLS0tLS0tLS0tLS0v7V9rx7efO2Hn6HG5Ku4a68X6qnt2dJt4LA5yGh6GlpaWlpaWlpaWlpaWlfVVtb\\/mgd9XawkHufPfaMHOa29ya69KX1zBoaWlpaWlpaWlpaWlpad9Hu+tM6PMh8ZLalW1n7SVdnbYKPbv3SyUD+Xa2OOIhtUijpaWlpaWlpaWlpaWlpf0T7bF+kPfQ8\\/Xi44z7GqbsizP0\\/Ae5dpqOxRn6E3votLS0tLS0tLS0tLS0tLSvrQ243f3Vq7zAMC4fLPTszjnWCxL5AvaFhIPstLS0tLS0tLS0tLS0tLS0d9y101A7LDBMO\\/6ntBwQPiaWAAz1TXFD+p7j\\/ReXJ6rcaWlpaWlpaWlpaWlpaWl\\/q424foevderZPR3kDlvm63pGn5t+X3IhfbhN\\/UhLS0tLS0tLS0tLS0tL+5baTpX79aexS13lHn4ROnJnfrXi0Jx9f3o9gZaWlpaWlpaWlpaWlpb2SW3\\/7rVVpwh8k052f8\\/Qd+kC8jxDHzpl4p\\/9KX753U1xtLS0tLS0tLS0tLS0tLT\\/ca2IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiMh\\/Jf8LAAD\\/\\/zOQT2gpwvLvAAAAAElFTkSuQmCC\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139077910701\\/ticket?caller_id=2612895764&hash=9b989595-4dca-4bbf-b1cf-187c61e7c896\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 21:36:06', '2025-12-27 21:36:06'),
+(9, 4, NULL, 40, 0, '139724890896', 'agendamento', 1.00, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T20:37:29.856-04:00\",\"external_charge_id\":\"01KDH6733720HKQ0REW42503HN\",\"id\":\"139724890896-001\",\"last_updated\":\"2025-12-27T20:37:29.856-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T20:37:29.840-04:00\",\"execution_id\":\"01KDH6732K3VQ4GS1DF5AGCZ82\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T20:37:29.854-04:00\",\"date_last_updated\":\"2025-12-27T20:37:29.854-04:00\",\"date_of_expiration\":\"2025-12-28T20:37:29.683-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #40\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_40\",\"fee_details\":[],\"financing_group\":null,\"id\":139724890896,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1397248908966304CA2B\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKCUlEQVR42uzdQXLivhIHYFMsWHIEjsLRyNE4So7AMgsqejUJsrslOWFm8v5VA99v6ST25+ysbrUmERERERERERERERERERERERERERERERERERERERER+Q9zKH1e2l86\\/bp6HVzYffz++deF93zHadrU273efv\\/94\\/cvy298Zj8QnGlpaWlpaWlpaWlpaWlpn097bi+8TFO99\\/yXq7hpmo7LYy7jR4T33y\\/8a71w\\/ppES0tLS0tLS0tLS0tLS\\/vn2vCwqo1PP\\/36nt6Gz+eq3X08+iObj6fv64Vy4+yXb\\/5NKW\\/pHxK1p9vN32hpaWlpaWlpaWlpaWlpaRdtvff8sLCeUJMvvIfVgrt61T\\/e\\/42WlpaWlpaWlpaWlpaW9j\\/XTrXL+7jgQpf3Sg19Tu0bn4vq1TIN+sZpaWlpaWlpaWlpaWlpaWnHXe5hY3b98bY+bLrV0Lf13mEzeKihv3914dRq\\/6onn5aWlpaWlpaWlpaWlpb2EbSj2WthUtoxVfzrhU298Jou7OuF3PZ+ul14Sxe2oangrybF0dLS0tLS0tLS0tLS0tL+flZulXd2Hwdf6PWjvqSt3nmv+I+HlpaWlpaWlpaWlpaWlvZf1h6XBvPRpLTj0pO+W1YcNrXt\\/TB+n8Hsta7Kfm0l8e1oaWlpaWlpaWlpaWlpaZ9NO7W3OrUbzU\\/t+4SN6TXxiO7w9G75YL\\/sVJ9yU0H4h5xpaWlpaWlpaWlpaWlpaX9Ce0zDzUva2X1Jj35r+aU9ESxMVtuEaW5l6XIfTUcv6RSyO9YTaGlpaWlpaWlpaWlpaWkfXht60t\\/CL4X1hDrLfMadl2Fspba9fzVqLeNKe8eJlpaWlpaWlpaWlpaWlvaHtFMqX5f2yK9u9lrOYWkkL19t5K7T3MIn+Lbd6r3N\\/yFaWlpaWlpaWlpaWlpa2ufR5o3Zl7Zr\\/TJ4n3OqoZf2BqFkfk3LB402Lx8MqvK0tLS0tLS0tLS0tLS0tM+lPS+Wy3Jmd6zPl2Ufeu4QCK8bC\\/zHVODP55d1uHnbeX3EfSeM09LS0tLS0tLS0tLS0tJ+ow0f5G\\/jLvdjGrW2v91qE+5dN4PnA8DmtvfwhR4\\/yNs++zL4B9LS0tLS0tLS0tLS0tLSPpc2FLi7nAcnbIdx6YfEv6QXLEkbq+z5wjGtYXwbWlpaWlpaWlpaWlpaWtqH1OYKfuaHbeR5PaFpk6\\/rCSvaUkYnojV3zLPnaGlpaWlpaWlpaWlpaWn\\/Upu73PO9d+MP7GkZhj5X2V\\/aA8Bq2T1PR4\\/D28I0t1pD3+a2d1paWlpaWlpaWlpaWlraZ9OuriesFNWnNAy9Lkhsq7ZbcXhZGum7M7tzI\\/2OlpaWlpaWlpaWlpaWlvbntOWLWWrhRLD5zO7w4\\/gNXwvieVz4\\/IU+PsR7VKY\\/0NLS0tLS0tLS0tLS0tI+n7YuH5TV47Lzmd2j9YT8sOmL6ejzn5xSyby0CwwTLS0tLS0tLS0tLS0tLe2Tat\\/D+WVlmaw2VUvHzw976XsI4vrAS\\/qH1Ip\\/h7hOd4WWlpaWlpaWlpaWlpaW9k7tsf18npaN3PO88bbLvTkArGt7\\/7iQte95Z3f+ID\\/d1eVOS0tLS0tLS0tLS0tLS\\/uo2kNbE8+zzPft5cuCiyXzbqd6PrO7S7cgcd+Z3bS0tLS0tLS0tLS0tLS0j63tPvaD9jxse2+WD\\/I+9DD5LbcM7NISxHbQVLBrN7LT0tLS0tLS0tLS0tLS0v6hNn9gXwY96bkFvftkf13416Rtjuiulq6Rfl\\/L9Hd8odPS0tLS0tLS0tLS0tLSPrq2W0+Y+WG1IM8y\\/3zYIe1DX6m5n9Zq6KMu9zvWE2hpaWlpaWlpaWlpaWlp79Lec0T3lNvE6wf5LpXM859sxrPX9qmG3uV35o3T0tLS0tLS0tLS0tLS0j6ONuzszrfahEd3J2yPbzAX4c+pTX60V\\/ylrcqHQ8deaWlpaWlpaWlpaWlpaWmfT5uzX8rxMz+fTrZP49JzxX9lXHqerDYf4h20oamdlpaWlpaWlpaWlpaWlvYHtcfhrfJ48bknPfN3CXetPz6nI8W6L\\/Ru9trx9j7bOyr+tLS0tLS0tLS0tLS0tLQPqT0Mbpu3nR+HLeib9k9WtJfVRvrBI66pKk9LS0tLS0tLS0tLS0tL+1za0Y\\/y+WVdff50O5E786P2q3\\/I661vfhuG0ZXlwh09+bS0tLS0tLS0tLS0tLS032trDX1TH31oK97n9sjt3NSeL6zv7M5982VQpq87u8t3J4LR0tLS0tLS0tLS0tLS0j6eNuO6hMFo8d6ntDgQSuD7L5raN20P+3Z8LPgdXe60tLS0tLS0tLS0tLS0tN9rw5ndGddcyPzQ5Z1vML9\\/GEA+LZ\\/4cfN46Bv\\/zfUEWlpaWlpaWlpaWlpaWtrH1XarBSPtfKu8njAtffD7dhhb7nJ\\/S+8TZ6+9THeGlpaWlpaWlpaWlpaWlvZRtdNi+WxSH81eG9w7X9jk0WnltlN9fp+q3aeN5qPZa7S0tLS0tLS0tLS0tLS0P6INs9d2gx72PG98dERY\\/sDe17b3XDLP2pJGrV3SJ\\/63O7tpaWlpaWlpaWlpaWlpaR9Sm8\\/sHjWpHwcLDGE9ob5uc0RYqKGPlizKYJpbe+gYLS0tLS0tLS0tLS0tLe1zandptaDbRr4dDDdfqfh3x5VNX+9sP6dHHO5aT6ClpaWlpaWlpaWlpaWl\\/UabP8jL4Liu41rFu9R7l4F28Kj5\\/fMXejedjZaWlpaWlpaWlpaWlpb2CbXdcPP8l3PaAndTIT+lbefHpYa+byvkeTr66Jm0tLS0tLS0tLS0tLS0tD+lrU+fh4GPjujOfeNhstpqmjO7Py7s2q3ho7xO34aWlpaWlpaWlpaWlpaW9lG1o+WDPGptSoPRmpp7nr2WOa+p5r6yQnEalt1paWlpaWlpaWlpaWlpaZ9Fexh80OdN4iWNWtsv2msanbYJZ3bXne3b8LrdU\\/IdT+mINFpaWlpaWlpaWlpaWlraH9Ge2wsvy6S0fER3KKq\\/h0\\/21S\\/0\\/A95Hxw6Fr\\/Q76ih09LS0tLS0tLS0tLS0tI+tjaUzA+3R2\\/aive1bVL\\/1L62p3rnI7fDEd2bwXj1boGBlpaWlpaWlpaWlpaWlpY2aLv1hPAb4biyXb33qe+Kjy0AueKfObWHYBqc8U1LS0tLS0tLS0tLS0tL+3\\/QRtz4hK9tOrN7bmoPJfNt+0U\\/pS\\/0a26kD0eKnWlpaWlpaWlpaWlpaWlpn1K72uW+cu\\/Sdrnn1y1pH\\/qh\\/Y1chC+tdvrjnnxaWlpaWlpaWlpaWlpa2owbz17bDJrAd2ln9+cX+iENIL8s3\\/zd63ba+Ilf\\/m5SHC0tLS0tLS0tLS0tLS3tP64VERERERERERERERERERERERERERERERERERERERH5V\\/K\\/AAAA\\/\\/8VrmWqpIGTDgAAAABJRU5ErkJggg==\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139724890896\\/ticket?caller_id=2612895764&hash=befa1f52-c727-4c52-b00a-34ecc0f5fde6\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 21:37:31', '2025-12-27 21:37:31'),
+(10, 4, NULL, 41, 0, '139078998589', 'agendamento', 1.00, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T20:40:22.900-04:00\",\"external_charge_id\":\"01KDH6CC2VV3M7DQGQ6YV05W1D\",\"id\":\"139078998589-001\",\"last_updated\":\"2025-12-27T20:40:22.900-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T20:40:22.886-04:00\",\"execution_id\":\"01KDH6CC23GY13WPFCVT76HX4W\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T20:40:22.898-04:00\",\"date_last_updated\":\"2025-12-27T20:40:22.898-04:00\",\"date_of_expiration\":\"2025-12-28T20:40:22.721-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #41\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_41\",\"fee_details\":[],\"financing_group\":null,\"id\":139078998589,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter13907899858963044687\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKAklEQVR42uzdQXIiuRIGYDlYsOQIHIWjmaNxFI7AkgWBXozbojJVKoyfPRPR8P2rmepq8VXvJKVSRURERERERERERERERERERERERERERERERERERERERP7DbOs8+1JqvYaX3v95evn4z0174yPrj\\/87\\/PPGNY9Yylsb7vg5wPXj\\/dP0Rgkj5hxoaWlpaWlpaWlpaWlpaV9Pe+gffFj+\\/NiplN3ng1V40HJuAyxqT+1zA7\\/l9v2H+yRaWlpaWlpaWlpaWlpa2v9f2\\/7+adLesksP2nz6+sE\\/tzfCAH8eBO3iIkDUvvffT0tLS0tLS0tLS0tLS0tL+7mecA5b5h9jr\\/vlgPDgmjfEv65Vb59LS0tLS0tLS0tLS0tLS\\/ufanMN9\\/s0digkv42dc\\/ycoc9K0291421TvfzWDJ2WlpaWlpaWlpaWlpaW9km0syr38frAOpW9l7CesO+22P+8v+pxy9of1eTT0tLS0tLS0tLS0tLS0j6DdrH3WsS1Df724K09OKYHm2k9IT5o59DP6cEqFBX8vFMcLS0tLS0tLS0tLS0tLe2Dectb5nmGXvs99MEM\\/abNdfChvVvclf9haGlpaWlpaWlpaWlpaWn\\/fu1uMKHPO95lGntUk16HA8x6ry1Uud8ED+yh09LS0tLS0tLS0tLS0tI+sTZkk27YLmE9oeE2g2Pnbf2hpq8bVbk\\/WjdPS0tLS0tLS0tLS0tLS\\/tzbbhh+xw2uNt8OpS9Z+01jF2nPfHT\\/X+Ndf\\/GOrR3a1eE3QktLS0tLS0tLS0tLS0t7RNrD9NyQE3rCbmo\\/ZJwb7Oj6wPtKqw4hBHz\\/WVlzKelpaWlpaWlpaWlpaWl\\/aF29mI4pv0ns95royn+Pn1uSVeKjXblZ1P29yU+LS0tLS0tLS0tLS0tLe2raHdTxXmdWpeXwR56nRYYbnvox88fu44HD3XzC8kN2AstLS0tLS0tLS0tLS0t7Utruyr3cNvY4XN94DJoxlbT\\/nzc8f\\/4ntXiAkN7PzdgX6U\\/pqWlpaWlpaWlpaWlpaX9qbYk3KwmPVS5l4n\\/lvuN78uoqH2VpvhdN7f87\\/W9fuO0tLS0tLS0tLS0tLS0tM+mzefQT6kZWw0l6OPea7EOPo\\/Y3rjXb\\/3S879cT6ClpaWlpaWlpaWlpaWlfW5tqDgf4fZpw75p447\\/e8K1FYpLqiGIhfRlepBvOFvT0tLS0tLS0tLS0tLS0v6qNgwVOOt07Dp\\/zzUUqe+m3mu3KX7bdt\\/0Z8VDHfwlb9MP6uZpaWlpaWlpaWlpaWlpaV9Fu1DlXvoLysKP7fr1gXzl9mxXvuFqfjDg3+rmaWlpaWlpaWlpaWlpaWl\\/SxuG2g4n5PHO7tBq7TZ2m7LPeq+FEa+DGXo4K14e2EOnpaWlpaWlpaWlpaWlpX0B7cJ12fnO7ppWC+p0I9hsPaE0S536rdd06diqX7J48IZxWlpaWlpaWlpaWlpaWtrn0277X6+pU\\/kmPT2n7uiXNPuPG\\/y76aR6XmAYXYAWGrDX73WKo6WlpaWlpaWlpaWlpaV9sJvZqDt46L12Sfyu33jt+4f3vdrq4Cfqowe5aWlpaWlpaWlpaWlpaWlfRvs2aH8e1xPC7L+U2Pu89MsBdboRbFWXEu74nn3Pw3d209LS0tLS0tLS0tLS0tI+j7YMNuxz2ftuGvs8ODUefv32dYfBOfTQjG5U1P7+jZp8WlpaWlpaWlpaWlpaWtrHz0qHEvRZp7TR\\/Hs2Q99\\/PtikIvVVqFqf7crn7w\\/t3Y60tLS0tLS0tLS0tLS0tK+nDafG1+PbxvJ1ZaFd+u22sdl6QtsQX\\/XvL7dao6WlpaWlpaWlpaWlpaX9be29uvF8RfdsD32hKvyYJvVBe2177gv9xmlpaWlpaWlpaWlpaWlpX1j7Zz0hlKy3ocp4xzv3Pp\\/dCBbWE25189t+QWL2YPeNk920tLS0tLS0tLS0tLS0tM+qDck3bJ\\/Tg9sbh6Ud\\/1zUXsed1TbTG5cwYjjZfiwPhpaWlpaWlpaWlpaWlpb2iz30Ov30reI8TNnzjWDhIPdC\\/\\/DjNIfPuBE\\/X+JNS0tLS0tLS0tLS0tLS\\/uy2vI51OwCsLfcqbyVoI96r4WD5qf2\\/SU1Ywu78mVq73bp1zBoaWlpaWlpaWlpaWlpaV9Wu1BSHvihdflsPSF8z1uocj8sLVnUwTn0UOUeSwZoaWlpaWlpaWlpaWlpaX+urWnHezZDzzeCPbTjvetx4f3aV7nn9893T3bT0tLS0tLS0tLS0tLS0j6rti0fdL3MQ7v00XpC+7qwh35t15VtU\\/\\/00f1lx\\/7Boa+sp6WlpaWlpaWlpaWlpaX9Fe2un6Hv+0Ly3HutZTbBvoQ5f+g3XvoO5seEOy2VptPS0tLS0tLS0tLS0tLSvpB2m\\/qghRL02cnummrSr+GvtE34Vd9ZbZUs13GrtfA9D1a509LS0tLS0tLS0tLS0tI+n7blhtuOe6\\/1Y1\\/DJd6zLf2aWq3lGoJQArDQe61+fWc3LS0tLS0tLS0tLS0tLe2jdeOz2XI\\/IR+d7I4XgO3TDvlueEV3DbeA19R7LfBpaWlpaWlpaWlpaWlpaV9Tm+\\/s3qQ98fg386nxcEx9pA3fc7qzQrFqv3lI2odvGKelpaWlpaWlpaWlpaWlfR5tXk+ogxu2m2XVa+PYs85v+VbvfOx8O51bz+fQ6wNV7rS0tLS0tLS0tLS0tLS0D2pzp7RZZhdq5132cxtgP+G2gyr3Mk3qT\\/1p8ll3tu3XvddoaWlpaWlpaWlpaWlpaZ9NO7qP7L3fVM+HxOu0wHBOm\\/CX9v74\\/rJr4IQVitPSkgUtLS0tLS0tLS0tLS0t7U+1bfp8ToXk18Ee+vl+4Xntf2zVz7\\/jNn2dt2u7fT8tLS0tLS0tLS0tLS0t7atquwxareXW5d2e+72T3bMVityMrfR76N8PLS0tLS0tLS0tLS0tLe1frx0tB+wHN2yHQ+V5f771Xnvrd\\/y7ova2QhG+p+u91v5BjrS0tLS0tLS0tLS0tLS0v6Q99A+atoynz7tBlfvsRrD6eat3nsCPtOEnvtxDp6WlpaWlpaWlpaWlpaV9bm3YMt+m9YRwI1jXyzzM\\/ndLVe4lXdH91l86Nqpyrw+sJ9DS0tLS0tLS0tLS0tLSvpB2uVNcOGUecs01BItvbHrcLLS0tLS0tLS0tLS0tLS0\\/6722r8Ze5m3Pw53dkfLod8yb93R1+En2gDh0rEHq9xpaWlpaWlpaWlpaWlpaZ9V+3WVezuHvkmLA+t+LeDU6uDbB576o+6jbm7t7PulfBFaWlpaWlpaWlpaWlpa2m9pR73X8vR5P83hQ2bN2PLJ7m5PfLbLfq8SnZaWlpaWlpaWlpaWlpb21bQiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiJ\\/S\\/4XAAD\\/\\/ybf6vND2QcOAAAAAElFTkSuQmCC\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139078998589\\/ticket?caller_id=2612895764&hash=12d27ddc-ae7f-4636-9ac3-30e9de3074fe\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 21:40:25', '2025-12-27 21:40:25'),
+(11, 4, 2, 42, 0, '139725945176', 'agendamento', 1.00, 'approved', 'accredited', NULL, NULL, '{\"test\":true}', '2025-12-27 21:46:27', '2025-12-27 21:59:19'),
+(12, 4, 2, 43, 0, '139728009268', 'agendamento', 1.01, 'approved', 'accredited', NULL, NULL, '{\"test\":true}', '2025-12-27 22:02:15', '2025-12-27 22:03:32'),
+(13, 4, 2, 44, 0, '139727289920', 'agendamento', 1.00, 'approved', 'accredited', NULL, NULL, '{\"test\":true}', '2025-12-27 22:04:40', '2025-12-27 22:07:25'),
+(14, 4, 2, 45, 0, '139082375203', 'agendamento', 1.01, 'approved', 'accredited', NULL, NULL, '{\"test\":true}', '2025-12-27 22:20:23', '2025-12-27 22:25:15'),
+(15, 4, 2, 46, 0, '139729337756', 'agendamento', 1.00, 'approved', 'accredited', NULL, NULL, '{\"test\":true}', '2025-12-27 22:29:42', '2025-12-27 22:34:59');
+INSERT INTO `pagamentos` (`id`, `estabelecimento_id`, `assinatura_id`, `agendamento_id`, `plano_id`, `mercadopago_id`, `tipo`, `valor`, `status`, `status_detail`, `qr_code`, `qr_code_base64`, `payment_data`, `criado_em`, `atualizado_em`) VALUES
+(16, 4, NULL, 47, 0, '139082943781', 'agendamento', 1.00, 'cancelled', 'expired', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T21:35:36.000-04:00\",\"external_charge_id\":\"01KDH9HFN7N88ASXF2FZ6S0ZW9\",\"id\":\"139082943781-001\",\"last_updated\":\"2025-12-27T21:35:36.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T21:35:36.117-04:00\",\"execution_id\":\"01KDH9HFMJCPXQ49N6F3TG950D\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T21:35:36.000-04:00\",\"date_last_updated\":\"2025-12-28T21:41:00.000-04:00\",\"date_of_expiration\":\"2025-12-28T21:35:35.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #47\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_47\",\"fee_details\":[],\"financing_group\":null,\"id\":139082943781,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter1390829437816304BD0B\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139082943781\\/ticket?caller_id=2612895764&hash=615db9d2-f316-4c86-bb60-fbb4ad237f2d\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"cancelled\",\"status_detail\":\"expired\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-27 22:35:36', '2025-12-28 22:41:01'),
+(17, 4, 2, 48, 0, '139083063837', 'agendamento', 1.01, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T21:40:04.000-04:00\",\"external_charge_id\":\"01KDH9SNJP80JXT9VHSBR9GCMS\",\"id\":\"139083063837-001\",\"last_updated\":\"2025-12-27T21:40:04.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T21:40:04.322-04:00\",\"execution_id\":\"01KDH9SNHZBK9137SEJ451DFBG\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-27T21:40:17.000-04:00\",\"date_created\":\"2025-12-27T21:40:04.000-04:00\",\"date_last_updated\":\"2025-12-27T21:40:24.000-04:00\",\"date_of_expiration\":\"2025-12-28T21:40:04.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #48\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_48\",\"fee_details\":[{\"amount\":0.01000000000000000020816681711721685132943093776702880859375,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139083063837,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-27T21:40:17.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120867802127,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter13908306383763041119\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKCElEQVR42uzdQXLqOBMHcFEssuQIHMVHg6NxlBwhSxYU\\/moShLslkfh7LzVVA7\\/\\/bvwY++fspG63ioiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiPyL2c99ju2PDv9cvdT\\/mpZfvH3+\\/vTPL675jqVs6u3ebze4fv7+Y\\/nFV3YDwYmWlpaWlpaWlpaWlpaW9vW0p\\/bCsZTP\\/+f8eauvf\\/7Uvo1vNS2P+Rg\\/Irz\\/buFf6oXT9yRaWlpaWlpaWlpaWlpa2j\\/Xhodl7X2FXso2LZ83lf9++83XhV29MN84u2XNv6l3rI+I2sPt5mdaWlpaWlpaWlpaWlpaWtpFGyrk83Lvt1TojtpaQ78XxH\\/uVf98\\/zMtLS0tLS0tLS0tLS0t7b+uva+npwUXONdxDT2v4WNRPaz5u75xWlpaWlpaWlpaWlpaWlracZd7+DC7\\/vM2FdUb7XF59Hx7\\/2toai\\/thUOr\\/auefFpaWlpaWlpaWlpaWlraZ9COZq+FSWlTqvjXC7HLPVzY1Qu57f1wu3BOF+4V\\/7+dFEdLS0tLS0tLS0tLS0tL+\\/\\/nwa3qCj1oS16Q53njJZXpS1qh\\/2JoaWlpaWlpaWlpaWlpaf\\/L2mlpMB9NSpuWr8bDjsMm9KR\\/tx2wa88YC0X1SyvZhrejpaWlpaWlpaWlpaWlpX0pbThh+5wOF4tt7If2fcKH6fs0Lj1kM94+yLPkYlNBvfBjfwItLS0tLS0tLS0tLS0t7Rrtdyv0+LDQ5R7486BknvPR\\/kFG09Hn5RSyP99PoKWlpaWlpaWlpaWlpaV9Bu110KR+Hre9nxb+fT\\/hkG7Q3bHbTwi4ub1joaWlpaWlpaWlpaWlpaX9JW1J5etQ4M4L+LhC74rwx0cfcs\\/jqnx4Zqiyb8d\\/IVpaWlpaWlpaWlpaWlra59fu24p3WWaZd03qoQV9Vck8ngJe563P4y+7B1V5WlpaWlpaWlpaWlpaWtrX0p7S2r67d8i57RAIr9tU\\/PNTRu\\/fzWoL09xOtLS0tLS0tLS0tLS0tLR\\/rS2pqX03OL9rSqPWdktT+zbMG\\/\\/8GHyb1t\\/XMKK8vn\\/mN2X6wR+QlpaWlpaWlpaWlpaWlva1tOPtg8cnbIdx6ftUVP9IjfFz0s5tUT3+QY5lfWhpaWlpaWlpaWlpaWlpn1I7DT4SH\\/DjfsIPbfLTsAO+OxGtuWN7IhotLS0tLS0tLS0tLS0t7V9pc5d7vncctdYW1a9hUtq0zF77SPxLOx093\\/ESzuyuR4TFtndaWlpaWlpaWlpaWlpa2lfTPtxP+Gg3Bz6Wrvj7pLRp6XK\\/7yc8rLl3Z3Z3A9hpaWlpaWlpaWlpaWlpaX9Lmw8A27cV7+nW5d192V0GVfZu9trozO7Rkr07BZyWlpaWlpaWlpaWlpaW9qW0YfvgcRP8sa14d0d0H9J32+Fhu\\/q7vAVxSCXzud1gKLS0tLS0tLS0tLS0tLS0L6ktwyb1c3qfS+bnhx0T7nTrir+kHYqu4t\\/9yS5lZWhpaWlpaWlpaWlpaWlpV2mn2\\/I5nggW1tPhQO382XU8AKybN\\/554a49pr75stzg\\/gc5rOpyp6WlpaWlpaWlpaWlpaV9Vm0+0KubZb5bdgu27XfocYMh59Se2d2l25BYd2Y3LS0tLS0tLS0tLS0tLe1zawfD0O\\/a07DtfTQproTv0EPFv6TPzsMWRLOfUH\\/x\\/njrg5aWlpaWlpaWlpaWlpZ2vTYvsD+WiveDLvddWlTnE8EuSdsc0V0tXSN9nea2ZoVOS0tLS0tLS0tLS0tLS\\/vE2jLcT7jzw25BN8v8bfwdei2Ib9Pv5+9GrYU7fr+fQEtLS0tLS0tLS0tLS0v7R9ouH+2JYA9q6OO+8fuKO6z5d6mG3mX1dHRaWlpaWlpaWlpaWlpa2ifU5tFp4cKcCtzd6LQ8e+2S+ubvh3h334q\\/D6ry4dCxd1paWlpaWlpaWlpaWlra19WWwX7C+eF36IMu94Y\\/KPCXAa771J2WlpaWlpaWlpaWlpaW9he1UzsY7XA70Ct3uW8HBe63doWez+zOaVbo4Y7ToO2dlpaWlpaWlpaWlpaWlvaltPvBbfNn59NwUlpz3tfxkTbPW39rNxjyI2IRnpaWlpaWlpaWlpaWlpb21bSjf8rnlx2WW+0WXP5qvNF+9wepWxbbsGUxLxd+PG2NlpaWlpaWlpaWlpaWlnaNttbQN\\/XR+8EgtXzk9pya2kOFfFvP+zql160L8k1d4nfj3epf6D5v\\/URLS0tLS0tLS0tLS0tL+2LafWpBL2l\\/4Jy+Go\\/3PqTNgamtoY+b2jdtD\\/t2fCz4ii53WlpaWlpaWlpaWlpaWtqftfW76muqkMfzu0IjeUmc7oiwS3j\\/PMH8kGavvY8nmK\\/eT6ClpaWlpaWlpaWlpaWlfV7taLeg076FonrYTyi3T7277YNLW5U\\/p\\/fZtuPVy9r9BFpaWlpaWlpaWlpaWlraJ9SWxfLVpD6avTa4d77Qndl9HRxodk7v82D2Gi0tLS0tLS0tLS0tLS3tr2j37ezv3MOe543H77DzEv\\/Ylthzyby0Vfk5zV4ry3i3NV9209LS0tLS0tLS0tLS0tI+n7YsFe\\/zuEm9K3BP7ey10+0Gc3vh8nDLYh5Mc2vnrdPS0tLS0tLS0tLS0tLSvpa2fof+Furz48\\/I39LWwqV93a6pfU4V\\/+ZT97DjcFoONDt\\/e2Y3LS0tLS0tLS0tLS0tLe16bV6Qz4PjuqZUEy+pyn6uNzgOF+TdJsA8WKF309loaWlpaWlpaWlpaWlpaV9Qm6ejl\\/b\\/zLjQ5b7J09HzZ+f1FPD7BkM4AG1O09FHz6SlpaWlpaWlpaWlpaWl\\/S1tffp5cO\\/8IfdbaiSPuEGaAeS1TB\\/uuB3vCryXH0NLS0tLS0tLS0tLS0tL+6zaJlnbDUY7LNsHc+paz7PPt+NpbuER54d7GLS0tLS0tLS0tLS0tLS0L6XdDxb0+YjuOR1Xtlu0+RdfBf7dUvEfvf\\/ozO7uO3RaWlpaWlpaWlpaWlpa2t\\/SntoLuYaeS+ajJfvDFXr+g1wHh47FFfqKGjotLS0tLS0tLS0tLS0t7XNrA25\\/e\\/S97X268S9tk\\/rXfsKoyz28fziie5PP7O4S+uZpaWlpaWlpaWlpaWlpaWnH+wnthU3lv6ftgPAysQWgtJPiSnqf0+0XlxVd7rS0tLS0tLS0tLS0tLS0v6bNn13v2rb3kqrsH6lkvm1X9CWt0C\\/5jmGa+omWlpaWlpaWlpaWlpaW9iW1gy735kCzfO+5\\/Q69Pn2XauiZ3+04NJ+6r95PoKWlpaWlpaWlpaWlpaVdqR3PXtsMmsAD7lpX6PV1N\\/lh4USweawNX3ZPaRgbLS0tLS0tLS0tLS0tLe0LakVERERERERERERERERERERERERERERERERERERERP4r+V8AAAD\\/\\/2YObTCFYttyAAAAAElFTkSuQmCC\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139083063837\\/ticket?caller_id=2612895764&hash=c5702885-24cf-42cc-a18e-622347618b88\",\"transaction_id\":\"PIXE18236120202512280140s08d4fa5d00\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120867802127,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":1,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_id\":\"PIXE18236120202512280140s08d4fa5d00\"}}', '2025-12-27 22:40:04', '2025-12-27 22:48:33'),
+(18, 4, NULL, 49, 0, '139730213934', 'agendamento', 1.01, 'pending', NULL, NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T21:41:24.897-04:00\",\"external_charge_id\":\"01KDH9W489TRSHR4V4W9FHT3M8\",\"id\":\"139730213934-001\",\"last_updated\":\"2025-12-27T21:41:24.897-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T21:41:24.883-04:00\",\"execution_id\":\"01KDH9W47JRBGREWG1JH7GE2DD\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-27T21:41:24.895-04:00\",\"date_last_updated\":\"2025-12-27T21:41:24.895-04:00\",\"date_of_expiration\":\"2025-12-28T21:41:24.725-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #49\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_49\",\"fee_details\":[],\"financing_group\":null,\"id\":139730213934,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":null,\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"area_code\":null,\"extension\":null,\"number\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1397302139346304844E\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKA0lEQVR42uzdQXLiyBIG4CJYsOQIHIWjwdE4Sh\\/BSxaENTG0S8qsKtnM2NERDd+\\/eW9oLH1iV5WprCIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiJ\\/MIepz7n90unfT2\\/3\\/7tP39jd\\/+vy7zfe8xVL2dTL\\/fq4wPv9+2\\/LN0q4Ys6FlpaWlpaWlpaWlpaWlvb1tJf2g3Mp97+53i\\/1+5\\/v2t34UsflNm\\/jW4Tn3y\\/8+fkvn5NoaWlpaWlpaWlpaWlpaf+\\/Ntwsa+cVeinbsHyuC\\/Ld\\/db3bO5339cPpg9OWNFv6hXrLaL29HHxKy0tLS0tLS0tLS0tLS0t7aINFfJpufYuFbpvQVv5v7XHpUK+Xre\\/P\\/+VlpaWlpaWlpaWlpaWlvaPa+f19HHBhS7v93ENPbR9b3JRPaz5u75xWlpaWlpaWlpaWlpaWlracZd7eDG7\\/vM2FdUb7Tn1sN9x7599cGq13+rJp6WlpaWlpaWlpaWlpaV9Bu1o9lqYlHZMFf\\/6wSZU\\/MMHoeIfPzh9fHBNH8wV\\/+9OiqOlpaWlpaWlpaWlpaWl\\/e9ZudTXK\\/Q8b7ykMn1JK\\/QfDC0tLS0tLS0tLS0tLS3t36w9Lg3mo0lpx8H5XefFMn2+HbBvzxgLRfVbK9mGp6OlpaWlpaWlpaWlpaWlfSntYXlr\\/JoOF4sbBqehKR9o1kxHz++hnwZHdN\\/\\/KzYV1A8eOLOblpaWlpaWlpaWlpaWlvZrbV2Cv7fr6eZmXQk8V8irtuubf1tGrW3a2WvbvCvQXpGWlpaWlpaWlpaWlpaW9uW0g\\/2EeGZ3aRf7p2Vc+mFpe59L4PX55w9yU\\/sh4borFlpaWlpaWlpaWlpaWlraH9JmS81721Y+z17rivC5kXzlRe46zS0swbdtlX07+IVoaWlpaWlpaWlpaWlpaV9C21W8yzLLvGtSz03to+SS+S1tHzTavH0wqMrT0tLS0tLS0tLS0tLS0r6W9rLsJ7wlfne42LXtig+PG0\\/kPrazz8PzT6mpIM5qq7d47IRxWlpaWlpaWlpaWlpaWtovtDWxyz2XwEMN\\/TcnNLVflxp6My48dLmHU8Azv+Qy\\/eAHpKWlpaWlpaWlpaWlpaV9LW0ocK90uXf7A+3qP9bcj21p\\/Zye\\/9B+cExnhn0ZWlpaWlpaWlpaWlpaWtqn1OYKfknV91Dxj\\/sJX7TJH4cd8N2JaM0V8+w5WlpaWlpaWlpaWlpaWtpvanOXe772brzADrPP57b387JCP6QH3Kfp6HF4W5jmVjcBtrntnZaWlpaWlpaWlpaWlpb21bSD\\/YSuqB43DPJL5cely33eT8i3OC87FN2Z3d0AdlpaWlpaWlpaWlpaWlran9JO7bW7vvHzUuAOb3Z3i\\/rbYPbaPi3xr6tL9u4UcFpaWlpaWlpaWlpaWlral9KG7YP1JvhzW\\/Hujug+pfe2w832ywlfzXT0UDKf2g2GQktLS0tLS0tLS0tLS0v7ktoybFKf\\/zIs9ksq8MfhamH74PKxfXBLF+gq\\/t1PdisPhpaWlpaWlpaWlpaWlpb2Ie3x40Dt63g9fRmfsJ0PAOvmjd8\\/mGvi56Vv\\/m258Xbwg3ze5U5LS0tLS0tLS0tLS0tL+6zafKBXN8t8\\/8l76HGDYWqfJ5\\/Z3aXbkHjszG5aWlpaWlpaWlpaWlpa2ufWdov9oL0MK\\/6jSXElvIfeVfzv\\/7tLWxDNfkL9xq\\/1rQ9aWlpaWlpaWlpaWlpa2se1eYH9NphlnlvQ85I9nwh2S9rmiO5q6Rrp5x\\/kgRU6LS0tLS0tLS0tLS0tLe0Ta8twP2Hmh92Cbpb5bvweei2Ib9P3RzX0UZf75\\/sJtLS0tLS0tLS0tLS0tLT\\/SzsN2sTziWArNfRx3\\/i84u5OBCuDvvFuV4CWlpaWlpaWlpaWlpaW9tW0eXRa+GBKBe5udFqevTY6cns\\/eFf8V+qbD6d6P7ifQEtLS0tLS0tLS0tLS0v7vNoy2E+YW9BLuvulPY9slT+arDbvJwTtJSFoaWlpaWlpaWlpaWlpaX9Ke2wHo50+DvTKXe7byp9S23vtWp\\/f7A5ndq9MMO9mrx0\\/nmf7QA2dlpaWlpaWlpaWlpaWlvYptYfBZfNr58fxpLTc5b6qzfPWd+0GQ77FqAhPS0tLS0tLS0tLS0tLS\\/sq2tE\\/fXZ+WRlW\\/BvtZz9I3bLYhi2Lafngy9PWaGlpaWlpaWlpaWlpaWkf0dYa+qbe+jAYpJaP3A7DzadUQ5+PFLukx60L8k0owufxbmVpe98NHpeWlpaWlpaWlpaWlpaW9vm1h9SCXtL+wDUNRsvX3rQ19JJxg6b2zeC99dGx4A90udPS0tLS0tLS0tLS0tLSfq2t71XH9XQ+vys0kmfObXCB+fnzBPNTO3ttNMH84f0EWlpaWlpaWlpaWlpaWtrn1U752mPtLhTVw37C\\/U9G2we3tip\\/Tc8TZ6+dy4OhpaWlpaWlpaWlpaWlpX1K7aGdg3YYz14bXDt\\/0JzZfd9giO+Vh+cPL5qPZq\\/R0tLS0tLS0tLS0tLS0v6ItrR\\/WdL6O88bj+9h1z9Z6XLPJfPSVuWnNHutLOPdvqyh09LS0tLS0tLS0tLS0tI+pTZMR8\\/Hda2c2Z0r3uHamzyuLdTQux8k72FMbWf957sftLS0tLS0tLS0tLS0tLTPqs2jy0OT+spr5FPbtb7a1D6lin\\/zqnu44mU50Oz6wAnjtLS0tLS0tLS0tLS0tLT\\/UTtK6HKPCe9+Hz7uvvmyST2eGTa1s9fCD0JLS0tLS0tLS0tLS0tL+4Labrh5\\/ssyaHsvbYW8XmB+7byeAj5vMHQHoI1uQUtLS0tLS0tLS0tLS0v709p69+vqtWt2bSP5jBukGUB+\\/2AXiur1AtO45k5LS0tLS0tLS0tLS0tL+5LaJt3qPw9GOy3bB1PqWs+zz7fjM8byMLaVPQxaWlpaWlpaWlpaWlpa2pfSHgYL+jxZbUqz1\\/aLNn\\/jd4F\\/v1T8R88\\/OrO7ew+dlpaWlpaWlpaWlpaWlvantJf2g\\/NS8e5K5qMl++oKPf8g74NDx+IK\\/YEaOi0tLS0tLS0tLS0tLS3tc2tDyfwwGF1+3w64hZuVZcdh1OV+SReY2gHsKwl987S0tLS0tLS0tLS0tLS0tOn87Pm0sfCN41Lg39Vrn\\/r31mMLQOib7zj5BykPVPxpaWlpaWlpaWlpaWlpab+rXT+zO7S9l1Rlf0sl8227os+Hft\\/yFcM09QstLS0tLS0tLS0tLS0t7Utqx13u69ee2vfQx9PUM7\\/5Rvfu+8P7CbS0tLS0tLS0tLS0tLS0D2rHs9c2gybwgHuvK\\/T6uJvcNz543O554hJ\\/+t6kOFpaWlpaWlpaWlpaWlrav1wrIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiLyt+SfAAAA\\/\\/8SGtvIj+XeZQAAAABJRU5ErkJggg==\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139730213934\\/ticket?caller_id=2612895764&hash=8332d8be-13fb-4efd-b43b-aca6198e080c\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.01,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.01,\"transaction_id\":null}}', '2025-12-27 22:41:27', '2025-12-27 22:41:27'),
+(19, 4, NULL, 50, 0, '139730631876', 'agendamento', 1.00, 'approved', 'accredited', NULL, NULL, '{\"test\":true}', '2025-12-27 22:43:06', '2025-12-27 22:45:18'),
+(20, 4, 2, 51, 0, '139083687961', 'agendamento', 1.02, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T21:49:42.000-04:00\",\"external_charge_id\":\"01KDHAB9SXQYHNKA55CJ6QHR57\",\"id\":\"139083687961-001\",\"last_updated\":\"2025-12-27T21:49:42.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T21:49:42.088-04:00\",\"execution_id\":\"01KDHAB9S5W1Q1NE01RTNW5DY5\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-27T21:50:05.000-04:00\",\"date_created\":\"2025-12-27T21:49:42.000-04:00\",\"date_last_updated\":\"2025-12-27T21:50:05.000-04:00\",\"date_of_expiration\":\"2025-12-28T21:49:41.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #51\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_51\",\"fee_details\":[{\"amount\":0.01000000000000000020816681711721685132943093776702880859375,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139083687961,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-27T21:50:05.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120867953419,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.025802BR5911DIRA93473616004Laje62250521mpqrinter13908368796163041C5D\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKEElEQVR42uzdT5LiOBYHYBMsWHIEjuKjVR6No3AEliwIPDFMyn5PEn+mKrsjyny\\/TXe4jP05d5KengYRERERERERERERERERERERERERERERERERERERERH5F3OY2nwNQ\\/nf8\\/2mX9M0DNt8x\\/3C5f6A4\\/2OnPyW8s+XYdjXd+w7giMtLS0tLS0tLS0tLS0t7edpj\\/WFu2VT\\/3JbXhYuTNN0Gobxv\\/+9lVefvv95U3\\/dJn\\/\\/NF3LT47PSbS0tLS0tLS0tLS0tLS0v68NA\\/JDGqHnAfn\\/7hi\\/r16HYZduu5bh9vEbdy38MEKfk7XhDlpaWlpaWlpaWlpaWlpa2kV7u1vy6H++UCy79D15QfxWL9Pf8qJ6nqGgpaWlpaWlpaWlpaWlpf2XtPfswhp6GU\\/3MqZx+ildOBft\\/QMvSTv81AidlpaWlpaWlpaWlpaWlnYl2qbKPVStB22eYJifnecTTt\\/3x63hQ3ev+PBTNfm0tLS0tLS0tLS0tLS0tGvQ9nuvzSv+4\\/eFa7owr\\/if0oV9udBUuZf5hHBhm5ux\\/UmnOFpaWlpaWlpaWlpaWlradzM96h8eVryvYQ29GaEXbXhi7M4WtD8QWlpaWlpaWlpaWlpaWto1aMc02A\\/pNUNv1tCfVbnn3muzNnz\\/Ls1hvKxyp6WlpaWlpaWlpaWlpaVdqzbsQ7\\/0R\\/+9Q7zz6WRhG3nedt70nst18Nd+M7qJlpaWlpaWlpaWlpaWlvbntE3Ze+bkNfTpu6j9QU7L527rnd2Xepk+dkcPp4APtLS0tLS0tLS0tLS0tLQfpi1L4LcylA\\/3huPKhrrK\\/VaePfXL3jut1poJhlgE\\/+vdfei0tLS0tLS0tLS0tLS0tO9r82h5qpfAx1TUPXTW0Eu\\/8TwgrzZy14vwQ3Nmdygkp6WlpaWlpaWlpaWlpaX9NO0hrZA3Ve6PV7zLdEBpr97bt73t7NvOT+xNSBxoaWlpaWlpaWlpaWlpaT9PW3qvNX3QbnnFv9be+s\\/al7c\\/28h+WOYfciH99t1OcbS0tLS0tLS0tLS0tLS0r7VhI\\/flWcV5XcN+ywd65bL3PEI\\/LSvk8zubKvfwClpaWlpaWlpaWlpaWlraj9WG6YNDPZ8QTuRueq81J4Kdl5dtQjO2vA99SK3Wcnf056GlpaWlpaWlpaWlpaWlXas2nNk9PWkMN+XGcP196PO283Epew9\\/kCnzm43pub06LS0tLS0tLS0tLS0tLe0favOZ3bn32jz+\\/qp\\/FU7YPn3fsblf2C+KeCLYr+WJ4czu5p3DG\\/MJtLS0tLS0tLS0tLS0tLQr1nbmEzad1uXzBEMzIRG0pzRD0ZyIluvgd\\/Vcw4WWlpaWlpaWlpaWlpaW9oe0zZJ56L02dNqL5yH7rljKHc96rzUXrv3S9MOr88toaWlpaWlpaWlpaWlpadenzSeC7etOaVm7S\\/uwc5V7nJAY6yPCvtIBYM2FY1pUfz77QUtLS0tLS0tLS0tLS0u7au2m86hLqlq\\/lvX5Y2qGXuYTbuFzy4r\\/tX5FPrM791t\\/s8qdlpaWlpaWlpaWlpaWlvZNbXNm94MReqf32rW\\/CH9anrjtf39T9n5cxvwXWlpaWlpaWlpaWlpaWtqP1B6WmvRmT3ieYGhw83zCWN9furnF+YTcLv0rfUzZmL59tzs6LS0tLS0tLS0tLS0tLe06tU2nuPzqfMJ20y59fHR+2TbNUGzq2YJtuFBecXm1D52WlpaWlpaWlpaWlpaW9n1tyLkMn\\/tV7iGbcsdh2dkde6\\/lV3wtkwDnWtu0d6OlpaWlpaWlpaWlpaWl\\/UBtmT6oHtWZT4injX0t2t58QuCclyXz6kCzXNQeXnF6VZZPS0tLS0tLS0tLS0tLS\\/uONhR19+rGQ3vxa+HkBuRNTqnfeLBs6jH\\/1Kkbf6ffOC0tLS0tLS0tLS0tLS3tKrXH7nxC9bI8+s+91\\/J8QtjZPa\\/KN98\\/pDvGtG7\\/siaflpaWlpaWlpaWlpaWlnZ92iGtvocTtmf+mE7YPqfZgl2ZPvhq26X3zi9rCumnTtk7LS0tLS0tLS0tLS0tLe1Pacd2\\/B1H6OPSb\\/xFlftc1H5MD3gwQs9181MqpKelpaWlpaWlpaWlpaWl\\/UDt0Fnxbn5ZzzhUm8pL2Xs4s3vz8IllH\\/q1bsYWl\\/VpaWlpaWlpaWlpaWlpaT9NO34\\/am709ittIx\\/rM7vDEd2XNFtwrc8vG+oSgGmZkBgelr0\\/72tHS0tLS0tLS0tLS0tLS\\/umNpzZnavcq23XZYB9rl9dRui3sobe+\\/48xD8tRe2hbv6dNXRaWlpaWlpaWlpaWlpa2hVr8ybxPLafR\\/85oV16r8r9RVH7qb5wrN9JS0tLS0tLS0tLS0tLS\\/vn2iFVeTe4ZshecisD7NB7baq3acdV+fwH+bUcALavS9OH1yv+tLS0tLS0tLS0tLS0tLRr1VazBX3tZTmz+9aZYGimD7b1Bz5otTYtExLvzSfQ0tLS0tLS0tLS0tLS0q5Qm1ffp0cV59uOdr6jKQFotLmQvuxb7\\/Veey+0tLS0tLS0tLS0tLS0tC8SmnvnZuBVxXlnDT0+oPD39R37jja\\/otk8\\/sY+dFpaWlpaWlpaWlpaWlratWmHpZd5Xs\\/eBG2pSQ8X5vmEU2qXPqUL1\\/I9YQ09bHW\\/5gmJMmXxssqdlpaWlpaWlpaWlpaWlnZ92tAdPXeKu3Vq2MOCfbMPfQgXmgc0x4KH+8+psn737vlltLS0tLS0tLS0tLS0tLSvtVPde21KW73zcLvwb51nR35zZlhJWFTPdfNT\\/lxaWlpaWlpaWlpaWlpa2o\\/ShjX0Zvqgd6DZuYMbHu1Dn\\/8gX50ZinpVnpaWlpaWlpaWlpaWlpb2x7XD9xr6JQzZc746Vd4P0wzZmzH\\/of9DWlpaWlpaWlpaWlpaWlraOg+15\\/qI7lNqnZZ7r21TUfumg7ukOYzr8HuhpaWlpaWlpaWlpaWlpf3rtQ+nD6b8qPDsUPa+W7Sb+4V9mXHI2ofd0WOVe34nLS0tLS0tLS0tLS0tLe2fa4\\/1hVyTPi4j9KYO\\/lIsYYR+Wlblm8zaBhdG6Ie3zi+jpaWlpaWlpaWlpaWlpV2hNuwyPyyvjtr6uK5NeNlYo3K\\/9cNS5b4LFzpV7gMtLS0tLS0tLS0tLS0tLW3ShgtNevzSLn1f70N\\/cCJa+edeM7qJlpaWlpaWlpaWlpaWlvYf1IYB9lgP2QtuW9bQj8uFc80JA\\/Le9wzpRLDfn0+gpaWlpaWlpaWlpaWlpV2FNl8IVe771HutyS4Vtc9F6rn3Wl52bxbVp1r7JLS0tLS0tLS0tLS0tLS0\\/5e213stj9BDd\\/D9cse2Uzd+LhfC+PvU1zat1n6\\/UxwtLS0tLS0tLS0tLS0t7V+vFRERERERERERERERERERERERERERERERERERERER+VvynwAAAP\\/\\/Lg4b2us4C+0AAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139083687961\\/ticket?caller_id=2612895764&hash=98c079c0-fbbb-47e9-bada-00de70fdce76\",\"transaction_id\":\"PIXE18236120202512280149s089b4ee4e4\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.020000000000000017763568394002504646778106689453125,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120867953419,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":1.0100000000000000088817841970012523233890533447265625,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.020000000000000017763568394002504646778106689453125,\"transaction_id\":\"PIXE18236120202512280149s089b4ee4e4\"}}', '2025-12-27 22:49:42', '2025-12-27 22:50:07'),
+(21, 4, 2, 52, 0, '139083688027', 'agendamento', 5.00, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.05000000000000000277555756156289135105907917022705078125,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-27T21:51:12.000-04:00\",\"external_charge_id\":\"01KDHAE24CZJZWY7W4HA6V8H5Y\",\"id\":\"139083688027-001\",\"last_updated\":\"2025-12-27T21:51:12.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-27T21:51:12.534-04:00\",\"execution_id\":\"01KDHAE23QCYVH2E34JJMW11JD\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-27T21:51:34.000-04:00\",\"date_created\":\"2025-12-27T21:51:12.000-04:00\",\"date_last_updated\":\"2025-12-27T21:51:34.000-04:00\",\"date_of_expiration\":\"2025-12-28T21:51:12.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #52\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_52\",\"fee_details\":[{\"amount\":0.05000000000000000277555756156289135105907917022705078125,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139083688027,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-27T21:51:34.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120868020385,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654045.005802BR5911DIRA93473616004Laje62250521mpqrinter139083688027630420D2\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKJElEQVR42uzdz3HjuBIHYLh40FEhKBSFZoWmUBSCjjqoyFfrMchuEPqzM95XNdL3u+yaQ5MffQPQaBQRERERERERERERERERERERERERERERERERERERERH5P2Y3rXMopf7v+eumz2kqZQgXSvn4+uny9YDj1x05+S31ny+lbNs7th3BkZaWlpaWlpaWlpaWlpb2\\/bTH9sJh+Wm7\\/PNQX5Zxp1L2\\/\\/x3rPef0vfM318vnBf+tX3FDRItLS0tLS0tLS0tLS0t7e9rw4B8t4zQ5\\/H04Vv7646A26Rx9TWNvz\\/qhVMaoc\\/J2nAHLS0tLS0tLS0tLS0tLS1t0q5G\\/5u0hn6t2mOaf5i+nzi2y\\/RjXlTvz1DQ0tLS0tLS0tLS0tLS0v7H2rAEfkzj6ceF53VRPT6xDtkvSVt+aoROS0tLS0tLS0tLS0tLS\\/si2lWVe6haD9pNp0h9t6yyxyr3PCFRunvFy0\\/V5NPS0tLS0tLS0tLS0tLSvoK233ttrLj994VrujCv+J\\/ShW29sKpyr\\/MJ4cKQm7H9Sac4WlpaWlpaWlpaWlpaWtpnM93qHx5WvLO2GaFXbXhi7M4WtD8QWlpaWlpaWlpaWlpaWtpX0O7TYD\\/k0i5w315DX1W5d3qvzdrw\\/Zv2FLL7Ve60tLS0tLS0tLS0tLS0tO+h7Y3+p3bFvzdb8NluO\\/96wJB6z41tHXyvbn7zaMWflpaWlpaWlpaWlpaWlvZJ7a7fy7xz5PaQjgj76NSmXx\\/u7L60y\\/SxO3o9dOx0+w9LS0tLS0tLS0tLS0tLS\\/uq2pJ6mU\\/Ly8Y0fbA6YXusz55Sc\\/Nz+8TQam2estgtMxSrCYnpidkPWlpaWlpaWlpaWlpaWtrnu5mF0XLOub66sw97aMfwpbMIny2XtPd7aEfo5YkVf1paWlpaWlpaWlpaWlral9TuUme1soz+b3\\/PMVW5h6L21b7tod23nacspnZC4hqW9WlpaWlpaWlpaWlpaWlp30pb96HHPmhTu2Df0d7Itr69s5F9SmXyzYREmLKgpaWlpaWlpaWlpaWlpf0RbdjIfUkr3mMoai+pJj3UsIdfGfPbwwj91I75e1Xu4RW0tLS0tLS0tLS0tLS0tG+rDdvOd+2Kd65hz73XLi3\\/vLzsIyyZfy7d3MLG9CFfWPFpaWlpaWlpaWlpaWlpad9HG84viwv84WW5dfnUWvL3bOuZ3at+67nK\\/fNWUcEz3dFpaWlpaWlpaWlpaWlpaZ\\/R1hPBmt5rdVF92++sFk7Y\\/oU7pAF8HfMPne7o+cywS7sZ\\/OF8Ai0tLS0tLS0tLS0tLS3tC2v78wmx7D3PPxzaCYnDdzO2eT6hc+j3R7vtvLf3\\/UJLS0tLS0tLS0tLS0tL+0Pa0hktH1LrtGMakJ+TdrOseM\\/aVe+1U3si2LTs7F498WG\\/cVpaWlpaWlpaWlpaWlral9Tu0lB+23ZKC9qp3Yedq9yb+YTVEWGrqvjw0zH9ye7PftDS0tLS0tLS0tLS0tLSvrR2DKvvh24J+pA2po+h93nojn6uJQDhVO9eDUGv3\\/pzVe60tLS0tLS0tLS0tLS0tE9qc7vwadl23ayhd3qvXe898eu\\/Q\\/\\/7Q3O1TWjv9lyVOy0tLS0tLS0tLS0tLS3tS2p3S036ZrqTzq\\/O8wn79ubaze3aTlnM7zykj8lTFidaWlpaWlpaWlpaWlpa2nfVrjrF5VfnKvd+p7i5Kj5Uuc9vD93R8+fmZnS\\/Ltzfh05LS0tLS0tLS0tLS0tL+6+0wbLrV7l3Stan+uy8s3tqX7ZburltUgP2ob4itHcrtLS0tLS0tLS0tLS0tLTvqg370G\\/PJ4Sa9IDrndl9St9zXpbMP9pC+qlzRNrm0Ro6LS0tLS0tLS0tLS0tLe3z2nt14+elKvxaOXlR\\/dTZGr5PZeIlraFv75SmD3+4s5uWlpaWlpaWlpaWlpaW9m\\/WTu2zQ++13Jrt0q6h533YQ50+WK3K5+\\/PUxZz3XxYlT\\/S0tLS0tLS0tLS0tLS0r6ZtrSr77ul1drqQLNwZvfYrs837dJXvddWJQAr\\/hP70GlpaWlpaWlpaWlpaWlp\\/5V23w6fP7tD9muqg1\\/t7F6N0Md2EmCFK3ndPlygpaWlpaWlpaWlpaWlpX1DbemseK9+s+K2y6Pi+V21ddrcHT1PH+Qnnrrf3xTe09LS0tLS0tLS0tLS0tK+m3a\\/nMi9raeN5Sr3w\\/ezy6Jt5hOmVruakAiF8VN\\/xb9TN09LS0tLS0tLS0tLS0tL+\\/vacGb33BjtkMreQ+\\/zTapyzyP0sa6hr75\\/as8YO6Uh\\/tze7Yk1dFpaWlpaWlpaWlpaWlraF9bmTeJ1bD\\/mfeg5n2m2YP99oNndVmurNfT+Mv1ES0tLS0tLS0tLS0tLS\\/tD2pKqvAOuN2QPiSP0fboQtmnHVfn8B\\/lcDgDbtqXp5fGKPy0tLS0tLS0tLS0tLS3tq2rzbMGN7uiX5czusTPBMLTTB0P7gTdarYXmbc\\/NJ9DS0tLS0tLS0tLS0tLSvpo2NDp70Kl86GjnO2rvtfz9eYIhzlDUfeu93mt3QktLS0tLS0tLS0tLS0v7W8nNwJuK884aetaOdck837HtaPMrzu3m8YcngtHS0tLS0tLS0tLS0tLSvp62nrA9F5jvlir3KcwWdOYThtCdLac+8VqfGNbQw1b3a56QCE8stLS0tLS0tLS0tLS0tLRvpq2\\/ObbzCWMue+\\/PJ8wL\\/Ksi9dX5ZWH6YJfuP7eV9SdaWlpaWlpaWlpaWlpa2p\\/Q5u7oq9Zp2XJZ+GN49kqbn5jfHhbV85h\\/ymeM0dLS0tLS0tLS0tLS0tK+lbYszc170wd5sJ+Tu6Pf3Yd+aKcsAm6ipaWlpaWlpaWlpaWlpf2vtKXMB4CV9sjt+WV1QB5ard3Iqf2e3M3t3H\\/FREtLS0tLS0tLS0tLS0tL2yt7nzqL6pvaKW11ZvehXSGfliPCVnvF8xp6mMO4lt8LLS0tLS0tLS0tLS0tLe1fr70xfdBZ8Y+t1g7\\/vPqaqtx\\/Xdi2+9AfdEePVe71Ai0tLS0tLS0tLS0tLS3tT2mP7YVDap22\\/75w7VS5X+rnhhH6aVmVX2XWrnBhhL57dCIYLS0tLS0tLS0tLS0tLe2rasP0QVjxDtMHpT2u6yO8rHciWL3jvLR3e1zlXmhpaWlpaWlpaWlpaWlpaZM29HULswXlJv9zWeDP+9DDEd1jZ0JiSnfkz6WlpaWlpaWlpaWlpaWl\\/S+0YQm895uf3\\/u2L\\/UBn8tG7tJqd8tW79X3lHQi2B\\/NJ9DS0tLS0tLS0tLS0tLS\\/v3a56vct2279FVR+2mZPsj8ZlE9Tx\\/0j0ijpaWlpaWlpaWlpaWlpf0jba\\/3Wnj2PpV9hzuGtm68tzF7tdU7a2Ortd\\/vFEdLS0tLS0tLS0tLS0tL+9drRURERERERERERERERERERERERERERERERERERERE\\/pb8LwAA\\/\\/\\/1OTfsqahxsQAAAABJRU5ErkJggg==\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139083688027\\/ticket?caller_id=2612895764&hash=f383dd82-78b8-42f6-a4c3-a9501e5af499\",\"transaction_id\":\"PIXE18236120202512280151s08cfb3ec26\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":5,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120868020385,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":4.95000000000000017763568394002504646778106689453125,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":5,\"transaction_id\":\"PIXE18236120202512280151s08cfb3ec26\"}}', '2025-12-27 22:51:12', '2025-12-27 22:51:37'),
+(22, 4, 2, 78, 0, '139141465023', 'agendamento', 1.00, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-28T14:34:02.000-04:00\",\"external_charge_id\":\"01KDK3T9TCP07CY96GZ7WH1E62\",\"id\":\"139141465023-001\",\"last_updated\":\"2025-12-28T14:34:02.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-28T14:34:02.454-04:00\",\"execution_id\":\"01KDK3T9SNG4JN62KV13RCE135\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-28T14:34:54.000-04:00\",\"date_created\":\"2025-12-28T14:34:02.000-04:00\",\"date_last_updated\":\"2025-12-28T14:34:54.000-04:00\",\"date_of_expiration\":\"2025-12-29T14:34:02.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #78\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_78\",\"fee_details\":[{\"amount\":0.01000000000000000020816681711721685132943093776702880859375,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139141465023,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-28T14:34:54.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"1787518615\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120879365443,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter139141465023630483BC\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKC0lEQVR42uzdQXLiShIGYBEsWPoIHIWj4aNxFI7AkgVBTTTtQplVhdE893sRDd+\\/mXmyW\\/rknaqyMicRERERERERERERERERERERERERERERERERERERERH5D7MtfT7bX9r\\/unq5\\/d+PUg7zDza33z\\/8+o1rvuM0rertjl83uN5+\\/zT\\/xlTv2OVAS0tLS0tLS0tLS0tLS\\/t+2kN74XOa6r3v\\/\\/KmDRdWlT9N025+zGn8iPD+HzN\\/9P4jEi0tLS0tLS0tLS0tLS3tP9eGh1VtfPr+1\\/f0evD5vLk9epr5H\\/VC+eJ8zN\\/8q1LO6Q8Stfuvm59paWlpaWlpaWlpaWlpaWlnbb33\\/WFhPaEmX7iG1YLdvEP+eN\\/+9v5nWlpaWlpaWlpaWlpaWtr\\/XDvVKu\\/djAtV3tdwj92w7HuVN9WrZRrUjdPS0tLS0tLS0tLS0tLS0o6r3MPB7PrjdX3Y9HWQe13vHQ6Dhz3063cX9q32RzX5tLS0tLS0tLS0tLS0tLSvoB31Xgud0nZpx79eWNULx3Qh7PjHC\\/uvC+d0YR2KCn7UKY6WlpaWlpaWlpaWlpaW9v\\/Pg1uFL\\/Spvk\\/+IK8f9SUd9c5nxf94aGlpaWlpaWlpaWlpaWn\\/Zu1uLjAfdUrbzafGw4rDanAwPb7PoPdat8t+aSXx7WhpaWlpaWlpaWlpaWlp30obdvzPabhYPGi+L48TuqN388vWg+WD+wrF7b9iUUG9sKw+gZaWlpaWlpaWlpaWlpb2ifa7L\\/T89HXeAh9ry2xZhW5uZa5yH3VHL2kK2T9cT6ClpaWlpaWlpaWlpaWlfQVt1xhtFVqtTWl+We1lfqmPrmXvcX7ZuNXaJh11z3XzZbCpTktLS0tLS0tLS0tLS0v7I+2Utq9rruFlcu+10SZ8LSQPbxe\\/4euufHeDTdplX+e\\/EC0tLS0tLS0tLS0tLS3t+2hzd\\/Ruh\\/w0eJ\\/DN2Xvecv8vuLwOU8EyysUo0L6Iy0tLS0tLS0tLS0tLS3tW2oP6dt+m9YTcnf0c1shMA1+v84vmwY1BHmBIe741yWI89IJ47S0tLS0tLS0tLS0tLS0T7Q1caD2lL6n68HvS336Ybof5D7Pe+jdALBraFHefaHniWC7uRnbREtLS0tLS0tLS0tLS0v7xtpagj6qch9N2N7PCwzbxD+lFyyDY+eneVP9fmGXZoY9DS0tLS0tLS0tLS0tLS3tS2p3LS6sJ3y0bdw+2o\\/9vJ7wQDt6\\/+6OufccLS0tLS0tLS0tLS0tLe0PtbnKPd87dkprz35fQ6e03VfvtZLK5H9zuu7o4Y6XMLO7jgiLZe+0tLS0tLS0tLS0tLS0tO+mHa8nbMb91cKWeUnjyuJ6wsM9925mdy6k39DS0tLS0tLS0tLS0tLS\\/jlt+aaXWpgIVurZ7\\/DjOIO7boiPeq9NU3N4vPtk76aA09LS0tLS0tLS0tLS0tK+lTbskJ8fFsGHmd2j9YTvHpa1sTt62DIv7QLDREtLS0tLS0tLS0tLS0v7ptprO78s8rte5qEZel5PCDUEJQzlHu\\/4d4jLtCi0tLS0tLS0tLS0tLS0tAu1u3agdjjIXWrvtcGx6zgArCt7v124f7J\\/pj\\/INN\\/gnN7naZU7LS0tLS0tLS0tLS0tLe2rarftnnjuZf6RNrjL\\/LBV+PrfDU6q55ndXboFiWUzu2lpaWlpaWlpaWlpaWlpX1s7aIYe55fl7fjQDP2+fNCdQ+92\\/G\\/\\/u0lLEOtBUcFm\\/jEtLS0tLS0tLS0tLS0t7Y+0+QP7NO94N0e9w4TtnOPMvyRtM6K7WrpC+o95m\\/7pFzotLS0tLS0tLS0tLS0t7atrH4\\/oDqsFuZf574dt0zn07mXy75fv1hNqlfuC9QRaWlpaWlpaWlpaWlpa2kXaJSO6R3volyf\\/JHxxdyPFRnXj3aoALS0tLS0tLS0tLS0tLe37aMPJ7vN4ftdhMGF7fIP7Jny9cEkLDNd2xSHuyoehY0daWlpaWlpaWlpaWlpa2vfT5oSP\\/VX79T\\/lqvXw9Z8HmnXt1XNntZE2rD\\/Q0tLS0tLS0tLS0tLS0v5B7S7d6phq0rv5XZm\\/GZzsLvPM7pxreESuct99vc96wY4\\/LS0tLS0tLS0tLS0tLe1LareD2+Zj57u2BD13R6\\/\\/5IH29LCQfvCIS9qVp6WlpaWlpaWlpaWlpaV9L+3oR3l+2b7EYWTdjv\\/UFrUfvv+DHL\\/q5u9TwMN6QllUk09LS0tLS0tLS0tLS0tL+1xb99BX9dHbdsf70I7cHud6e9gpTQGPRe25br4MtulDN7cDLS0tLS0tLS0tLS0tLe2baTOuS2iMFu+9\\/8KVeUR3edhqLXRzyzXs6\\/FY8AVV7rS0tLS0tLS0tLS0tLS0z7VhZnfGNRcyv6RN9a7su36Qx5nd4QbHcQfzxesJtLS0tLS0tLS0tLS0tLSvq82rBWWsvd9qn0rW6wJDt3xwaavcz+l91m179WnpegItLS0tLS0tLS0tLS0t7atpwzn0TS1SH\\/VeG9x73TZji63TSqoJqAPN8ljwB73XaGlpaWlpaWlpaWlpaWn\\/lLa0+9l5IthufA47V7l\\/ph3ybsZY1pbUai08c+HJblpaWlpaWlpaWlpaWlra19U2E75CkXpYPsgXpnTv0Q269YH7kkVpu7l9zu+zYD2BlpaWlpaWlpaWlpaWlvY1tWGgdihSz8fI14Pm5g92\\/HPqesLjk+2H9Ijtou7otLS0tLS0tLS0tLS0tLSLtN0HdreHPtjxLvXeZaAdPOr+\\/g\\/27QeF97S0tLS0tLS0tLS0tLS076LN3dGn9l\\/e026INzvk3UCz3Hut2yHvHkFLS0tLS0tLS0tLS0tL+y9o69PP7b27gV6hU9od9zBd77Vum\\/7BDY7T09DS0tLS0tLS0tLS0tLSvqq2Wz7oWq19e5A7916bZk635941Y3u8hkFLS0tLS0tLS0tLS0tL+z7a7eCDPh8SL2lc2cesvaTWab8v5O7o6\\/C64f3zzO7uHDotLS0tLS0tLS0tLS0t7Z\\/SHtoLeQ+96zdei9qbduGDL\\/T8B7kOho7FL\\/QFe+i0tLS0tLS0tLS0tLS0tK+tzR\\/7Yd5XWA645Av1N47tVO88cjuM6F4N2qvH5Kp4WlpaWlpaWlpaWlpaWlrawbSxdoHhvuN\\/TMsB4WViCUDY8e84tYZgGsz4pqWlpaWlpaWlpaWlpaX9F7Td53OXdZrZfS9q36bea6f2X4Uv9Ev7B7mMt\\/VpaWlpaWlpaWlpaWlpad9FO6hybwaa5XuXtsq9Pn3Uey0fdT+lH8ez74vXE2hpaWlpaWlpaWlpaWlpF2rHvddWgyLwTTrZ\\/fsLfZuaseWD3NOgTPw0\\/sQvP+sUR0tLS0tLS0tLS0tLS0v7l2tFRERERERERERERERERERERERERERERERERERERET+lvwvAAD\\/\\/1p4yB7sEyCsAAAAAElFTkSuQmCC\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139141465023\\/ticket?caller_id=1787518615&hash=9151833f-4989-4b42-8693-fc6f64890bae\",\"transaction_id\":\"PIXE18236120202512281834s082279ea71\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120879365443,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":0.9899999999999999911182158029987476766109466552734375,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":\"PIXE18236120202512281834s082279ea71\"}}', '2025-12-28 15:34:02', '2025-12-28 15:34:54');
+INSERT INTO `pagamentos` (`id`, `estabelecimento_id`, `assinatura_id`, `agendamento_id`, `plano_id`, `mercadopago_id`, `tipo`, `valor`, `status`, `status_detail`, `qr_code`, `qr_code_base64`, `payment_data`, `criado_em`, `atualizado_em`) VALUES
+(23, 4, NULL, 80, 0, '139142106767', 'agendamento', 1.00, 'cancelled', 'expired', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-28T14:37:15.000-04:00\",\"external_charge_id\":\"01KDK406KS27HY7TEVGNC583JR\",\"id\":\"139142106767-001\",\"last_updated\":\"2025-12-28T14:37:15.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-28T14:37:15.779-04:00\",\"execution_id\":\"01KDK406K1JACCF0PD2R1WHY60\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-28T14:37:15.000-04:00\",\"date_last_updated\":\"2025-12-29T14:40:27.000-04:00\",\"date_of_expiration\":\"2025-12-29T14:37:15.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #80\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_80\",\"fee_details\":[],\"financing_group\":null,\"id\":139142106767,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"1787518615\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.005802BR5911DIRA93473616004Laje62250521mpqrinter13914210676763043D28\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139142106767\\/ticket?caller_id=1787518615&hash=97a6a88e-f619-49db-bc22-0d04a6ba8a64\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"cancelled\",\"status_detail\":\"expired\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1,\"transaction_id\":null}}', '2025-12-28 15:37:15', '2025-12-29 15:40:30'),
+(24, 4, 2, 83, 0, '139142089235', 'agendamento', 1.01, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-28T14:47:09.000-04:00\",\"external_charge_id\":\"01KDK4JAA9M6J9KKP4P2YN6G7E\",\"id\":\"139142089235-001\",\"last_updated\":\"2025-12-28T14:47:09.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-28T14:47:09.394-04:00\",\"execution_id\":\"01KDK4JA9MGF1V25DT2HNDK9ES\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-28T14:47:34.000-04:00\",\"date_created\":\"2025-12-28T14:47:09.000-04:00\",\"date_last_updated\":\"2025-12-28T14:47:34.000-04:00\",\"date_of_expiration\":\"2025-12-29T14:47:09.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #83\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_83\",\"fee_details\":[{\"amount\":0.01000000000000000020816681711721685132943093776702880859375,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139142089235,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-28T14:47:34.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"1787518615\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120879572909,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1391420892356304CF89\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAJ+0lEQVR42uzdQZLaShIGYBEseskROApHo4\\/GUXQElloQaMK4S8oslQC72xPx4Ps380bG6MO7qszK6kREREREREREREREREREREREREREREREREREREREROT\\/mP24zGfXlf883z50HMeu25YHh1\\/\\/e709GG5fcLp9Iie\\/pfzx0HW7+hO7huBES0tLS0tLS0tLS0tLS\\/t+2lP94PPrPz\\/S39yWl2VcP\\/N\\/v7r\\/+vwm\\/\\/7y4DzzL+WvnO6TaGlpaWlpaWlpaWlpaWn\\/XhsW5Pt5hT6tpz+\\/tNMKPf+ekkv5\\/OkLdyn8sEKfkrXhE7S0tLS0tLS0tLS0tLS0tLP2erPk1f\\/0oFg+0oZBF7RlgyGU6a+5qN7eoaClpaWlpaWlpaWlpaWl\\/cfaG2cIBe6ynn7ceN5\\/fT5+461NfBNW6MfUN05LS0tLS0tLS0tLS0tLS9vucg9d60GbNxhil3vYT1hou8aDhfZbPfm0tLS0tLS0tLS0tLS0tK+gbc9emyr+h68Hl\\/Rgqvj36cGuPFh0uYcdir6u+H9\\/UhwtLS0tLS0tLS0tLS0t7bMZ1+aHh4r3VFRvrdAb3xinswXtD4SWlpaWlpaWlpaWlpaW9hW0h7TYDxnqAveihj6ULxjvj0s\\/pgfh93\\/Ut5Dd73KnpaWlpaWlpaWlpaWlpX1VbTiHPrRX\\/+Nc8Q\\/Z5P2E1ZwbffP9Wt\\/8pb4zjZaWlpaWlpaWlpaWlpb2B7VhUlpue78k\\/mYVF37P4mT3UJfp43T0culYv76ZQEtLS0tLS0tLS0tLS0v7qtpQQ8\\/Dza\\/purIuL\\/aPv\\/54G06NH5P2UPOPd35\\/l6ryD8+h09LS0tLS0tLS0tLS0tI+r82r5TGt0M\\/l1fU57M1iXNvtE+dGEb5PlrCG39Yr9O5RDZ2WlpaWlpaWlpaWlpaW9lW1+\\/mUddfocs+L\\/aF9f9e4dm57m7rcx3rLYqw3JC6hrE9LS0tLS0tLS0tLS0tL+1baUvGPc9DC21d60lezK29vHGRv7T\\/ElA0GWlpaWlpaWlpaWlpaWtof0YaD3MO9BXnjArBt+ivX\\/PZu5vRzhXx6Z2OaW\\/cH+wm0tLS0tLS0tLS0tLS0tK+pDcfO9+l2rpUNgzJ7bXEj2Hl+WTzZfkx9810atZano98PLS0tLS0tLS0tLS0tLe2ravOkuHP6g4+6HB\\/GuC2mo8dj54fUMrCvP7pyMD03wdPS0tLS0tLS0tLS0tLSflObbwTLs9dWmtrLgvz3uPR+LqrHk93jV1E9T0cf0p3di3d2T+wn0NLS0tLS0tLS0tLS0tK+sLaxn7BpjC5f35C4FdUv4Rz64rqyxRbEYstitW5PS0tLS0tLS0tLS0tLS\\/s32nZXeByddqqbusOC\\/GOueEdtLqqPqRM9PLiUXvXwjQ\\/njdPS0tLS0tLS0tLS0tLSvqR232hSD9sHWTtdqH2stwE+5w2J\\/ZPT0cP\\/O6Wi+v3dD1paWlpaWlpaWlpaWlraF9Yu6vOL1X\\/Nv4bZ52U6ejyHXjYYurrLfUreoXi6y52WlpaWlpaWlpaWlpaW9kltN09K+whvzzX0rtZmS\\/7jfr4FfNv+\\/WG42mLNP9DS0tLS0tLS0tLS0tLSvqU2VLwXZ8LzBsMCN+0nHOrPl2lul0aZfrqzO9\\/xHQaw97S0tLS0tLS0tLS0tLS076pdTIprt6CPjVPjXT0dPdxfNr29VfG\\/\\/fGQegJ+P7h\\/Dp2WlpaWlpaWlpaWlpaW9o+0wbJvdLmPafZaN\\/+6oay\\/G9PRu7wgL5sA51q7GO9GS0tLS0tLS0tLS0tLS\\/ue2nHucl\\/ZTzjWt40VXOvO7j79nvNcMt80qvN5PyHPW6elpaWlpaWlpaWlpaWl\\/UFtK3n5vGvPGw8JNfQuWTbhZHfrC3JRnZaWlpaWlpaWlpaWlpb2rbRl++DafrBbG4y2aVziva1Pdk\\/7CSGtB4dUt394wzgtLS0tLS0tLS0tLS0t7etqq6b2UOBvnUMvPyZU\\/Ktx6XnUWrgibdFUsGh7p6WlpaWlpaWlpaWlpaX9Ke1hXn+HAvc1r79LU\\/s59bAP9Qr9nCaY5zL9Atfluv3iX4iWlpaWlpaWlpaWlpaW9q20XaPi3d5PmHYcPudD5X1pYy+z18qd3ZvVbyzXgl\\/qYWzTr6OlpaWlpaWlpaWlpaWlfUPt4euruof7CV0alx6no4+1dtE3nyfFfTYq\\/vn309LS0tLS0tLS0tLS0tJ+Uxvu7A7r75Uruqf19DGNWgsPzu3fn5f4\\/dzUHvrmn6mh09LS0tLS0tLS0tLS0tK+sLZ9SPyariurEsald\\/M59JXJaoum9r5+kI+609LS0tLS0tLS0tLS0tL+iLZLXd4Z99GoeJdcywK7b8wbHxtV+fwPcpwvANvVrend44o\\/LS0tLS0tLS0tLS0tLe2raqvdgrZ2mK8IuzY2GBbbB9v6B66MWhsbV4rR0tLS0tLS0tLS0tLS0r6r9sGk8m1bu59v9b7U35g3GDb5irTV2WvP7SfQ0tLS0tLS0tLS0tLS0j7I6jDwquO8XUMfZu01lMzDnd27hja\\/YnF4\\/ImefFpaWlpaWlpaWlpaWlraV9OWLLrcN0F7TF3rAfcxD0OPw9gO84ZBuLP7mrcPyn5CeMX2iS53WlpaWlpaWlpaWlpaWtoX1i7muuXrx0oPeyjYXxvfvWhqX3nFPjW1n+vO+p6WlpaWlpaWlpaWlpaW9ie0eTr6YnRal9bfw8y\\/5sb48Pa+XvPnt4eieu6bH+svoKWlpaWlpaWlpaWlpaV9I23htLYPWov9c719sCiZ53Po0\\/ZBrqEH3EhLS0tLS0tLS0tLS0tL+6+0ZT09pC7vsbFkD13e17pkPj5ckFfj3RqvoKWlpaWlpaWlpaWlpaV9e+1K2\\/tUIQ+zzA91yTyMTtulLvdtfVZ8SHX7barKxw0JWlpaWlpaWlpaWlpaWtp307a2D1br80Op54dZ5kW7ub1sV3YcVqej53+Q2OWeG+lpaWlpaWlpaWlpaWlpab+vPdUPPuevmnB5+XxMN4KNaYW+ONk9pqPhvz9xXJ4Vj\\/PJT7S0tLS0tLS0tLS0tLS0b6kNx8739f3ZYbLakLri4+\\/JOc2fONfXgp\\/vN9LT0tLS0tLS0tLS0tLS0tLWc926usCfH2wb49J36Rj5dvVGtK6r7i\\/LnfW0tLS0tLS0tLS0tLS0tP9MG0rgrb+Za+hhGNu55oQFeev3dOlGsL\\/fT6ClpaWlpaWlpaWlpaWlfQltftDaT2gPRvtITe2Xxuy1c112D\\/xLmrc+do9DS0tLS0tLS0tLS0tLS\\/tH2tbstfDdh7rtO6y\\/c9946\\/csjnrnvvHWMDZaWlpaWlpaWlpaWlpa2jfUioiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI\\/FfyvwAAAP\\/\\/OGEqOOhvF3cAAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139142089235\\/ticket?caller_id=1787518615&hash=744cd158-8e82-4653-938f-5bfd3d34a7bd\",\"transaction_id\":\"PIXE18236120202512281847s08eb012838\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120879572909,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":1,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_id\":\"PIXE18236120202512281847s08eb012838\"}}', '2025-12-28 15:47:09', '2025-12-28 15:47:36'),
+(25, 4, NULL, 84, 0, '139144229445', 'agendamento', 1.01, 'cancelled', 'expired', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-28T15:20:36.000-04:00\",\"external_charge_id\":\"01KDK6FJ63K38YBWGZ94J0FZFH\",\"id\":\"139144229445-001\",\"last_updated\":\"2025-12-28T15:20:36.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-28T15:20:36.301-04:00\",\"execution_id\":\"01KDK6FJ5CJQ5EETHFGMPCK4WB\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-28T15:20:36.000-04:00\",\"date_last_updated\":\"2025-12-29T15:25:49.000-04:00\",\"date_of_expiration\":\"2025-12-29T15:20:36.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #84\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_84\",\"fee_details\":[],\"financing_group\":null,\"id\":139144229445,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"1787518615\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1391442294456304660B\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139144229445\\/ticket?caller_id=1787518615&hash=f075a78a-29d0-4854-84ac-44cc85e260c9\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"cancelled\",\"status_detail\":\"expired\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_id\":null}}', '2025-12-28 16:20:36', '2025-12-29 16:25:55'),
+(26, 4, 2, 85, 0, '139812491146', 'agendamento', 1.01, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-28T19:17:17.000-04:00\",\"external_charge_id\":\"01KDKM0Y6W0XBHF3C20SGF4HF0\",\"id\":\"139812491146-001\",\"last_updated\":\"2025-12-28T19:17:17.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-28T19:17:17.157-04:00\",\"execution_id\":\"01KDKM0Y683CGGWV99SR2AQPH7\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-28T19:17:40.000-04:00\",\"date_created\":\"2025-12-28T19:17:17.000-04:00\",\"date_last_updated\":\"2025-12-28T19:17:40.000-04:00\",\"date_of_expiration\":\"2025-12-29T19:17:16.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #85\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_85\",\"fee_details\":[{\"amount\":0.01000000000000000020816681711721685132943093776702880859375,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139812491146,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-28T19:17:40.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"1787518615\",\"identification\":{\"number\":\"99999999999\",\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120931431406,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter139812491146630429CC\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKLklEQVR42uzdQY4iORAFUCMWLDlCHYWjkUfjKByBJQtEjlRdJiNsQ9HdpZEa3l+NGDp5WTs7wuEiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIi\\/2M+5j5TKfU\\/T59f2s9zKev62eHrn67n+fz5gMPnN3Lyr9T\\/fS5l235jOxAcaGlpaWlpaWlpaWlpaWnfT3toP\\/jUXuujDo+1pZTd5z\\/JCa\\/7kd5\\/nufjF\\/8SfuIRiZaWlpaWlpaWlpaWlpb2z7XjZ0dLu4b+9TKbz5\\/eLR9s6weD9fe1\\/YNc8h+k\\/iYtLS0tLS0tLS0tLS0tLW3aT9iEGvrns28flLKqH9zK7gF3WDYkQpn+movqdUOClpaWlpaWlpaWlpaWlvZ\\/1sYe7k67X1boXeoKfTX4f+e6ht+nNTwtLS0tLS0tLS0tLS0tLe24y32czcK\\/hrb3u\\/sJ6\\/EOxUd7svtve\\/JpaWlpaWlpaWlpaWlpaV9BO569dnv2bulJDx\\/cKv7H9ME27Sdc0vbBqt1PWOdhbH8zKY6WlpaWlpaWlpaWlpaW9tnk6eBTu0KvFfJu9tovS0nD246D54eS+Q+ElpaWlpaWlpaWlpaWlvYVtHV0Wi5wr\\/KjAv+wdLnf2ZCoubS7BXf2E7orxQ60tLS0tLS0tLS0tLS0tO+nLV\\/7Axl3DV3reVx6WfYT5mU6ejzIPrcfTIMNhvZk+xxmz9HS0tLS0tLS0tLS0tLS\\/r32zrNDT3q3wM4ffHy9z6o+IKzob+9T0hPrB+vw\\/vs\\/6MmnpaWlpaWlpaWlpaWlpX0dbVlu2N6kH7s+WtvvW8t+eF3ZejBqravKl2VD4pndD1paWlpaWlpaWlpaWlra57XdQe55udDrVB+V19PdfV\\/T14r71Bbh89vlMv2lFtUPyxVhtLS0tLS0tLS0tLS0tLTvqQ3Xb432E0Y18cPgzu6pr8o3N4KVtsperxS7dbmX70NLS0tLS0tLS0tLS0tL+6rau7PXurV9t59wSa8bryurb3dpx6VvkjbfAj4P\\/oC0tLS0tLS0tLS0tLS0tH+uHY0X3y\\/8m7biwgVg+WD2ta645+V117UPPq+\\/P5ZbwMugqE5LS0tLS0tLS0tLS0tL+57aQ+pJDyXwTepyjyXzPFltt8xeu1XZwzS3brLacTBq7en9BFpaWlpaWlpaWlpaWlral9SWdP3YnAr2owu1uyb1Yxr0loenX8Y7FHMaDHeqOxT1g+P3Xe60tLS0tLS0tLS0tLS0tN9rP5b1dDd77ZxK5t3b3Z4dvhG01zCMbb88cTv4g8zj+em0tLS0tLS0tLS0tLS0tG+lHXW55\\/Hn1bJZfv02ey3vJ3Q7FKNpbh+D\\/YQwgP33e\\/JpaWlpaWlpaWlpaWlpae8m941P7f8OTd3bL\\/5qfMP2aPZaHkeev9FV5WlpaWlpaWlpaWlpaWlp31MbDnLfHpVxtcv9kmeZ50zpvq9deuIoU3vHWCiqf1tDp6WlpaWlpaWlpaWlpaV9SW29fuz86Nm1wH\\/3QrM7ffCjpvZ80Hzbnlv\\/dlIcLS0tLS0tLS0tLS0tLe0z2l\\/Pzj3sZVBD7+7vGrzupT0anqe5XVMRvuQbxOYHP0FLS0tLS0tLS0tLS0tL+\\/racCPYZr6XafhPu+nosSae9wdCmT400jfa8ERaWlpaWlpaWlpaWlpa2jfUhtV\\/mOs2ur\\/svNTzm0lxYTr6cdmhWLd3do+mo5f2G4WWlpaWlpaWlpaWlpaW9oe0tQQ+19HlU3pUHV1+43Rd7rtlGFvoYV\\/lmnhdh5\\/SCn30B3muJ5+WlpaWlpaWlpaWlpaW9tW0tcC9afcT5jBqrW4fhFFrl7v7CbWpfZ1wq8HstXxn2m2HotDS0tLS0tLS0tLS0tLS\\/oT2bt\\/4OSzI2wvAVmE9nRNq6HGC+aBCvh60qD+zn0BLS0tLS0tLS0tLS0tL+3ranO14Nb\\/\\/OnZ9TjX0URF+Ht\\/IvW+3LMIdY2EP45np6LS0tLS0tLS0tLS0tLS0L6wN2wfz0tQerytrf\\/3a1udX7XDzVZ69lo+6h0u\\/T2mD4UxLS0tLS0tLS0tLS0tL+\\/PavMC+rafDBdylPYcdcg018UNa889JG37iMviJx13utLS0tLS0tLS0tLS0tLSvrc2HxEcH08eT0sJJ9WuLa6ajj8+hz1U7\\/cZ+Ai0tLS0tLS0tLS0tLS3tS2rHp8av4X9PSwv6aJb5vGwHbJdLvK+P\\/iBT20MQNjUe7yfQ0tLS0tLS0tLS0tLS0j6p\\/WgL3HkOWncjWFm63Ndpltoqz14ba8\\/juv38bA2dlpaWlpaWlpaWlpaWlva1tV2X+2c2ocCd9xO6U+ZTOmW+W9re799flqejT\\/0AdlpaWlpaWlpaWlpaWlrav9LWGnr3qHxFd7l7kPu4HMyO6ary3ey1boJ52BUotLS0tLS0tLS0tLS0tLTvp83bBznbAeSQ\\/slxUEOvw9tu+wlh3vpp2cO4tFsWz\\/Tk09LS0tLS0tLS0tLS0tK+qrbW5\\/Ojru2F2nGxv287BPZLU3vXN1\\/3E5oNhnAOPc9eK7S0tLS0tLS0tLS0tLS0P6HNy+ewwG4W5IMaerzVO8wbDyv07kawc\\/pGpy3P9eTT0tLS0tLS0tLS0tLS0r6etqRn5+2A2ILe9aSHGvpucA69nlTPV4RtxkfdSztvnZaWlpaWlpaWlpaWlpb23bQfDx4Vryurx85Py7Hz26S4QxlNR4\\/fmL7+IF0j\\/SY8MZxsL7S0tLS0tLS0tLS0tLS0P6ZdjUenlfanS2pq36RxbfnHVuOT2mHJHtf8e1paWlpaWlpaWlpaWlrat9aW8Q3bg0nl63QOPd7ZXWvol9rDPr6\\/LG5Z5HPo+WT7t\\/eX0dLS0tLS0tLS0tLS0tI+qa3r6fNgyZ5L5pvBs0c3gnVF9f3SiV4GuNxZ\\/sR0dFpaWlpaWlpaWlpaWlraV9WWwX7CHCrk3f1d+c7uqa2QD\\/YTbmfFcw098C\\/lz0JLS0tLS0tLS0tLS0tL+89rPwYL++lexT9sMFxzy8CURq0dHv\\/EMfUQ5C73Z2av0dLS0tLS0tLS0tLS0tI+qe2ePaUS+Lysv+MwtvA+3Qr9kF6wNrVf2zX86BZwWlpaWlpaWlpaWlpaWtp31oYz4XmWeZ6sdk5d8VF7t8v91A5gP433MMK8N1paWlpaWlpaWlpaWlpa2jTXLd9flm8bu34zy\\/zuN7b1g\\/btynOz3GlpaWlpaWlpaWlpaWlp\\/04bPtgtJ7vv1NBDCfzUXuJ9aivk23bN3x31\\/pP9BFpaWlpaWlpaWlpaWlral9B2Xe6hJ\\/3wtfofDUbbpCu6b9\\/I95flsvuohh62LB6HlpaWlpaWlpaWlpaWlva3tKPZa+H+rl0qqtcF+bWdN77K7zO+BTy3icfZa2VZsv\\/+pDhaWlpaWlpaWlpaWlpa2n9eKyIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIi8q\\/kvwAAAP\\/\\/XoMZdpbNmy4AAAAASUVORK5CYII=\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139812491146\\/ticket?caller_id=1787518615&hash=e1315d06-96bd-42c9-8822-827971e3c356\",\"transaction_id\":\"PIXE18236120202512282317s08dd93969b\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120931431406,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":1,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_id\":\"PIXE18236120202512282317s08dd93969b\"}}', '2025-12-28 20:17:16', '2025-12-28 20:17:41'),
+(27, 4, 2, 87, 0, '139857762708', 'agendamento', 1.01, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-29T08:09:41.000-04:00\",\"external_charge_id\":\"01KDN078MWT2QAJ79E5CVSR15E\",\"id\":\"139857762708-001\",\"last_updated\":\"2025-12-29T08:09:41.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-29T08:09:41.799-04:00\",\"execution_id\":\"01KDN078M8TB6K9BD0SAHZWSRX\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-29T08:10:20.000-04:00\",\"date_created\":\"2025-12-29T08:09:41.000-04:00\",\"date_last_updated\":\"2025-12-29T08:10:20.000-04:00\",\"date_of_expiration\":\"2025-12-30T08:09:41.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #87\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_87\",\"fee_details\":[{\"amount\":0.01000000000000000020816681711721685132943093776702880859375,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139857762708,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-29T08:10:20.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120938904252,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter139857762708630424D4\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKBUlEQVR42uzdzZEquRIGUBEsWGICpmAamIYpbQJLFgT1YugWlSmJnze3YyIunG81U5dWHdhJKaWKiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI\\/IfZTH327Yd2\\/zw91\\/\\/b\\/vN\\/l+t\\/rq6fP\\/zziUsesZRFHe7rZ4DL9fPH+RPfWQ8EB1paWlpaWlpaWlpaWlraz9Me2gf7Uq5\\/c7oO9f3PV+1qPNR2fs1x\\/Irw\\/dcz\\/1wfHB6TaGlpaWlpaWlpaWlpaWn\\/vTa8LGtvM\\/RSloPp8+r66msW17ev64Pph7Oe5\\/yLOmJ9RdTufgY\\/0dLS0tLS0tLS0tLS0tLSztpQIZ\\/msVep0H0O2lpD\\/9Zu5wr5\\/br99fufaGlpaWlpaWlpaWlpaWn\\/c+1tPr2dcWGX92VcQw9z+EUuqoc5f7dvnJaWlpaWlpaWlpaWlpaWdrzLPRzMrv+8TEX1Sy2qfy8f7NMe9ivu8ujBrtX+0Z58WlpaWlpaWlpaWlpaWtp30I56r4VOadtU8a8PFqHiHx6Ein98sPt5cEoPbhX\\/P+0UR0tLS0tLS0tLS0tLS0v7\\/+fOUHWGfquydzP03G+8pDJ9STP0XwwtLS0tLS0tLS0tLS0t7d+s3c4bzEed0rbznvRwMH0xPcih\\/bpdd\\/Qy914LWYZvR0tLS0tLS0tLS0tLS0v7UdpwDv2ULheLB813c2O4rlNcPnY+tesJ3fLBbYWifv9jWpBYPdufQEtLS0tLS0tLS0tLS0v7orakXuZ5hh5fFlqnhQdTeyNYt2\\/+OLdaW7S915Z5VaAdkZaWlpaWlpaWlpaWlpb2A7XdIfFFwJV2sr+b26Vv5m3v8f6yR63WMq4bsdDS0tLS0tLS0tLS0tLS\\/pI2W\\/Iu73wj2Crc8BWK8FPbe60kS67Krx8c9V4OfiFaWlpaWlpaWlpaWlpa2o\\/QdhXv8mCT+mhT+\\/SgZH5bcdgPrwg7txvppxdOdtPS0tLS0tLS0tLS0tLSvqv2MK8nHNPYq9YSmrFd2q\\/bVPxDgX+0h2A36NVWX\\/HaDeO0tLS0tLS0tLS0tLS0tE+0YUJ+agvcp7aG\\/v32fCPYZi67x3bh088npnlTe9PNrSvTD35AWlpaWlpaWlpaWlpaWtrP0o6XD+7fsB2asW1SUf2YvuCUtLHKnh9s2531hZaWlpaWlpaWlpaWlpb287S5gn+XH9cTnmyT3w53wI9uRIsj5t5ztLS0tLS0tLS0tLS0tLR\\/qM273PPYsdVank9Pcw29\\/EywF\\/lkd\\/2CuTt6HvEc7uyuV4TFbe+0tLS0tLS0tLS0tLS0tJ+mvbuekO\\/sDt3ZFqFT2nbe5X5bT8iv2Kd98\\/nO7q4BOy0tLS0tLS0tLS0tLS3tb2mnduxc8d7+vKw72V0GVfb7vdfGl3jnH+SVGjotLS0tLS0tLS0tLS0t7Vtqw\\/LB\\/U3w+7bivU\\/rCWHF4di+bD3f8BX\\/ZJdK5lO7wFBoaWlpaWlpaWlpaWlpaT9SW4ab1PNtY+fMzy\\/bz7jpZw9BXB\\/II3ZrGGHbe6GlpaWlpaWlpaWlpaWl\\/T3tdr5QezSfrtPt5fjBV\\/t1w4g37b7dN18H6H6Qx7vcaWlpaWlpaWlpaWlpaWnfVZsv9Op6ma9TgTufQ48LDDmH9s7uLt2CxGt3dtPS0tLS0tLS0tLS0tLSvrd20Az9pj0MK\\/6jTnElnEOf0p+EY+dhCaJZT6if+Lq\\/9EFLS0tLS0tLS0tLS0tL+7o2T7CPg17meQv6Ok2q841g56Rtruiulm4j\\/e0HeWGGTktLS0tLS0tLS0tLS0v7xtoyXE+48cNqQdfLfDU+h16L8MvBBWh3Wq2FER+vJ9DS0tLS0tLS0tLS0tLS\\/ittl2N7I1hXQx8l3wKe5\\/zrVEPv8nJ3dFpaWlpaWlpaWlpaWlraN9Tm1mnhwZQK3F3rtNsncqu1Q9om350V\\/0r75td1QeLl9QRaWlpaWlpaWlpaWlpa2vfVlsF6wm0LepfdcPYf26V3vddKvyfgpj0kBC0tLS0tLS0tLS0tLS3tb2m3bWO03c+FXnmX+zId5I5fMMzQ853dOXGGXtoRu23vtLS0tLS0tLS0tLS0tLQfpd0Mhs3HzreDVmshX23vtaw93t1IP3hFLMLT0tLS0tLS0tLS0tLS0n6advRPd+8vqw8u7ey\\/0T76QeqSxTIsWYRrwZ\\/etkZLS0tLS0tLS0tLS0tL+4q21tAX9dWbQSO1fOV2LYgv06T+VnO\\/c7K7vmI9aO9Wf6FzqsrT0tLS0tLS0tLS0tLS0n6QdpO2oJe0PnBKjdHi2LtZO6qhjze1Lwbn1kfXgr+wy52WlpaWlpaWlpaWlpaW9rm27gOP8+l8f1fYSD5qnZaPet++f+5gvku9177GHcxfXk+gpaWlpaWlpaWlpaWlpX1fbV4tmMbaVSiqhy3rZd4Hn5cPzm1V\\/pS+z6ib22vrCbS0tLS0tLS0tLS0tLS076bdtH3QNuPea4\\/GDhX\\/fGd3vtDs9v3DQfNR7zVaWlpaWlpaWlpaWlpa2t\\/SHtJfljT\\/PrbtxY\\/pr1fzLvemxJ5L5qWtyk+p91qY4j892U1LS0tLS0tLS0tLS0tL+5bausF81Ckt39ld2k3ty9CdrX4+P+jWB25LFlPbzS3srH8aWlpaWlpaWlpaWlpaWtq31q7SakF3jHw5aG7e3V9257qy7gfJJ9sP6RWbl9YTaGlpaWlpaWlpaWlpaWmfaHOntGlwXdc21cRLqrKf6gD74YQ8J94ZNrW910J3NlpaWlpaWlpaWlpaWlraD9Tm7uil\\/cuMC7vcF7k7+tReaJYXGPbtOfTRK2hpaWlpaWlpaWlpaWlpf1tb335qxx4d5D62+8a\\/2rPfNV3vta5MvxyvCnyVp6GlpaWlpaWlpaWlpaWlfVdtk6ztGqPtZsuUdq3n3ufL8R1juRnbnTUMWlpaWlpaWlpaWlpaWtqP0m4GE\\/p8SHyalw9O86nxS11gmNIu9\\/Vc8W\\/44+7op8E5dFpaWlpaWlpaWlpaWlra39Ie2gf7VPHOJfPRlP3uDD3\\/IJfBpWOnwUb6L1paWlpaWlpaWlpaWlraT9WGkvlmvJ5QcXfu7M45tAPU9m5de\\/WYvCuelpaWlpaWlpaWlpaWlpY21ecP7bb37VzgX9Wxd\\/259bgFIAzQccIrzi\\/scqelpaWlpaWlpaWlpaWl\\/QXtNB\\/knu5uey+pyn5MJfNlO6MvaYZ+HiwCPL2\\/jJaWlpaWlpaWlpaWlpb2jbXjXe6lWrqxp\\/Ycel4tqOfQM79bcWiat728nkBLS0tLS0tLS0tLS0tL+6J23HttMdgEHnCXOkOvX3eRX1a\\/T7dNPGtP4Qf5k05xtLS0tLS0tLS0tLS0tLR\\/uVZERERERERERERERERERERERERERERERERERERERORvyf8CAAD\\/\\/0rVUNcAHRg9AAAAAElFTkSuQmCC\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139857762708\\/ticket?caller_id=2612895764&hash=f9782bef-250c-4fe7-847f-d2db65912522\",\"transaction_id\":\"PIXE18236120202512291210s0856a2fa7e\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120938904252,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":1,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_id\":\"PIXE18236120202512291210s0856a2fa7e\"}}', '2025-12-29 09:09:41', '2025-12-29 09:10:28'),
+(28, 4, 2, 88, 0, '139215442431', 'agendamento', 1.01, 'approved', 'accredited', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"bank_info\":{\"is_same_bank_account_owner\":true},\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-29T08:56:37.000-04:00\",\"external_charge_id\":\"01KDN2X6NY47SJ7XW583E5N49M\",\"id\":\"139215442431-001\",\"last_updated\":\"2025-12-29T08:56:37.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-29T08:56:37.832-04:00\",\"execution_id\":\"01KDN2X6NAVTY7WWQ5T02W8YHP\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":\"2025-12-29T08:57:02.000-04:00\",\"date_created\":\"2025-12-29T08:56:37.000-04:00\",\"date_last_updated\":\"2025-12-29T08:57:08.000-04:00\",\"date_of_expiration\":\"2025-12-30T08:56:37.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #88\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_88\",\"fee_details\":[{\"amount\":0.01000000000000000020816681711721685132943093776702880859375,\"fee_payer\":\"collector\",\"type\":\"mercadopago_fee\"}],\"financing_group\":null,\"id\":139215442431,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":\"2025-12-29T08:57:02.000-04:00\",\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":\"XXXXXXXXXXX\",\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":\"CPF\"},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"sub_type\":\"INTER_PSP\",\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":40388482513,\"long_name\":\"MERCADO PAGO INSTITUI\\u00c7\\u00c3O DE PAGAMENTO LTDA.\",\"transfer_account_id\":null},\"is_same_bank_account_owner\":true,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":72268491,\"branch\":\"1\",\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":\"NU PAGAMENTOS S.A. - INSTITUI\\u00c7\\u00c3O DE PAGAMENTO\"}},\"bank_transfer_id\":120892576655,\"e2e_id\":null,\"financial_institution\":1,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter1392154424316304C199\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKAklEQVR42uzdQXIiu7IGYBEMGLIElsLS7KWxFJbgIQMCvXhuqypTpcJ0t8+NaPj+yb1RjamPM5MylSoiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiLyP8yhLvNeSvu\\/H58fequ1lG17dvr6022tl88vOH1+Iie\\/pf3zpZR9\\/4n9QHCipaWlpaWlpaWlpaWlpX097al\\/8P71f3cD3L7HnUs5\\/v\\/\\/3tqrz1+f3+Tf3x58zPxr+5PTfRItLS0tLS0tLS0tLS0t7Z9rw4L8MK\\/Qp\\/X0+5f21ycCbpfW1ddeOz0IK\\/QpWRs+QUtLS0tLS0tLS0tLS0tLO2tvn5a8+p8eNMsubRhM+wnh94Qy\\/S0X1cc7FLS0tLS0tLS0tLS0tLS0\\/7H2k3MJBe62nv6+8bxp4zd+tolvwgr9LfWN09LS0tLS0tLS0tLS0tLSjrvcQ9d60OYNhojL+wmlPxpehmfFy0\\/15NPS0tLS0tLS0tLS0tLSPoN2PHttqvgfvx5c04Op4n9OD6aK\\/6LLPexQnPuK\\/99PiqOlpaWlpaWlpaWlpaWlfTR1bX74yuy1xQp98I1xOlvQ\\/kBoaWlpaWlpaWlpaWlpaZ9Be0yL\\/ZBLKnBvx8PNS2pqXxmX\\/pYehN+\\/628hu9\\/lTktLS0tLS0tLS0tLS0v7rNpwDv0yXv3XvuL\\/mU34k9Gx8\\/HsudwHfx0Po6u0tLS0tLS0tLS0tLS0tD+nDYPRwqS0Olg+N\\/6mriXf2Z1Pdl\\/6Mn2cjt42Ac7rmwm0tLS0tLS0tLS0tLS0tM+qDTX06WVvc4E7vCzfsH1r313ntvdrur9sMWpt8fvjvPW3R8+h09LS0tLS0tLS0tLS0tI+ri39+jus0D\\/aq\\/tz2JvFuLa8wB70jdf+IPe2X6GX72rotLS0tLS0tLS0tLS0tLTPqj2kyWqLLve82L+M7++qa+e2t6nLvYbp6Hm82ymdFT\\/Q0tLS0tLS0tLS0tLS0r6etlX8F3PQbqs7Dve2Jvbt7YOD7DU00of9hzr\\/wO2jk+JoaWlpaWlpaWlpaWlpab\\/XhoPcl3sL8jxe\\/H0ugbc\\/ueW3l1RUf0ubAIdBl3t4BS0tLS0tLS0tLS0tLS3ty2o\\/V\\/+7ccW7zjdyl3722sp09DbNLZ9s3\\/QH09fvGCu0tLS0tLS0tLS0tLS0tC+mzZPiPuanm\\/Ho8tpbat\\/lnu\\/sLv2FZjUdTF\\/MT\\/+d6ei0tLS0tLS0tLS0tLS0tN\\/fCDaevTZaoYcF+a8bts9zUT2e7K5fRfU8HX1xsvvSHwb\\/dj+BlpaWlpaWlpaWlpaWlvaJtff2E77\\/quNXUf0azqGPL\\/2ufR\\/8rn96oaWlpaWlpaWlpaWlpaX9IW3Ovp+9tu+HgZe0IN\\/NFe+ozUX1Ou5Eb0v8j\\/SN384bp6WlpaWlpaWlpaWlpaV9Su1h0KQeJqVl7XSh9lu\\/DfA+b0gc7kxHX9lgOKWi+v3dD1paWlpaWlpaWlpaWlraJ9aO6\\/Ojin\\/j38Ls8zYdPZ5DbxsMpe9yn5J3KB7ucqelpaWlpaWlpaWlpaWlfVBb5klpu\\/D2XEMP372fe9iv4yL8eb4FfDv+\\/WG42mLNf6GlpaWlpaWlpaWlpaWlfUltqHgvzoTHDYZBpv2EY\\/\\/5Ns3tOijTT3d25zu+6zyA\\/UxLS0tLS0tLS0tLS0tL+6raxaS4\\/Op829hxMC79vd9PqKknYFTx\\/\\/znS+oJ+PXg\\/jl0WlpaWlpaWlpaWlpaWtrf0gbLYdzl3pfMN+0Th\\/lkd56OXvKCvG0CfPTaxXg3WlpaWlpaWlpaWlpaWtrX1Na5y319PyH0pAfc6M7u0Ca\\/Db8\\/HHU\\/D5rawyvu19BpaWlpaWlpaWlpaWlpaf9IO0pePu\\/7ovqibzyc7C7JsunX\\/HXQN\\/7wdHRaWlpaWlpaWlpaWlpa2qfSlnn1P3qwXxuMNpq9tu1Pdk9V+Zra5A\\/pRrCpbz5U5U+0tLS0tLS0tLS0tLS0tC+qHV1Xtgst6\\/0Gwy3U549zC0D+xjh7raRbvbM2t73T0tLS0tLS0tLS0tLS0v6U9jivv\\/dzC\\/ot\\/PP7141ggb8ZrKenpvZTWvMvVughu1RD7\\/4L0dLS0tLS0tLS0tLS0tK+lLYMKt7j\\/YRcQx\\/1wYc7uzer39hOql\\/7YWzTr6OlpaWlpaWlpaWlpaWlfUFtODX+zX5CaHu\\/hfp8y7W\\/vywn\\/sBRxT8cZC+0tLS0tLS0tLS0tLS0tH+tDXd2T13uo2PXbYH967vf0o3cJdXQR78\\/N9Kf589Pr3ishk5LS0tLS0tLS0tLS0tL+8TafEi8re1v6bqyLmFcepl\\/z3Y8am3R1H7uH4yOutPS0tLS0tLS0tLS0tLS\\/qW2pC7vjNsNKt4tcYXeZq\\/V\\/ph2rMrn\\/yBv8wVg+7XWdFpaWlpaWlpaWlpaWlraF9R2uwVj7SV1uY962PP2wbb\\/gSuj1uq8IfHYfgItLS0tLS0tLS0tLS0t7bNpD4O\\/HHecbwfaXT97Lf\\/+bfrGTb4ibXX22p3Q0tLS0tLS0tLS0tLS0v6W9jRoQV90nK\\/W0PMl3uEg9\\/Rgoc2vWBwef+AcOi0tLS0tLS0tLS0tLS3t02tbPXuTLHWwn7BtPenH9DvO84Nr2LJoNfRw1P2aNyTCNxZaWlpaWlpaWlpaWlpa2hfVLhb7t9z2Hrrcw37C5X5Te0zYPjikpvaPvrP+TEtLS0tLS0tLS0tLS0v7Q9raz16r6ah3WH9fZv5tsKjPV4RtwpI9JBTV85q\\/Du4Yo6WlpaWlpaWlpaWlpaV9FW3jjLYPRrPMF9sHi5J5Poc+bR\\/kGnrAVVpaWlpaWlpaWlpaWlra\\/0pb5hp66a\\/cXhnG9pZOdte+b3y8IC9Nu\\/oKWlpaWlpaWlpaWlpaWtqX15ZxT\\/pUIQ+zzI99yTyMTtsPutwP\\/VnxXEMPexjX8mehpaWlpaWlpaWlpaWlpf3ntaO1\\/fvgHHoetRZmmTft5vNl+7bjUPsdh8Wt3uFk+ykddaelpaWlpaWlpaWlpaWl\\/SntqX+Qtcd5hR740+y1w3yyO94ItliQB9x5gAsr9MNDN4LR0tLS0tLS0tLS0tLS0j6hNhw7DxXvabFfvkrml9QVX8c3gtV53noNTe2PdLkXWlpaWlpaWlpaWlpaWlrapO1fHRO63Bfj0vfpGPk2Ffhv\\/RdtBy0AK++kpaWlpaWlpaWlpaWlpf0p7aInPSfX0MMwto+eExbko99T0o1gf7WfQEtLS0tLS0tLS0tLS0v772vzg++73Ft2q1d01yW\\/K6q3aW61194JLS0tLS0tLS0tLS0tLe1vaUez18J3H\\/u277D+zn3jo9+zOOqd+8bjqLU\\/nxRHS0tLS0tLS0tLS0tLS\\/vPa0VERERERERERERERERERERERERERERERERERERERP6V\\/F8AAAD\\/\\/6A+rRHSdH0UAAAAAElFTkSuQmCC\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139215442431\\/ticket?caller_id=2612895764&hash=a1605d88-a68f-4ad2-8bb3-24c75b85c009\",\"transaction_id\":\"PIXE18236120202512291256s08661322bd\"},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"approved\",\"status_detail\":\"accredited\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":120892576655,\"external_resource_url\":null,\"financial_institution\":\"1\",\"installment_amount\":0,\"net_received_amount\":1,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_id\":\"PIXE18236120202512291256s08661322bd\"}}', '2025-12-29 09:56:38', '2025-12-29 09:57:09');
+INSERT INTO `pagamentos` (`id`, `estabelecimento_id`, `assinatura_id`, `agendamento_id`, `plano_id`, `mercadopago_id`, `tipo`, `valor`, `status`, `status_detail`, `qr_code`, `qr_code_base64`, `payment_data`, `criado_em`, `atualizado_em`) VALUES
+(29, 4, NULL, 89, 0, '139862424790', 'agendamento', 1.01, 'pending', 'pending_waiting_transfer', NULL, NULL, '{\"accounts_info\":null,\"acquirer_reconciliation\":[],\"additional_info\":{\"tracking_id\":\"platform:v1-whitelabel,so:ALL,type:N\\/A,security:none\"},\"authorization_code\":null,\"binary_mode\":false,\"brand_id\":null,\"build_version\":\"3.136.0-rc-1\",\"call_for_authorize_id\":null,\"callback_url\":null,\"captured\":true,\"card\":[],\"charges_details\":[{\"accounts\":{\"from\":\"collector\",\"to\":\"mp\"},\"amounts\":{\"original\":0.01000000000000000020816681711721685132943093776702880859375,\"refunded\":0},\"client_id\":0,\"date_created\":\"2025-12-29T09:01:39.000-04:00\",\"external_charge_id\":\"01KDN36DF3125F80E9WM2PSSGH\",\"id\":\"139862424790-001\",\"last_updated\":\"2025-12-29T09:01:39.000-04:00\",\"metadata\":{\"reason\":\"\",\"source\":\"proc-svc-charges\",\"source_detail\":\"processing_fee_charge\"},\"name\":\"mercadopago_fee\",\"refund_charges\":[],\"reserve_id\":null,\"type\":\"fee\",\"update_charges\":[]}],\"charges_execution_info\":{\"internal_execution\":{\"date\":\"2025-12-29T09:01:39.693-04:00\",\"execution_id\":\"01KDN36DEFDA01JVDDX6EZZFNW\"}},\"collector_id\":426420888,\"corporation_id\":null,\"counter_currency\":null,\"coupon_amount\":0,\"currency_id\":\"BRL\",\"date_approved\":null,\"date_created\":\"2025-12-29T09:01:39.000-04:00\",\"date_last_updated\":\"2025-12-29T09:01:39.000-04:00\",\"date_of_expiration\":\"2025-12-30T09:01:39.000-04:00\",\"deduction_schema\":null,\"description\":\"Agendamento #89\",\"differential_pricing_id\":null,\"external_reference\":\"agendamento_89\",\"fee_details\":[],\"financing_group\":null,\"id\":139862424790,\"installments\":1,\"integrator_id\":null,\"issuer_id\":\"12501\",\"live_mode\":true,\"marketplace_owner\":null,\"merchant_account_id\":null,\"merchant_number\":null,\"metadata\":[],\"money_release_date\":null,\"money_release_schema\":null,\"money_release_status\":\"released\",\"notification_url\":\"https:\\/\\/iafila.doisr.com.br\\/webhook\\/mercadopago\\/agendamento\\/4\",\"operation_type\":\"regular_payment\",\"order\":[],\"payer\":{\"email\":null,\"entity_type\":null,\"first_name\":null,\"id\":\"2612895764\",\"identification\":{\"number\":null,\"type\":null},\"last_name\":null,\"operator_id\":null,\"phone\":{\"number\":null,\"extension\":null,\"area_code\":null},\"type\":null},\"payment_method\":{\"id\":\"pix\",\"issuer_id\":\"12501\",\"type\":\"bank_transfer\"},\"payment_method_id\":\"pix\",\"payment_type_id\":\"bank_transfer\",\"platform_id\":null,\"point_of_interaction\":{\"application_data\":{\"name\":null,\"operating_system\":null,\"version\":null},\"business_info\":{\"branch\":\"Merchant Services\",\"sub_unit\":\"default\",\"unit\":\"online_payments\"},\"location\":{\"source\":null,\"state_id\":null},\"transaction_data\":{\"bank_info\":{\"collector\":{\"account_alias\":null,\"account_holder_name\":\"Rafael de Andrade Dias\",\"account_id\":null,\"long_name\":null,\"transfer_account_id\":null},\"is_same_bank_account_owner\":null,\"origin_bank_id\":null,\"origin_wallet_id\":null,\"payer\":{\"account_id\":null,\"branch\":null,\"external_account_id\":null,\"id\":null,\"identification\":[],\"long_name\":null}},\"bank_transfer_id\":null,\"e2e_id\":null,\"financial_institution\":null,\"infringement_notification\":{\"status\":null,\"type\":null},\"is_end_consumer\":null,\"merchant_category_code\":null,\"qr_code\":\"00020126580014br.gov.bcb.pix0136420ab7c4-4d63-46d4-809e-cd3eebc129ec52040000530398654041.015802BR5911DIRA93473616004Laje62250521mpqrinter13986242479063044F61\",\"qr_code_base64\":\"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\\/\\/\\/8AAABVwtN+AAAKDElEQVR42uzdT7LqthIHYFMMGLIElsLSYGlnKSyBIQMKvwpBdrck\\/uQeXqoC32+UcjjW5zuT1GoNIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIi8i9mM7bZD0P5z+P1R7txHIZlebCdf3m6vuDn+oucPMpu\\/v26\\/sW6I\\/ihpaWlpaWlpaWlpaWlpf0+7U\\/9YH\\/7z1X6y2UZ7Iq7FP7hxr+UoQ+33y\\/y95cHx5l\\/Ln\\/y85hES0tLS0tLS0tLS0tLS\\/vn2jAh38wz9Gk+vb9ppxn6\\/q+hz+V7Ss5p\\/r0oDw5phj4la3f1nJ+WlpaWlpaWlpaWlpaWlvavB5erJc\\/+pwdDrd23G+KXepv+kjfV6xUKWlpaWlpaWlpaWlpaWtp\\/RXvlnMIGd5lPPy88P6TK8mP5RXlj0A7vmqHT0tLS0tLS0tLS0tLS0n6ItqlyD1XrQZsXGKY98W1aTzjcfh+Phg\\/ds+LDu2ryaWlpaWlpaWlpaWlpaWk\\/QdvvvTbt+G9vD87pwbTjf0gP1uVBU+UeVigO9Y7\\/7zvF0dLS0tLS0tLS0tLS0tK+mvFe\\/\\/Cw45211Qy988bYnS1o3xBaWlpaWlpaWlpaWlpa2k\\/QbtNkf0z3fa37c\\/tG26lyr3DhQfj+VX0L2eMqd1paWlpaWlpaWlpaWlraT9WGc+in\\/ux\\/rHf8r1nkKvfm2Hm\\/91yugz\\/3m9GNtLS0tLS0tLS0tLS0tLT\\/F23olJbL3nMz9MXYzXF+86JzsvtUb9PH7ujhFvCBlpaWlpaWlpaWlpaWlvbLtGUPfdrPPsyN0VZpsDjZ342X8u4xlb0PnQWGIZ1DD+3dzvWu\\/Cvn0GlpaWlpaWlpaWlpaWlpX9fm2fKYZujHMnR9DnvRtGvLE+xO3fgYeq+FO8bCDH14todOS0tLS0tLS0tLS0tLS\\/up2k3qrHYnuwdHvUtRe+\\/c9rJzbjv\\/C\\/UWJDa0tLS0tLS0tLS0tLS0tN+nbXb8w7t7Rerrx0sT6zJ65yB7XLLYp48Z05IFLS0tLS0tLS0tLS0tLe1btOEg9+lRxXmuYS+DhT+55NGHtKm+S4sAvSr3MAQtLS0tLS0tLS0tLS0t7ddqr7P\\/Vb+X+TjfyB0ePOyOfh1sqoM\\/zOfQ88H0ZX7Q8GlpaWlpaWlpaWlpaWlpv0cb7uzOzc2rKvfcGG5ou6PHY+fhzu6hvtBsTAfTm6KC17qj09LS0tLS0tLS0tLS0tI+1+YbwXLvtTtF7WVC\\/ne79MO8qR5Pdo+3TfWmO3rovdaMObywnkBLS0tLS0tLS0tLS0tL+8HaznrC4vVXbW+b6uewnpD30Eu79FVdB7+q1xpOtLS0tLS0tLS0tLS0tLRv0uaETmnTnnjvRu4yIV\\/NO96Tttd7Lc\\/5x\\/lk96pcOrZv\\/wFpaWlpaWlpaWlpaWlpab9Iu+kUqYdOaVk7Xai9q5cB9mlBYju2V4TVvx867d1eWf2gpaWlpaWlpaWlpaWlpf1gbT5X3rttrKwnFP4l9D4v3dGHesf\\/XA+R7+w+57r516rcaWlpaWlpaWlpaWlpaWlf1Ib59KquSY8z9DxlD5ZmE\\/4w3wK+7H9\\/aK7WzPlPtLS0tLS0tLS0tLS0tLRfqd3MNemr8V56N2yH9YRt\\/fvSze3c2aaf7uzOd3yPcwP2Ay0tLS0tLS0tLS0tLS3tt2qbTnH9EvSxc2p8qLujh\\/vLptF3nR3\\/6\\/+eHpQr0k7PzqHT0tLS0tLS0tLS0tLS0v4jbbBsOlXuY+q9Nsxfdyrz733dey0PsZ8XAY61tmnvRktLS0tLS0tLS0tLS0v7ndpxrnK\\/s56wq28bK7jend2hTH4Zvr9zodlYryfkfuu0tLS0tLS0tLS0tLS0tG\\/U9pKnz+t+v\\/GQQ+o3HiyLes4\\/durGX+6OTktLS0tLS0tLS0tLS0v7Udphnv33HqzvNUZbdC7xXtYnu6dd+ZDeg23at396wzgtLS0tLS0tLS0tLS0t7edqq6L2sMH\\/U5cAhEZqTQlAfmNzf1nvqHtT9k5LS0tLS0tLS0tLS0tL+y7tdp5\\/r0untDBl3879xkMd\\/KKesg+hqP0nzfmbCXnIKu2hV\\/9CtLS0tLS0tLS0tLS0tLRfpR06O9799YRT+rp4qLzUwYc7uxd331jOoZ\\/rZmzT19HS0tLS0tLS0tLS0tLSfqF2e3vV8HQ9YSg1Afu0P19yru8vy1mEb9x3dvzz99PS0tLS0tLS0tLS0tLS\\/lIb7uw+BUtz7LpMsI\\/zhLyZoU9DN9+fC+kP8577NMRre+i0tLS0tLS0tLS0tLS0tB+s7R8Sv6RT5kNncaDXe+34SlH7oX7QHHWnpaWlpaWlpaWlpaWlpf29dkhV3hm36ux4h95ryzJ002987OzK53+Q3XwB2LpTmj7Q0tLS0tLS0tLS0tLS0n6pNmaX9rPHdF1XuSLs0vxJZ\\/lgWX\\/gnVZrY+dKMVpaWlpaWlpaWlpaWlrar9KGRmdPOpUva228baz0XsvfnxcYFvmKtLu91x6ElpaWlpaWlpaWlpaWlvaPkpuBVxXnd\\/fQxzRlDwe5pweNNg\\/RHB5\\/eiMYLS0tLS0tLS0tLS0tLe3naTfpVX8\\/uP7lIlmqBYaCW83N0GMztu28YBDu7L7k5YOynhCGWD6rcqelpaWlpaWlpaWlpaWl\\/VTt3V7ml7qG\\/ZzWB6L2blF7TFg+2KSi9mNdWX+gpaWlpaWlpaWlpaWlpX2HNndHb1qnDfV0u\\/AvuTA+jF4GW4Qpe0jYVM9182P9AlpaWlpaWlpaWlpaWlraL9IWTrN8MNaT\\/WaDe9nfMm+6uW1uzdsu+dLvukyelpaWlpaWlpaWlpaWlvbt2jKfPoUpe5MwIQ+913q5s6nerAp0hqClpaWlpaWlpaWlpaWl\\/Xrt0K9Jn3bIQy\\/zbb1lHlqnrTtV7s1Z8byH3hTSD7S0tLS0tLS0tLS0tLS036ftze3DFd1DZ8c\\/9zIv2sV1sHVZcSj90491If0x\\/YPEKvc8Ji0tLS0tLS0tLS0tLS3t77U\\/9YN957quzsnu6c7uMc3Qm5PdIdONYA0uzNA3D28Eo6WlpaWlpaWlpaWlpaX9YG3AbeahhzLZLyXrp1QVP4YFhpyf+RdhPWEom\\/CPCulpaWlpaWlpaWlpaWlpaWmDtvR1Gzt\\/GarcT2mBIa8nDGXHv2zwX+oXLTslAGN\\/TFpaWlpaWlpaWlpaWlrad2mbmvScvIcemrEda06YkPe+Z0g3gv35egItLS0tLS0tLS0tLS0t7Udo84N9mv33qtxLVqmo\\/Vws5Ua0zL+zqT7W2gehpaWlpaWlpaWlpaWlpf1H2l7vtfDubV32HebfvbrxQ7qzuznqnevGY6u1P+8UR0tLS0tLS0tLS0tLS0v7n9eKiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIj8V\\/K\\/AAAA\\/\\/94Od0vjxvKHwAAAABJRU5ErkJggg==\",\"ticket_url\":\"https:\\/\\/www.mercadopago.com.br\\/payments\\/139862424790\\/ticket?caller_id=2612895764&hash=6f9bd616-94f1-4641-bd0a-9929a1136930\",\"transaction_id\":null},\"type\":\"OPENPLATFORM\"},\"pos_id\":null,\"processing_mode\":\"aggregator\",\"refunds\":[],\"release_info\":null,\"shipping_amount\":0,\"sponsor_id\":null,\"statement_descriptor\":null,\"status\":\"pending\",\"status_detail\":\"pending_waiting_transfer\",\"store_id\":null,\"tags\":null,\"taxes_amount\":0,\"transaction_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_amount_refunded\":0,\"transaction_details\":{\"acquirer_reference\":null,\"bank_transfer_id\":null,\"external_resource_url\":null,\"financial_institution\":null,\"installment_amount\":0,\"net_received_amount\":0,\"overpaid_amount\":0,\"payable_deferral_period\":null,\"payment_method_reference_id\":null,\"total_paid_amount\":1.0100000000000000088817841970012523233890533447265625,\"transaction_id\":null}}', '2025-12-29 10:01:39', '2025-12-29 10:01:40');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `planos`
+--
+
+CREATE TABLE `planos` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `slug` varchar(50) NOT NULL,
+  `mercadopago_plan_id` varchar(100) DEFAULT NULL,
+  `mercadopago_preapproval_plan_id` varchar(100) DEFAULT NULL,
+  `descricao` text DEFAULT NULL,
+  `valor_mensal` decimal(10,2) NOT NULL,
+  `max_profissionais` int(11) DEFAULT 1,
+  `max_agendamentos_mes` int(11) DEFAULT 100,
+  `recursos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`recursos`)),
+  `ativo` tinyint(1) DEFAULT 1,
+  `ordem` int(11) DEFAULT 0,
+  `trial_dias` int(11) DEFAULT 7,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `planos`
+--
+
+INSERT INTO `planos` (`id`, `nome`, `slug`, `mercadopago_plan_id`, `mercadopago_preapproval_plan_id`, `descricao`, `valor_mensal`, `max_profissionais`, `max_agendamentos_mes`, `recursos`, `ativo`, `ordem`, `trial_dias`, `criado_em`, `atualizado_em`) VALUES
+(1, 'Autônomo', 'autonomo', NULL, NULL, 'Ideal para profissionais independentes', 29.90, 1, 100, '{\"whatsapp\": true, \"mercadopago\": true, \"relatorios_basicos\": true, \"suporte\": \"email\"}', 0, 1, 7, '2025-12-09 15:47:24', '2025-12-10 16:46:39'),
+(2, 'Básico', 'basico', NULL, NULL, 'Para pequenos estabelecimentos', 79.90, 3, 300, '{\"whatsapp\": true, \"mercadopago\": true, \"relatorios_basicos\": true, \"multi_profissionais\": true, \"suporte\": \"email\"}', 0, 2, 7, '2025-12-09 15:47:24', '2025-12-10 16:46:49'),
+(3, 'Profissional', 'profissional', NULL, NULL, 'Para estabelecimentos em crescimento', 149.90, 10, 1000, '{\"whatsapp\": true, \"mercadopago\": true, \"relatorios_avancados\": true, \"multi_profissionais\": true, \"api_acesso\": true, \"suporte\": \"chat\"}', 0, 3, 7, '2025-12-09 15:47:24', '2025-12-10 16:47:02'),
+(4, 'Premium', 'premium', NULL, NULL, 'Recursos ilimitados', 299.90, 999, 999999, '{\"whatsapp\": true, \"mercadopago\": true, \"relatorios_avancados\": true, \"multi_profissionais\": true, \"api_acesso\": true, \"suporte_prioritario\": true, \"personalizacao\": true, \"suporte\": \"telefone\"}', 0, 4, 7, '2025-12-09 15:47:24', '2025-12-10 16:47:19'),
+(5, 'Plano teste', 'plano-teste', '803c2af3a0ca4ed6836d2b9cd4c1c4a3', NULL, '', 1.00, 1, 100, NULL, 1, 0, 7, '2025-12-10 16:19:20', '2025-12-10 16:19:21'),
+(6, 'Plano Teste 2', 'plano-teste-2', 'a3496d44c2224563953adfd9ded7b596', NULL, 'Plano semanal', 1.00, 2, 10, NULL, 1, 0, 7, '2025-12-18 08:26:57', '2025-12-18 13:34:40');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `profissionais`
+--
+
+CREATE TABLE `profissionais` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `usuario_id` int(11) UNSIGNED DEFAULT NULL,
+  `tipo` enum('vinculado','autonomo') DEFAULT 'vinculado',
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `foto` varchar(255) DEFAULT NULL,
+  `whatsapp` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `status` enum('ativo','inativo') DEFAULT 'ativo',
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `profissionais`
+--
+
+INSERT INTO `profissionais` (`id`, `usuario_id`, `tipo`, `estabelecimento_id`, `nome`, `foto`, `whatsapp`, `email`, `status`, `criado_em`, `atualizado_em`) VALUES
+(2, NULL, 'vinculado', 4, 'Mago', NULL, '75988890006', 'mago@gmail.com', 'ativo', '2025-12-11 14:45:40', '2025-12-11 15:48:36');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `profissional_servicos`
+--
+
+CREATE TABLE `profissional_servicos` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `profissional_id` int(11) UNSIGNED NOT NULL,
+  `servico_id` int(11) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `profissional_servicos`
+--
+
+INSERT INTO `profissional_servicos` (`id`, `profissional_id`, `servico_id`) VALUES
+(4, 2, 2),
+(5, 2, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `promocoes`
+--
+
+CREATE TABLE `promocoes` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `descricao` text DEFAULT NULL,
+  `tipo` enum('percentual','valor_fixo') NOT NULL,
+  `desconto` decimal(10,2) NOT NULL,
+  `tipo_cliente` enum('todos','novo','recorrente','vip') DEFAULT NULL,
+  `data_inicio` date DEFAULT NULL,
+  `data_fim` date DEFAULT NULL,
+  `status` enum('ativo','inativo') DEFAULT 'ativo',
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `servicos`
+--
+
+CREATE TABLE `servicos` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `descricao` text DEFAULT NULL,
+  `duracao` int(11) NOT NULL COMMENT 'Duração em minutos',
+  `preco` decimal(10,2) NOT NULL,
+  `status` enum('ativo','inativo') DEFAULT 'ativo',
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `servicos`
+--
+
+INSERT INTO `servicos` (`id`, `estabelecimento_id`, `nome`, `descricao`, `duracao`, `preco`, `status`, `criado_em`, `atualizado_em`) VALUES
+(2, 4, 'Barba', '', 20, 15.00, 'ativo', '2025-12-11 13:48:05', '2025-12-23 20:59:50'),
+(3, 4, 'Cabelo máquina', '', 25, 20.00, 'ativo', '2025-12-11 13:48:31', '2025-12-23 20:59:59'),
+(4, 4, 'Sombra', '', 10, 5.00, 'ativo', '2025-12-11 13:49:03', '2025-12-23 21:00:09');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `templates_notificacao`
+--
+
+CREATE TABLE `templates_notificacao` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `tipo` enum('confirmacao','lembrete','cancelamento','reagendamento','boas_vindas','pagamento','feedback') NOT NULL,
+  `canal` enum('whatsapp','email','sms') NOT NULL,
+  `assunto` varchar(255) DEFAULT NULL COMMENT 'Apenas para email',
+  `mensagem` text NOT NULL,
+  `variaveis` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`variaveis`)),
+  `ativo` tinyint(1) DEFAULT 1,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `usuarios`
+--
+
+CREATE TABLE `usuarios` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `senha` varchar(255) NOT NULL,
+  `tipo` enum('super_admin','estabelecimento','profissional') NOT NULL DEFAULT 'estabelecimento',
+  `estabelecimento_id` int(11) UNSIGNED DEFAULT NULL,
+  `profissional_id` int(11) UNSIGNED DEFAULT NULL,
+  `nome` varchar(100) NOT NULL,
+  `whatsapp` varchar(20) DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT 1,
+  `primeiro_acesso` tinyint(1) DEFAULT 1,
+  `token_reset_senha` varchar(100) DEFAULT NULL,
+  `token_expiracao` datetime DEFAULT NULL,
+  `ultimo_acesso` datetime DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `usuarios`
+--
+
+INSERT INTO `usuarios` (`id`, `email`, `senha`, `tipo`, `estabelecimento_id`, `profissional_id`, `nome`, `whatsapp`, `avatar`, `ativo`, `primeiro_acesso`, `token_reset_senha`, `token_expiracao`, `ultimo_acesso`, `criado_em`, `atualizado_em`) VALUES
+(1, 'admin@sistema.com.br', '$2y$10$JTNUdyydaB7uARn1WIjjKOtMq27s49sTys2lrq2s3sI.do6S7KLM6', 'super_admin', NULL, NULL, 'Administrador', NULL, NULL, 1, 1, NULL, NULL, '2025-12-05 23:19:53', '2025-12-06 02:15:45', '2025-12-05 23:19:52'),
+(2, 'rafaeldiaswebdev@gmail.com', '$2y$10$.fnjQyarGRJndBsuxfx1rO.wruBb6fYBK9xW/Khu34MNS4x9qC6/a', 'super_admin', NULL, NULL, 'Rafael de Andrade Dias', '75988890006', NULL, 1, 1, NULL, NULL, '2025-12-29 22:08:56', '2025-12-05 23:22:40', '2025-12-29 22:08:54'),
+(3, 'rafaeldiastecinfo@gmail.com', '$2y$10$gQF2S67E1CmOiQyZO8sAiORTTvPXOYL0S2..EnpueOpJ.P1fZSeI.', 'estabelecimento', 2, NULL, 'Barbearia do Perfil', '75988890006', NULL, 1, 1, NULL, NULL, '2025-12-11 14:15:02', '2025-12-10 15:11:36', '2025-12-11 14:15:02'),
+(5, 'modelo@gmail.com', '$2y$10$PmIna00GgWeHervGmzIyzepdhvKJTrGvn6ywVWY98ICr8n7ch2g02', 'estabelecimento', 4, NULL, 'modelo barber', '', NULL, 1, 1, NULL, NULL, '2025-12-30 09:27:53', '2025-12-10 17:06:18', '2025-12-30 09:27:52'),
+(6, 'mago@gmail.com', '$2y$10$tYpUKYjrVrdr9YLzmQUsv.trVAQ1YyOc7zIUHh2bnLG67keCPna86', 'profissional', 4, 2, 'Mago', '', NULL, 1, 1, NULL, NULL, '2025-12-30 09:20:44', '2025-12-11 14:45:40', '2025-12-30 09:20:44');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `usuarios_backup`
+--
+
+CREATE TABLE `usuarios_backup` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `senha` varchar(255) NOT NULL,
+  `telefone` varchar(20) DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
+  `nivel` enum('admin','usuario') DEFAULT 'usuario' COMMENT 'Nível de acesso do usuário',
+  `status` enum('ativo','inativo') DEFAULT 'ativo',
+  `ultimo_acesso` datetime DEFAULT NULL,
+  `token_recuperacao` varchar(100) DEFAULT NULL COMMENT 'Token para recuperação de senha',
+  `token_expiracao` datetime DEFAULT NULL COMMENT 'Data de expiração do token',
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `usuarios_backup`
+--
+
+INSERT INTO `usuarios_backup` (`id`, `nome`, `email`, `senha`, `telefone`, `avatar`, `nivel`, `status`, `ultimo_acesso`, `token_recuperacao`, `token_expiracao`, `criado_em`, `atualizado_em`) VALUES
+(1, 'Administrador', 'admin@sistema.com.br', '$2y$10$JTNUdyydaB7uARn1WIjjKOtMq27s49sTys2lrq2s3sI.do6S7KLM6', NULL, NULL, 'admin', 'ativo', '2025-12-05 23:19:53', NULL, NULL, '2025-12-06 02:15:45', '2025-12-05 23:19:52'),
+(2, 'Rafael de Andrade Dias', 'rafaeldiaswebdev@gmail.com', '$2y$10$.fnjQyarGRJndBsuxfx1rO.wruBb6fYBK9xW/Khu34MNS4x9qC6/a', '75988890006', NULL, 'admin', 'ativo', '2025-12-06 15:14:32', NULL, NULL, '2025-12-05 23:22:40', '2025-12-06 15:14:32');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `waha_sessoes`
+--
+
+CREATE TABLE `waha_sessoes` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(10) UNSIGNED DEFAULT NULL,
+  `session_name` varchar(100) NOT NULL,
+  `status` enum('stopped','starting','scan_qr','working','failed') DEFAULT 'stopped',
+  `numero_conectado` varchar(20) DEFAULT NULL,
+  `push_name` varchar(100) DEFAULT NULL,
+  `qr_code_base64` text DEFAULT NULL,
+  `ultimo_qr_gerado` timestamp NULL DEFAULT NULL,
+  `ultima_verificacao` timestamp NULL DEFAULT NULL,
+  `erro_mensagem` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `whatsapp_conversas`
+--
+
+CREATE TABLE `whatsapp_conversas` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `cliente_id` int(11) UNSIGNED DEFAULT NULL,
+  `whatsapp_numero` varchar(20) NOT NULL,
+  `etapa` varchar(50) DEFAULT NULL COMMENT 'servico, profissional, data, hora, confirmacao',
+  `dados_temporarios` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Armazena escolhas durante a conversa' CHECK (json_valid(`dados_temporarios`)),
+  `ultima_interacao` datetime DEFAULT NULL,
+  `expira_em` datetime DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `whatsapp_mensagens`
+--
+
+CREATE TABLE `whatsapp_mensagens` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(10) UNSIGNED DEFAULT NULL,
+  `direcao` enum('entrada','saida') NOT NULL,
+  `numero_destino` varchar(20) NOT NULL,
+  `tipo_mensagem` enum('texto','imagem','audio','documento','localizacao') DEFAULT 'texto',
+  `conteudo` text NOT NULL,
+  `message_id` varchar(100) DEFAULT NULL,
+  `status` enum('enviado','entregue','lido','erro','recebido') DEFAULT 'enviado',
+  `erro_mensagem` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `whatsapp_mensagens`
+--
+
+INSERT INTO `whatsapp_mensagens` (`id`, `estabelecimento_id`, `direcao`, `numero_destino`, `tipo_mensagem`, `conteudo`, `message_id`, `status`, `erro_mensagem`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'entrada', '120363102823068213', 'texto', 'Bol dia', 'false_120363102823068213@g.us_AC0ABF934D2E575F81B20975C99D95B0_27767064252474@lid', 'lido', NULL, '2025-12-28 14:03:27', '2025-12-28 14:03:27'),
+(2, NULL, 'entrada', '120363102823068213', 'texto', 'E aí', 'false_120363102823068213@g.us_ACD5807DADF53BCB41EBFD73843F890F_27767064252474@lid', 'lido', NULL, '2025-12-28 14:03:30', '2025-12-28 14:03:30'),
+(3, NULL, 'entrada', '120363102823068213', 'texto', 'Essa', 'false_120363102823068213@g.us_AC362D8D7C4D22B018A5FE0FB47A91FF_27767064252474@lid', 'lido', NULL, '2025-12-28 14:04:00', '2025-12-28 14:04:01'),
+(4, NULL, 'entrada', '120363102823068213', 'texto', 'Não,  n precisa mexer nisso.', 'false_120363102823068213@g.us_AC49FFD8DDFE6C4363AFD4672F48B2D9_27767064252474@lid', 'recebido', NULL, '2025-12-28 14:04:25', '2025-12-28 14:04:25'),
+(5, NULL, 'entrada', '120363102823068213', 'texto', 'Isso', 'false_120363102823068213@g.us_AC7E7E2C11C876E68720D9E24AA6CD9F_27767064252474@lid', 'recebido', NULL, '2025-12-28 14:04:31', '2025-12-28 14:04:31'),
+(6, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC1DD565B387EC64F965BF086E6B7759_27767064252474@lid', 'recebido', NULL, '2025-12-28 14:04:56', '2025-12-28 14:04:56'),
+(7, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #58', NULL, 'erro', NULL, '2025-12-28 16:07:12', '2025-12-28 16:07:12'),
+(8, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #59', NULL, 'erro', NULL, '2025-12-28 16:10:20', '2025-12-28 16:10:20'),
+(9, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #60', NULL, 'erro', NULL, '2025-12-28 16:10:50', '2025-12-28 16:10:50'),
+(10, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #61', NULL, 'erro', '{\"statusCode\":500,\"timestamp\":\"2025-12-28T16:16:46.185Z\",\"exception\":{\"message\":\"2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\",\"code\":2,\"details\":\"no LID found for 5575997058104@s.whatsapp.net from server\",\"metadata\":{},\"name\":\"Error\",\"stack\":\"Error: 2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:361:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at MessageServiceClient.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at MessageServiceClient.SendMessage (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at MessageServiceClient.SendMessage (/app/dist/core/engines/gows/grpc/gows.js:9923:30)\\n    at node:internal/util:470:21\\n    at new Promise (<anonymous>)\\n    at node:internal/util:456:12\\n    at WhatsappSessionGoWSPlus.sendText (/app/dist/core/engines/gows/session.gows.core.js:467:78)\\n    at descriptor.value (/app/dist/core/abc/activity.js:9:35)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\"},\"request\":{\"path\":\"/api/sendText\",\"method\":\"POST\",\"body\":{\"session\":\"est_4_modelo_barber\",\"chatId\":\"5575997058104@c.us\",\"text\":\"✅ *Agendamento Confirmado!*\\n\\n📅 *Data:* 02/01/2026\\n⏰ *Horário:* 09:00\\n💇 *Serviço:* Barba\\n👤 *Profissional:* Mago\\n💰 *Valor:* R$ 15,00\\n\\n📍 *Local:* modelo barber\\n\\nCaso precise cancelar ou reagendar, entre em contato conosco.\\n\\n_Mensagem automática - não responda._\"},\"query\":{}},\"version\":{\"version\":\"2025.11.2\",\"engine\":\"GOWS\",\"tier\":\"PLUS\",\"browser\":null}}', '2025-12-28 16:16:45', '2025-12-28 16:16:45'),
+(11, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #62', NULL, 'erro', '{\"statusCode\":500,\"timestamp\":\"2025-12-28T16:17:25.660Z\",\"exception\":{\"message\":\"2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\",\"code\":2,\"details\":\"no LID found for 5575997058104@s.whatsapp.net from server\",\"metadata\":{},\"name\":\"Error\",\"stack\":\"Error: 2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:361:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at MessageServiceClient.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at MessageServiceClient.SendMessage (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at MessageServiceClient.SendMessage (/app/dist/core/engines/gows/grpc/gows.js:9923:30)\\n    at node:internal/util:470:21\\n    at new Promise (<anonymous>)\\n    at node:internal/util:456:12\\n    at WhatsappSessionGoWSPlus.sendText (/app/dist/core/engines/gows/session.gows.core.js:467:78)\\n    at descriptor.value (/app/dist/core/abc/activity.js:9:35)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\"},\"request\":{\"path\":\"/api/sendText\",\"method\":\"POST\",\"body\":{\"session\":\"est_4_modelo_barber\",\"chatId\":\"5575997058104@c.us\",\"text\":\"✅ *Agendamento Confirmado!*\\n\\n📅 *Data:* 02/01/2026\\n⏰ *Horário:* 09:30\\n💇 *Serviço:* Barba\\n👤 *Profissional:* Mago\\n💰 *Valor:* R$ 15,00\\n\\n📍 *Local:* modelo barber\\n\\nCaso precise cancelar ou reagendar, entre em contato conosco.\\n\\n_Mensagem automática - não responda._\"},\"query\":{}},\"version\":{\"version\":\"2025.11.2\",\"engine\":\"GOWS\",\"tier\":\"PLUS\",\"browser\":null}}', '2025-12-28 16:17:24', '2025-12-28 16:17:24'),
+(12, 4, 'saida', '557597058104', 'texto', 'Notificação de confirmacao - Agendamento #63', NULL, 'enviado', NULL, '2025-12-28 16:19:05', '2025-12-28 16:19:05'),
+(13, 4, 'saida', '557597058104', 'texto', 'Notificação de confirmacao - Agendamento #64', NULL, 'enviado', NULL, '2025-12-28 16:19:58', '2025-12-28 16:19:58'),
+(14, 4, 'saida', '557597058104', 'texto', 'Notificação de confirmacao - Agendamento #65', NULL, 'enviado', NULL, '2025-12-28 16:20:43', '2025-12-28 16:20:43'),
+(15, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #66', NULL, 'erro', '{\"statusCode\":500,\"timestamp\":\"2025-12-28T16:22:16.534Z\",\"exception\":{\"message\":\"2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\",\"code\":2,\"details\":\"no LID found for 5575997058104@s.whatsapp.net from server\",\"metadata\":{},\"name\":\"Error\",\"stack\":\"Error: 2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:361:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at MessageServiceClient.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at MessageServiceClient.SendMessage (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at MessageServiceClient.SendMessage (/app/dist/core/engines/gows/grpc/gows.js:9923:30)\\n    at node:internal/util:470:21\\n    at new Promise (<anonymous>)\\n    at node:internal/util:456:12\\n    at WhatsappSessionGoWSPlus.sendText (/app/dist/core/engines/gows/session.gows.core.js:467:78)\\n    at descriptor.value (/app/dist/core/abc/activity.js:9:35)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\"},\"request\":{\"path\":\"/api/sendText\",\"method\":\"POST\",\"body\":{\"session\":\"est_4_modelo_barber\",\"chatId\":\"5575997058104@c.us\",\"text\":\"✅ *Agendamento Confirmado!*\\n\\n📅 *Data:* 02/01/2026\\n⏰ *Horário:* 11:30\\n💇 *Serviço:* Barba\\n👤 *Profissional:* Mago\\n💰 *Valor:* R$ 15,00\\n\\n📍 *Local:* modelo barber\\n\\nCaso precise cancelar ou reagendar, entre em contato conosco.\\n\\n_Mensagem automática - não responda._\"},\"query\":{}},\"version\":{\"version\":\"2025.11.2\",\"engine\":\"GOWS\",\"tier\":\"PLUS\",\"browser\":null}}', '2025-12-28 16:22:15', '2025-12-28 16:22:15'),
+(16, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #67', NULL, 'erro', '{\"statusCode\":500,\"timestamp\":\"2025-12-28T16:26:55.166Z\",\"exception\":{\"message\":\"2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\",\"code\":2,\"details\":\"no LID found for 5575997058104@s.whatsapp.net from server\",\"metadata\":{},\"name\":\"Error\",\"stack\":\"Error: 2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:361:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at MessageServiceClient.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at MessageServiceClient.SendMessage (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at MessageServiceClient.SendMessage (/app/dist/core/engines/gows/grpc/gows.js:9923:30)\\n    at node:internal/util:470:21\\n    at new Promise (<anonymous>)\\n    at node:internal/util:456:12\\n    at WhatsappSessionGoWSPlus.sendText (/app/dist/core/engines/gows/session.gows.core.js:467:78)\\n    at descriptor.value (/app/dist/core/abc/activity.js:9:35)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\"},\"request\":{\"path\":\"/api/sendText\",\"method\":\"POST\",\"body\":{\"session\":\"est_4_modelo_barber\",\"chatId\":\"5575997058104@c.us\",\"text\":\"✅ *Agendamento Confirmado!*\\n\\n📅 *Data:* 02/01/2026\\n⏰ *Horário:* 13:00\\n💇 *Serviço:* Barba\\n👤 *Profissional:* Mago\\n💰 *Valor:* R$ 15,00\\n\\n📍 *Local:* modelo barber\\n\\nCaso precise cancelar ou reagendar, entre em contato conosco.\\n\\n_Mensagem automática - não responda._\"},\"query\":{}},\"version\":{\"version\":\"2025.11.2\",\"engine\":\"GOWS\",\"tier\":\"PLUS\",\"browser\":null}}', '2025-12-28 16:26:54', '2025-12-28 16:26:54'),
+(17, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #68', NULL, 'erro', '{\"statusCode\":500,\"timestamp\":\"2025-12-28T16:27:27.054Z\",\"exception\":{\"message\":\"2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\",\"code\":2,\"details\":\"no LID found for 5575997058104@s.whatsapp.net from server\",\"metadata\":{},\"name\":\"Error\",\"stack\":\"Error: 2 UNKNOWN: no LID found for 5575997058104@s.whatsapp.net from server\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:361:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:324:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at MessageServiceClient.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at MessageServiceClient.SendMessage (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at MessageServiceClient.SendMessage (/app/dist/core/engines/gows/grpc/gows.js:9923:30)\\n    at node:internal/util:470:21\\n    at new Promise (<anonymous>)\\n    at node:internal/util:456:12\\n    at WhatsappSessionGoWSPlus.sendText (/app/dist/core/engines/gows/session.gows.core.js:467:78)\\n    at descriptor.value (/app/dist/core/abc/activity.js:9:35)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\"},\"request\":{\"path\":\"/api/sendText\",\"method\":\"POST\",\"body\":{\"session\":\"est_4_modelo_barber\",\"chatId\":\"5575997058104@c.us\",\"text\":\"✅ *Agendamento Confirmado!*\\n\\n📅 *Data:* 02/01/2026\\n⏰ *Horário:* 13:30\\n💇 *Serviço:* Barba\\n👤 *Profissional:* Mago\\n💰 *Valor:* R$ 15,00\\n\\n📍 *Local:* modelo barber\\n\\nCaso precise cancelar ou reagendar, entre em contato conosco.\\n\\n_Mensagem automática - não responda._\"},\"query\":{}},\"version\":{\"version\":\"2025.11.2\",\"engine\":\"GOWS\",\"tier\":\"PLUS\",\"browser\":null}}', '2025-12-28 16:27:26', '2025-12-28 16:27:26'),
+(18, 4, 'saida', '5575997058104', 'texto', 'Notificação de confirmacao - Agendamento #69', NULL, 'enviado', NULL, '2025-12-28 16:29:37', '2025-12-28 16:29:37'),
+(19, 4, 'saida', '5575998913210', 'texto', 'Notificação de confirmacao - Agendamento #70', NULL, 'enviado', NULL, '2025-12-28 16:36:37', '2025-12-28 16:36:37'),
+(20, 4, 'saida', '5575998913210', 'texto', 'Notificação de confirmacao - Agendamento #71', NULL, 'enviado', NULL, '2025-12-28 16:38:02', '2025-12-28 16:38:02'),
+(21, 4, 'saida', '5575998913210', 'texto', 'Notificação de cancelamento - Agendamento #71', NULL, 'enviado', NULL, '2025-12-28 16:44:35', '2025-12-28 16:44:35'),
+(22, 4, 'saida', '5575998913210', 'texto', 'Notificação de confirmacao - Agendamento #72', NULL, 'enviado', NULL, '2025-12-28 16:45:05', '2025-12-28 16:45:05'),
+(23, 4, 'saida', '5575998913210', 'texto', 'Notificação de reagendamento - Agendamento #72', NULL, 'enviado', NULL, '2025-12-28 16:45:30', '2025-12-28 16:45:30'),
+(24, 4, 'saida', '5575998913210', 'texto', 'Notificação de reagendamento - Agendamento #72', NULL, 'enviado', NULL, '2025-12-28 17:05:08', '2025-12-28 17:05:08'),
+(25, 4, 'saida', '5575998913210', 'texto', 'Notificação de cancelamento - Agendamento #72', NULL, 'enviado', NULL, '2025-12-28 17:05:42', '2025-12-28 17:05:42'),
+(26, 4, 'saida', '5575998913210', 'texto', 'Notificação de confirmacao - Agendamento #73', NULL, 'enviado', NULL, '2025-12-28 17:05:58', '2025-12-28 17:05:58'),
+(27, 4, 'saida', '5575998913210', 'texto', 'Notificação de reagendamento - Agendamento #73', NULL, 'enviado', NULL, '2025-12-28 17:13:28', '2025-12-28 17:13:28'),
+(28, 4, 'saida', '5575998913210', 'texto', 'Notificação de inicio - Agendamento #73', NULL, 'enviado', NULL, '2025-12-28 18:07:06', '2025-12-28 18:07:06'),
+(29, 4, 'saida', '5575997058104', 'texto', 'Notificação de inicio - Agendamento #69', NULL, 'enviado', NULL, '2025-12-28 18:13:12', '2025-12-28 18:13:12'),
+(30, 4, 'saida', '5575998913210', 'texto', 'Notificação de finalizacao - Agendamento #73', NULL, 'enviado', NULL, '2025-12-28 18:16:15', '2025-12-28 18:16:15'),
+(31, 4, 'saida', '5575998913210', 'texto', 'Notificação de confirmacao - Agendamento #74', NULL, 'enviado', NULL, '2025-12-28 18:28:25', '2025-12-28 18:28:25'),
+(32, 4, 'saida', '5575998913210', 'texto', 'Notificação de inicio - Agendamento #74', NULL, 'enviado', NULL, '2025-12-28 18:29:06', '2025-12-28 18:29:06'),
+(33, 4, 'saida', '5575998913210', 'texto', 'Notificação de finalizacao - Agendamento #74', NULL, 'enviado', NULL, '2025-12-28 18:29:44', '2025-12-28 18:29:44'),
+(34, 4, 'saida', '5575998913210', 'texto', 'Notificação de confirmacao - Agendamento #75', NULL, 'enviado', NULL, '2025-12-28 18:30:06', '2025-12-28 18:30:06'),
+(35, 4, 'saida', '5575998913210', 'texto', 'Notificação de reagendamento - Agendamento #75', NULL, 'enviado', NULL, '2025-12-28 18:30:32', '2025-12-28 18:30:32'),
+(36, 4, 'saida', '5575998913210', 'texto', 'Notificação de cancelamento - Agendamento #75', NULL, 'enviado', NULL, '2025-12-28 18:31:45', '2025-12-28 18:31:45'),
+(37, 4, 'saida', '5575998913210', 'texto', 'Notificação de cancelamento - Agendamento #80', NULL, 'enviado', NULL, '2025-12-28 18:37:39', '2025-12-28 18:37:39'),
+(38, 4, 'saida', '5575998913210', 'texto', 'Notificação de confirmacao - Agendamento #83', NULL, 'enviado', NULL, '2025-12-28 18:47:38', '2025-12-28 18:47:38'),
+(39, 4, 'saida', '5575997058104', 'texto', 'Notificação de lembrete_pagamento - Agendamento #41', NULL, 'enviado', NULL, '2025-12-28 19:30:11', '2025-12-28 19:30:11'),
+(40, 4, 'saida', '5575997058104', 'texto', 'Notificação de lembrete_pagamento - Agendamento #47', NULL, 'enviado', NULL, '2025-12-28 19:30:19', '2025-12-28 19:30:19'),
+(41, 4, 'saida', '5575997058104', 'texto', 'Notificação de lembrete_pagamento - Agendamento #49', NULL, 'enviado', NULL, '2025-12-28 19:30:25', '2025-12-28 19:30:25'),
+(42, 4, 'saida', '5575998913210', 'texto', 'Notificação de lembrete_pagamento - Agendamento #80', NULL, 'enviado', NULL, '2025-12-28 19:30:32', '2025-12-28 19:30:32'),
+(43, 4, 'saida', '5575998913210', 'texto', 'Notificação de lembrete_pagamento - Agendamento #84', NULL, 'enviado', NULL, '2025-12-28 19:30:39', '2025-12-28 19:30:39'),
+(44, 4, 'saida', '5575997058104', 'texto', 'Notificação de cancelamento - Agendamento #41', NULL, 'enviado', NULL, '2025-12-28 19:34:04', '2025-12-28 19:34:04'),
+(45, 4, 'saida', '5575997058104', 'texto', 'Notificação de cancelamento - Agendamento #47', NULL, 'enviado', NULL, '2025-12-28 19:34:05', '2025-12-28 19:34:05'),
+(46, 4, 'saida', '5575997058104', 'texto', 'Notificação de cancelamento - Agendamento #49', NULL, 'enviado', NULL, '2025-12-28 19:34:06', '2025-12-28 19:34:06'),
+(47, 4, 'saida', '5575998913210', 'texto', 'Notificação de cancelamento - Agendamento #80', NULL, 'enviado', NULL, '2025-12-28 19:34:07', '2025-12-28 19:34:07'),
+(48, 4, 'saida', '5575998913210', 'texto', 'Notificação de cancelamento - Agendamento #84', NULL, 'enviado', NULL, '2025-12-28 19:34:07', '2025-12-28 19:34:07'),
+(49, 4, 'saida', '5575988890006', 'texto', 'Notificação de confirmacao - Agendamento #85', NULL, 'enviado', NULL, '2025-12-28 23:17:42', '2025-12-28 23:17:42'),
+(50, NULL, 'entrada', '120363176780698645', 'texto', 'Beleza... Vamos testar! Tomara q de certo, valor bem interessante!', 'false_120363176780698645@g.us_AC68BEA7520C506595970244A3288A60_112060042068006@lid', 'recebido', NULL, '2025-12-29 02:01:33', '2025-12-29 02:01:33'),
+(51, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A50E7C862EF1C614C9D', 'recebido', NULL, '2025-12-29 02:01:38', '2025-12-29 02:01:38'),
+(52, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC59458D3254491877408E8C528650F9_27767064252474@lid', 'recebido', NULL, '2025-12-29 02:01:43', '2025-12-29 02:01:43'),
+(53, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3AA39D035DA78FCA2248', 'recebido', NULL, '2025-12-29 02:01:46', '2025-12-29 02:01:46'),
+(54, 4, 'entrada', '557588890006', 'texto', 'Chaa', 'false_557588890006@c.us_3A48A13BE56E2E41F694', 'recebido', NULL, '2025-12-29 02:01:55', '2025-12-29 02:01:55'),
+(55, NULL, 'entrada', '120363176780698645', 'texto', '_Sim, enquanto o seu número estiver ativo, o chip tem que estar vinculado a ele. Se você remover o chip, eu acho que dá problema, tá? Eu nunca tentei fazer isso, não._\n\n -- *Transcrito grátis pela zapia.com/app* 💬', 'false_120363176780698645@g.us_3EB0377C8495E1D3AFEA9D_169582656528613@lid', 'recebido', NULL, '2025-12-29 02:02:16', '2025-12-29 02:02:16'),
+(56, NULL, 'entrada', '120363175746047388', 'texto', '?', 'false_120363175746047388@g.us_ACCED66169ADC4FB93561929B55C5BED_107571918725289@lid', 'recebido', NULL, '2025-12-29 02:02:42', '2025-12-29 02:02:42'),
+(57, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC5417F25EAAF974ECE486ED4B248CBF_27767064252474@lid', 'lido', NULL, '2025-12-29 02:05:13', '2025-12-29 02:05:40'),
+(58, NULL, 'entrada', '120363102823068213', 'texto', 'de alguma maneira o ip está bloquedo na valuer, eu até olhei se na conta estava mas n está', 'false_120363102823068213@g.us_3EB0272AB921876117014B_27767064252474@lid', 'recebido', NULL, '2025-12-29 02:07:01', '2025-12-29 02:07:01'),
+(59, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC29EA89DBA5229F927A9C1FA19C52DF_27767064252474@lid', 'lido', NULL, '2025-12-29 02:07:18', '2025-12-29 02:09:30'),
+(60, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Ordenação Presbiteral dos Diáconos Anderson Luz, Erik Felipe Sudário e Landerson Lopes em Amargosa, uma celebração de Fé e Dedicação*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/ordenacao-presbiteral-dos-diaconos-anderson-luz-erik-felipe-sudario-e-landerson-lopes-em-amargosa-uma-celebracao-de-fe-e-dedicacao/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB0373794B0C01EBA6B3C_214911791681560@lid', 'recebido', NULL, '2025-12-29 02:11:26', '2025-12-29 02:11:26'),
+(61, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC5815EB86CEB104669D5743D33BB6DF_27767064252474@lid', 'lido', NULL, '2025-12-29 02:13:03', '2025-12-29 02:33:12'),
+(62, NULL, 'entrada', '120363102823068213', 'texto', 'Pronto doido, a valuehost.com.br resolveu', 'false_120363102823068213@g.us_AC0E717D501DE0A77C29E3B152976832_27767064252474@lid', 'lido', NULL, '2025-12-29 02:15:19', '2025-12-29 02:50:43'),
+(63, NULL, 'entrada', '120363102823068213', 'texto', 'Eles colocaram o ip na lista branca', 'false_120363102823068213@g.us_AC900248C5A00A952C8A811EA4D6F975_27767064252474@lid', 'lido', NULL, '2025-12-29 02:15:27', '2025-12-29 02:50:43'),
+(64, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC129AA1E4D6F18B6FCB4FC9C477BA09_27767064252474@lid', 'recebido', NULL, '2025-12-29 02:16:49', '2025-12-29 02:16:49'),
+(65, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_ACAA2CF7E077677A3AA9ABCF6427433F_27767064252474@lid', 'enviado', NULL, '2025-12-29 02:17:14', '2025-12-29 02:18:27'),
+(66, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_ACAD8B7DA246751F8A186A31BC96CF24_27767064252474@lid', 'lido', NULL, '2025-12-29 02:17:32', '2025-12-29 02:29:40'),
+(67, NULL, 'entrada', '120363196591768177', 'texto', 'https://youtu.be/HJxkNpSmZVM?si=vJNdDW7JFavAoABV', 'false_120363196591768177@g.us_AC7617E7C74787F43332C6B2D3F46372_271523604615177@lid', 'recebido', NULL, '2025-12-29 02:17:58', '2025-12-29 02:17:58'),
+(68, NULL, 'entrada', '120363153211725317', 'texto', 'nem acressivo eh!', 'false_120363153211725317@g.us_3EB0A59D1CABD47BDB6399_222136312553574@lid', 'recebido', NULL, '2025-12-29 02:23:55', '2025-12-29 02:23:55'),
+(69, NULL, 'entrada', '120363175746047388', 'texto', 'Mas, o antigo que me referi é o próprio Optimus prime, o 3.4, faz diferença assim', 'false_120363175746047388@g.us_ACF049EE15AAEC325B7256CC644F16D8_107571918725289@lid', 'recebido', NULL, '2025-12-29 02:26:01', '2025-12-29 02:26:01'),
+(70, NULL, 'entrada', '145157395636280', 'texto', 'Forte na notícia', 'false_145157395636280@lid_AC5FAA98C8152FAE9BCEF0E17EBA2A52', 'lido', NULL, '2025-12-29 02:27:09', '2025-12-29 02:52:24'),
+(71, NULL, 'entrada', '120363102823068213', 'texto', 'Cpanel', 'false_120363102823068213@g.us_AC53E7F6B74AE104C08A40726E5B2DC7_27767064252474@lid', 'recebido', NULL, '2025-12-29 02:30:53', '2025-12-29 02:30:53'),
+(72, NULL, 'entrada', '145157395636280', 'texto', 'Tenho uma página de insta', 'false_145157395636280@lid_AC038854FEDF81E6B493EBAD76D43645', 'lido', NULL, '2025-12-29 02:31:13', '2025-12-29 02:34:37'),
+(73, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC072CF06E957D23BF68B1224C5329BD_27767064252474@lid', 'enviado', NULL, '2025-12-29 02:32:10', '2025-12-29 02:33:49'),
+(74, NULL, 'entrada', '145157395636280', 'texto', 'Aí queria saber o valor', 'false_145157395636280@lid_ACA439290ECF652765196699AEB92401', 'lido', NULL, '2025-12-29 02:32:41', '2025-12-29 02:38:02'),
+(75, NULL, 'entrada', '120363196591768177', 'texto', '', 'false_120363196591768177@g.us_AC2DBEB2E5CA02ED87EAFCAB6EA26D3F_271523604615177@lid', 'recebido', NULL, '2025-12-29 02:34:49', '2025-12-29 02:34:49'),
+(76, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3AD6E10E9BE2C0A51A42', 'recebido', NULL, '2025-12-29 02:35:12', '2025-12-29 02:35:12'),
+(77, NULL, 'entrada', '145157395636280', 'texto', 'Excelente', 'false_145157395636280@lid_AC56A33C1E1CE009251F3B56CA2DDC53', 'lido', NULL, '2025-12-29 02:35:58', '2025-12-29 02:40:55'),
+(78, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A3B61A443BA890EDA67', 'recebido', NULL, '2025-12-29 02:39:03', '2025-12-29 02:39:03'),
+(79, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC979522F781023AAEA0E422201A82F9_27767064252474@lid', 'enviado', NULL, '2025-12-29 02:39:16', '2025-12-29 02:48:12'),
+(80, NULL, 'entrada', '145157395636280', 'texto', 'Então seria do 0 com o layout do insta', 'false_145157395636280@lid_AC5D9E91BE66AEF2BFF1BA6D4453AAFB', 'recebido', NULL, '2025-12-29 02:42:56', '2025-12-29 02:42:56'),
+(81, NULL, 'entrada', '145157395636280', 'texto', '', 'false_145157395636280@lid_AC06B862A22FCFD78333C14AB08A5839', 'lido', NULL, '2025-12-29 02:45:47', '2025-12-29 02:55:56'),
+(82, NULL, 'entrada', '145157395636280', 'texto', 'Prontinho', 'false_145157395636280@lid_AC88033993F0DD29AAA672197E2CC441', 'recebido', NULL, '2025-12-29 02:46:13', '2025-12-29 02:46:13'),
+(83, NULL, 'entrada', '120363424969304388', 'texto', '👀 *Você percebeu isso no mercado?*\n\nDev, *Next.js, React e IA não são tendências,* são pré-requisito.\n\nPensando em quem quer evoluir de verdade, eu *liberei o Combo 3 em 1,* com três formações completas, acesso vitalício e projetos práticos pra você sair do básico. 🚀\n\nEssa condição especial *vai ficar disponível por pouco tempo.*\n\n👇🏻 *Clique aqui e garanta seu acesso* ao Combo 3 em 1\nhttps://www.fullstackclub.com.br/combo3em1\n', 'false_120363424969304388@g.us_3EB0DAFD35A3F4217B206B300E9E9F3C85B1937F_180406309679249@lid', 'recebido', NULL, '2025-12-29 02:46:36', '2025-12-29 02:46:36'),
+(84, NULL, 'entrada', '145157395636280', 'texto', 'Mas não tenho blog', 'false_145157395636280@lid_AC29BBA840F2E15E489BAEF0769C8424', 'recebido', NULL, '2025-12-29 02:47:47', '2025-12-29 02:47:47'),
+(85, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC38C769EEE3779A9D39376C32E0C085_27767064252474@lid', 'lido', NULL, '2025-12-29 02:48:07', '2025-12-29 02:51:07'),
+(86, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3AD15435EEC5E02C1707', 'recebido', NULL, '2025-12-29 02:51:01', '2025-12-29 02:51:01'),
+(87, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:09', '2025-12-29 02:51:09'),
+(88, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:11', '2025-12-29 02:51:11'),
+(89, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:13', '2025-12-29 02:51:13'),
+(90, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:16', '2025-12-29 02:51:16'),
+(91, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:18', '2025-12-29 02:51:18'),
+(92, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3A0905A4A17344C4956E', 'recebido', NULL, '2025-12-29 02:51:19', '2025-12-29 02:51:19'),
+(93, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:20', '2025-12-29 02:51:20'),
+(94, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:22', '2025-12-29 02:51:22'),
+(95, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:24', '2025-12-29 02:51:24'),
+(96, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:26', '2025-12-29 02:51:26'),
+(97, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A3349DEBDF62C78DF36', 'recebido', NULL, '2025-12-29 02:51:27', '2025-12-29 02:51:27'),
+(98, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:29', '2025-12-29 02:51:29'),
+(99, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:31', '2025-12-29 02:51:31'),
+(100, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:33', '2025-12-29 02:51:33'),
+(101, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:33', '2025-12-29 02:51:33'),
+(102, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:35', '2025-12-29 02:51:35'),
+(103, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:35', '2025-12-29 02:51:35'),
+(104, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:37', '2025-12-29 02:51:37'),
+(105, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:37', '2025-12-29 02:51:37'),
+(106, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:39', '2025-12-29 02:51:39'),
+(107, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:39', '2025-12-29 02:51:39'),
+(108, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:41', '2025-12-29 02:51:41'),
+(109, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0EB7DF8B05605FE5B2', 'recebido', NULL, '2025-12-29 02:51:42', '2025-12-29 02:51:42'),
+(110, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:44', '2025-12-29 02:51:44'),
+(111, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3A530281EB87D5A6AAF1', 'recebido', NULL, '2025-12-29 02:51:44', '2025-12-29 02:51:44'),
+(112, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:46', '2025-12-29 02:51:46'),
+(113, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:48', '2025-12-29 02:51:48'),
+(114, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:50', '2025-12-29 02:51:50'),
+(115, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:52', '2025-12-29 02:51:52'),
+(116, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:54', '2025-12-29 02:51:54'),
+(117, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:57', '2025-12-29 02:51:57'),
+(118, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:51:59', '2025-12-29 02:51:59'),
+(119, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:52:01', '2025-12-29 02:52:01'),
+(120, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:52:03', '2025-12-29 02:52:03'),
+(121, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A82013E618FF15732D4', 'recebido', NULL, '2025-12-29 02:52:05', '2025-12-29 02:52:05'),
+(122, NULL, 'entrada', '', 'texto', 'Boa tarde para todos vamos que vamos partir o outeiro da brisa', 'false_status@broadcast_AC336600B87716DDFDB3D73FB82B7A06_557388589877@c.us', 'recebido', NULL, '2025-12-29 02:54:37', '2025-12-29 02:54:37'),
+(123, NULL, 'entrada', '145157395636280', 'texto', 'Consigo colocar no CPF \n?\nPq tbm estamos esperando inciar o ano pra dar entrada no CNPJ', 'false_145157395636280@lid_AC34932ADF967049027B53F6E0F35B13', 'recebido', NULL, '2025-12-29 02:55:34', '2025-12-29 02:55:34'),
+(124, NULL, 'entrada', '', 'texto', 'Vem verão', 'false_status@broadcast_ACA13ADC2AD2264C9B7361515744F8F5_557388589877@c.us', 'recebido', NULL, '2025-12-29 02:57:19', '2025-12-29 02:57:19'),
+(125, NULL, 'entrada', '120363175746047388', 'texto', 'Sim \nComo tem mais contexto usa mais tokens', 'false_120363175746047388@g.us_2A706B3668F350678EDF_198483541766250@lid', 'recebido', NULL, '2025-12-29 02:59:05', '2025-12-29 02:59:05'),
+(126, NULL, 'entrada', '145157395636280', 'texto', 'Vou falar com meu sócio.', 'false_145157395636280@lid_AC22DB6202C4CCD00349DCEB06C152CC', 'recebido', NULL, '2025-12-29 02:59:40', '2025-12-29 02:59:40'),
+(127, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_ACDF49FA198F5AD309ED1DBA69CAF3DA_27767064252474@lid', 'lido', NULL, '2025-12-29 03:01:04', '2025-12-29 03:15:46'),
+(128, NULL, 'entrada', '120363176780698645', 'texto', 'Esse tem dado certo os números. https://salvy.com.br/ para meus whatsapp. R$29,90', 'false_120363176780698645@g.us_3EB0B12BA7E8D30A096968_209525701382217@lid', 'recebido', NULL, '2025-12-29 03:06:44', '2025-12-29 03:06:44'),
+(129, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC58A09B3873A5A7A4F5DD44B2A4D43C_27767064252474@lid', 'recebido', NULL, '2025-12-29 03:10:26', '2025-12-29 03:10:26'),
+(130, NULL, 'entrada', '120363102823068213', 'texto', '', 'false_120363102823068213@g.us_AC701282FF4D0CB21F0F6BEED93CBBA2_27767064252474@lid', 'enviado', NULL, '2025-12-29 03:12:46', '2025-12-29 03:13:19'),
+(131, NULL, 'entrada', '120363176780698645', 'texto', '', 'false_120363176780698645@g.us_3BF785295FAFE5D14E67_256074691121309@lid', 'recebido', NULL, '2025-12-29 03:19:41', '2025-12-29 03:19:41'),
+(132, NULL, 'entrada', '120363102823068213', 'texto', 'Pelo menu lateral', 'false_120363102823068213@g.us_ACD2F79B1B1E33DFA26767BFF7CED74C_27767064252474@lid', 'recebido', NULL, '2025-12-29 03:19:48', '2025-12-29 03:19:48'),
+(133, NULL, 'entrada', '120363176780698645', 'texto', 'https://flu.ke/ R$9', 'false_120363176780698645@g.us_3B1B1CEA5BA228802AD4_256074691121309@lid', 'recebido', NULL, '2025-12-29 03:21:00', '2025-12-29 03:21:00'),
+(134, NULL, 'entrada', '120363176780698645', 'texto', '👋 Le pedi a Zapia que transcriba mis audios automáticamente. Para detener envía: */stop*\n\n_mas eu não recomendo até testei essa linha de API o código custa chegar porque ele chega lá no painel deles o código de confirmação você tem que solicitar somente por voz e demora, nossa mas o serviço dessa empresa é incrível porque eu gosto dela você compra chip virgem se você quiser ou você pode habilitar via QR Code ou chip primeira coisa você pode comprar lá um monte de chip virgem e deixar na sua casa E à medida que você vai comprando linha, você vai ativando no chip E aí você fala, pô, essa linha queimou, sei lá, já era, morreu o WhatsApp Você vai lá, cancela ela, encomenda uma nova linha e vincula o mesmo chip Então é muito foda, cara Você vai lá, só pega o número serial do chip e já era É muito bom_\n\n -- *Transcrito gratis por zapia.com/app*', 'false_120363176780698645@g.us_3EB0FB720E1E78A68D27BD_169582656528613@lid', 'recebido', NULL, '2025-12-29 03:41:59', '2025-12-29 03:41:59'),
+(135, NULL, 'entrada', '120363176780698645', 'texto', '@112060042068006', 'false_120363176780698645@g.us_3B0A4D0116AEACD392D9_256074691121309@lid', 'recebido', NULL, '2025-12-29 03:50:18', '2025-12-29 03:50:18'),
+(136, NULL, 'entrada', '120363176780698645', 'texto', '', 'false_120363176780698645@g.us_3B4791D0C4103BC2DAD0_256074691121309@lid', 'recebido', NULL, '2025-12-29 03:54:03', '2025-12-29 03:54:03'),
+(137, NULL, 'entrada', '120363176780698645', 'texto', 'se for sem chip e sem esim so para whats business api 20 e poucos', 'false_120363176780698645@g.us_3B1C3A5E6BABFCDBA762_256074691121309@lid', 'recebido', NULL, '2025-12-29 04:00:44', '2025-12-29 04:00:44'),
+(138, NULL, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A0BF1EC5F4E497F2065', 'recebido', NULL, '2025-12-29 04:04:26', '2025-12-29 04:04:26'),
+(139, NULL, 'entrada', '120363424969304388', 'texto', '⏳ *O tempo está passando*\n\nDev, em breve o combo 3 Em 1 vai sair do ar mas você ainda pode garantir a sua vaga!\n\nEu reuni três formações completas, com acesso vitalício, focadas nas tecnologias mais usadas e bem pagas do mercado pra você evoluir de verdade sem enrolação. 🚀\n\nSão formações práticas, com projetos reais em:\n\n✅ _Next.js_\n✅ _React_\n✅ _IA para Devs_\nPra você sair do básico e subir de nível.\n\n\nClique aqui e *garanta seu acesso ao Combo 3 em 1*\n👉🏻 https://www.fullstackclub.com.br/combo3em1', 'false_120363424969304388@g.us_3EB06A8185F8DE1CFE11AE7486222D7D136AA241_93214212096251@lid', 'recebido', NULL, '2025-12-29 04:15:52', '2025-12-29 04:15:52'),
+(140, NULL, 'entrada', '120363176780698645', 'texto', 'Pessoal, boa tarde! Me deem uma ajuda... \nCerta vez uma pessoa me indicou uma opedadora voip q pagava cerca de 11a mensalidade pra número somente pra whatsapp. \n\nAcho q perdi o contato e agora to precisando...\n\nAlguém conhece alguma assim?', 'false_120363176780698645@g.us_AC791EC11EF7225474B94AA81BBD40ED_112060042068006@lid', 'recebido', NULL, '2025-12-29 04:19:00', '2025-12-29 04:19:00'),
+(141, NULL, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A0FCDC3DA28A570768B', 'recebido', NULL, '2025-12-29 04:24:48', '2025-12-29 04:24:48'),
+(142, NULL, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A37CA594E16D94721A2', 'recebido', NULL, '2025-12-29 04:26:15', '2025-12-29 04:26:15'),
+(143, NULL, 'entrada', '120363153211725317', 'texto', '???', 'false_120363153211725317@g.us_A5AFDBEA7299D86564101F070C94E699_156195193122957@lid', 'recebido', NULL, '2025-12-29 04:26:35', '2025-12-29 04:26:35'),
+(144, NULL, 'entrada', '', 'texto', '#tbt# do grande dia que o Senhor Jesus preparou pra nós! Que dia lindo, o dia que a  promessa de Deus se cumpriu em nossas vidas. ❤️🥰🙌', 'false_status@broadcast_AC97DDFD520BC6F7D014541E35C2BA90_557599642199@c.us', 'recebido', NULL, '2025-12-29 04:30:47', '2025-12-29 04:30:47'),
+(145, NULL, 'entrada', '', 'texto', 'Um #tbt# do dia como eu sonhei, orei,  e Deus realizou.', 'false_status@broadcast_AC571D1518A906DAD8626AB1A003C4CD_557599642199@c.us', 'recebido', NULL, '2025-12-29 04:32:07', '2025-12-29 04:32:07'),
+(146, NULL, 'entrada', '', 'texto', 'Bora para mais uma', 'false_status@broadcast_ACC3F2E7FD1B7B2674C19695DCCE9DAC_557388589877@c.us', 'recebido', NULL, '2025-12-29 04:38:58', '2025-12-29 04:38:58'),
+(147, NULL, 'entrada', '120363176780698645', 'texto', 'Ah então com o mesmo chip eu posso ativar novos números, caso tenha banimento em algum número. \n\nMas tenho que deixar o chip ativado no tel depois que criar a conta do zap?', 'false_120363176780698645@g.us_AC34385CADA0D4B4029EC38AA87E048E_112060042068006@lid', 'recebido', NULL, '2025-12-29 04:41:04', '2025-12-29 04:41:04'),
+(148, NULL, 'entrada', '120363175746047388', 'texto', 'Boa tarde \nTem alguma mensagem de erro?', 'false_120363175746047388@g.us_2A7ADB746388422853D1_198483541766250@lid', 'recebido', NULL, '2025-12-29 05:15:18', '2025-12-29 05:15:18'),
+(149, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Familiares procuram cruzalmense desaparecido há mais de 24 horas*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/familiares-procuram-cruzalmense-desaparecido-ha-mais-de-24-horas/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB07AE44EF5DB7F7A0E1A_214911791681560@lid', 'recebido', NULL, '2025-12-29 05:19:41', '2025-12-29 05:19:41'),
+(150, NULL, 'entrada', '120363175746047388', 'texto', 'não, simplesmente não aparece no texto, mesmo eu marcando na planilha', 'false_120363175746047388@g.us_3EB0C44DA0F6AA2C191269_107571918725289@lid', 'recebido', NULL, '2025-12-29 05:24:04', '2025-12-29 05:24:04'),
+(151, NULL, 'entrada', '', 'texto', '❤️❤️', 'false_status@broadcast_AC6E6D440AA2B68242DE9669ACE3DF94_557599642199@c.us', 'recebido', NULL, '2025-12-29 05:25:22', '2025-12-29 05:25:22'),
+(152, NULL, 'entrada', '120363175746047388', 'texto', '@198483541766250, gravei um vídeo mostrando tudo, já têm uns 10 dias que estou mexendo e nada', 'false_120363175746047388@g.us_3EB0610C3B08596B421E19_107571918725289@lid', 'recebido', NULL, '2025-12-29 05:34:32', '2025-12-29 05:34:32'),
+(153, NULL, 'entrada', '120363175746047388', 'texto', 'Boa tarde, pessoal! Estou com alguns problemas no robô seo optimus prime beta v.0v1, no TL;DR, ele não gera o summarization de forma alguma, alguém passa por isso tmb?', 'false_120363175746047388@g.us_3EB058268F546CA3730487_107571918725289@lid', 'recebido', NULL, '2025-12-29 05:43:04', '2025-12-29 05:43:04'),
+(154, NULL, 'entrada', '120363196591768177', 'texto', '', 'false_120363196591768177@g.us_AC1D1F89AAC5C54A0AFFDC380BDB1EA4_271523604615177@lid', 'recebido', NULL, '2025-12-29 06:11:04', '2025-12-29 06:11:04'),
+(155, NULL, 'entrada', '120363196591768177', 'texto', '🚀 Solução INSANA para WordPress!\n\nhttps://www.youtube.com/watch?v=oa1vQMRJFEE\n\nJá imaginou alternar usuários no WordPress em tempo real, sem precisar fazer logout, sem recarregar a página e sem sair do painel admin? 😱🔥\n\nCom essa solução baseada em AJAX, você ganha velocidade, praticidade e produtividade absurda no dia a dia — perfeita para:\n\n✅ Desenvolvedores\n✅ Agências\n✅ Administradores de sites\n✅ Ambientes com múltiplos usuários\n\n💡 O que você ganha na prática:\n⚡ Troca instantânea de usuários\n⚡ Zero logout / zero fricção\n⚡ Tudo direto do admin\n⚡ Fluxo de trabalho muito mais rápido\n⚡ Experiência profissional e moderna\n\n🔥 Resultado: menos tempo perdido, mais controle e muito mais eficiência no gerenciamento do WordPress.\n\n👉 Solução simples, leve e poderosa — do tipo que depois que você usa, não vive mais sem.\n\n🚀 Tecnologia avançada aplicada de forma inteligente no WordPress.', 'false_120363196591768177@g.us_AC3399BAF098BD978F8D52F7A4B6F94F_271523604615177@lid', 'recebido', NULL, '2025-12-29 06:33:24', '2025-12-29 06:33:24'),
+(156, NULL, 'entrada', '145157395636280', 'texto', 'Queria um padrão tipo do revista recôncavo.\nNaquele mesmo modelo.', 'false_145157395636280@lid_ACB2464BFD0C7CE1118DA49DCA0D47A2', 'recebido', NULL, '2025-12-29 06:36:45', '2025-12-29 06:36:45'),
+(157, NULL, 'entrada', '120363424969304388', 'texto', '😬 *IA não é ruim, você só não está usando a certa…*\n\nA maioria dos devs estão quebrando cabeça com IA que: \n\n❌ Não tem acesso a documentações atualizadas;\n❌ Não te ensina boas práticas de cada tecnologias;\n❌ Não entende do seu projeto e muito menos seu nível técnico;\n❌ Gera código ruim pois é treinado com código ruim e arquivos da web;\n\nE foi justamente por isso que eu criei o Nexus! Uma inteligência artificial criada exclusivamente para auxiliar programadores. Ela vai te ajudar: \n\n✅ *Te ensinando boas práticas* enquanto coda para/com você;\n✅ Sendo *100% personalizável* com seu projeto e momento como dev;  \n✅ Utilizando as *documentações mais recentes* para melhorar seu código;\n✅ Aumentando sua produtividade; \n\nE muito mais!\n\nEntão, não perca tempo. *Toca aqui e faça sua assinatura agora!*\nhttps://www.fullstackclub.com.br/nexus\n', 'false_120363424969304388@g.us_3EB0D65A836CE4046A42F4E3C246D93DFD9A5F8B_180406309679249@lid', 'recebido', NULL, '2025-12-29 06:57:36', '2025-12-29 06:57:36'),
+(158, NULL, 'entrada', '120363175746047388', 'texto', 'Vi o vídeo aqui \nRate limit é pq o modelo escolhido aceita pouco token \nVi no vídeo que comentou está usando a planilha do antigo , pode ser isso', 'false_120363175746047388@g.us_2AB189BE787461A84E85_198483541766250@lid', 'recebido', NULL, '2025-12-29 07:24:52', '2025-12-29 07:24:52'),
+(159, NULL, 'entrada', '', 'texto', 'https://youtu.be/h3P7KJ_gFcQ?si=gMuzezAczowMWwwL', 'false_status@broadcast_AC6AFDC530F1ABBAFD9DF3563D0E7D47_557583670721@c.us', 'recebido', NULL, '2025-12-29 08:18:29', '2025-12-29 08:18:29'),
+(160, NULL, 'entrada', '', 'texto', 'Bom dia para todos 🚐🚐🙏🏻', 'false_status@broadcast_AC274BD65A62222C1DA88CAABC34EC28_557388589877@c.us', 'recebido', NULL, '2025-12-29 09:07:57', '2025-12-29 09:07:57'),
+(161, NULL, 'entrada', '120363196591768177', 'texto', '', 'false_120363196591768177@g.us_A59E87882E8A194D173D3258C206CCFD_114499952611581@lid', 'recebido', NULL, '2025-12-29 10:24:43', '2025-12-29 10:24:43'),
+(162, NULL, 'entrada', '38436031447258', 'texto', 'Olá, tudo bem?', 'false_38436031447258@lid_28F9700ADA2FC20363', 'recebido', NULL, '2025-12-29 11:00:19', '2025-12-29 11:00:19'),
+(163, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Sonho &amp; Negócios: a revista digital que documenta o empreendedorismo regional em meio ao crescimento dos negócios no Brasil*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/sonho-negocios-a-revista-digital-que-documenta-o-empreendedorismo-regional-em-meio-ao-crescimento-dos-negocios-no-brasil/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB05D14E329106E2D43D7_214911791681560@lid', 'recebido', NULL, '2025-12-29 11:19:28', '2025-12-29 11:19:28'),
+(164, NULL, 'entrada', '120363175746047388', 'texto', 'Pessoal, bom dia.', 'false_120363175746047388@g.us_3EB06495827DECD5033B6C_232559795552442@lid', 'recebido', NULL, '2025-12-29 11:29:26', '2025-12-29 11:29:26'),
+(165, NULL, 'entrada', '120363175746047388', 'texto', 'Tem alguma IA para geração de imagens que estejam usando, de preferencia free e que tem na automação?', 'false_120363175746047388@g.us_3EB014ED4A33B24C238C70_232559795552442@lid', 'recebido', NULL, '2025-12-29 11:29:26', '2025-12-29 11:29:26'),
+(166, NULL, 'entrada', '120363175746047388', 'texto', 'Flux', 'false_120363175746047388@g.us_AC5BE027C10BB0F5EA487E230D159620_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:30:47', '2025-12-29 11:30:47'),
+(167, NULL, 'entrada', '120363175746047388', 'texto', 'e as imagens são boas?', 'false_120363175746047388@g.us_3EB0E2BDC26BDB7236BD13_232559795552442@lid', 'recebido', NULL, '2025-12-29 11:35:31', '2025-12-29 11:35:31'),
+(168, 4, 'entrada', '154829729083489', 'texto', 'Oi', 'false_154829729083489@lid_2AA062BEE57C9B21B049', 'recebido', NULL, '2025-12-29 11:39:36', '2025-12-29 11:39:36'),
+(169, 4, 'entrada', '154829729083489', 'texto', 'Ola', 'false_154829729083489@lid_2AE6A435FD3A3068EB80', 'recebido', NULL, '2025-12-29 11:39:49', '2025-12-29 11:39:49'),
+(170, NULL, 'entrada', '120363175746047388', 'texto', 'Kie?', 'false_120363175746047388@g.us_2A47B51C5947C27886ED_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:39:54', '2025-12-29 11:39:54'),
+(171, 4, 'entrada', '154829729083489', 'texto', 'Oi', 'false_154829729083489@lid_2A6C39D9652780DC7306', 'recebido', NULL, '2025-12-29 11:40:08', '2025-12-29 11:40:08'),
+(172, 4, 'entrada', '154829729083489', 'texto', 'Bom dia', 'false_154829729083489@lid_2A28B04484E9883D8E4F', 'recebido', NULL, '2025-12-29 11:40:19', '2025-12-29 11:40:19'),
+(173, NULL, 'entrada', '120363175746047388', 'texto', 'Não', 'false_120363175746047388@g.us_3EB0EBBD0B3AE318C3ACAC_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:40:26', '2025-12-29 11:40:26'),
+(174, NULL, 'entrada', '120363175746047388', 'texto', 'No Kie tudo é pago', 'false_120363175746047388@g.us_3EB075A877D008498CC824_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:40:35', '2025-12-29 11:40:35'),
+(175, NULL, 'entrada', '120363175746047388', 'texto', 'É pelo huugging face', 'false_120363175746047388@g.us_3EB07ACC1C329DCFC92B92_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:40:41', '2025-12-29 11:40:41'),
+(176, NULL, 'entrada', '120363175746047388', 'texto', 'Testa aí, não custa nada, literalmente kkk', 'false_120363175746047388@g.us_3EB0FDCD1CC03D19D4BCD0_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:41:01', '2025-12-29 11:41:01'),
+(177, 4, 'entrada', '154829729083489', 'texto', 'Oi', 'false_154829729083489@lid_2A7457EEDBFCF40292E1', 'recebido', NULL, '2025-12-29 11:41:02', '2025-12-29 11:41:02'),
+(178, NULL, 'entrada', '120363175746047388', 'texto', 'E podemos usar no n8n ?', 'false_120363175746047388@g.us_2ACD5A77A2D767EF6445_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:41:02', '2025-12-29 11:41:02');
+INSERT INTO `whatsapp_mensagens` (`id`, `estabelecimento_id`, `direcao`, `numero_destino`, `tipo_mensagem`, `conteudo`, `message_id`, `status`, `erro_mensagem`, `created_at`, `updated_at`) VALUES
+(179, NULL, 'entrada', '120363175746047388', 'texto', 'Sim, só integrar', 'false_120363175746047388@g.us_3EB0D5FAEA0AB690E37D0A_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:41:16', '2025-12-29 11:41:16'),
+(180, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A1D0F8386D78B96E8BF', 'recebido', NULL, '2025-12-29 11:41:19', '2025-12-29 11:41:19'),
+(181, NULL, 'entrada', '120363175746047388', 'texto', 'Só assistir as aulas de como fazer', 'false_120363175746047388@g.us_3EB0B632EFB10E7F1D7E08_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:41:27', '2025-12-29 11:41:27'),
+(182, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A8D70ADF46A24AF158A', 'recebido', NULL, '2025-12-29 11:41:27', '2025-12-29 11:41:27'),
+(183, NULL, 'entrada', '120363175746047388', 'texto', 'Qual dos cursos ?', 'false_120363175746047388@g.us_2A5BDECCBFA7D1C6989B_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:41:41', '2025-12-29 11:41:41'),
+(184, NULL, 'entrada', '120363175746047388', 'texto', 'kkkk', 'false_120363175746047388@g.us_3EB0D579186C8333229BEF_232559795552442@lid', 'recebido', NULL, '2025-12-29 11:41:45', '2025-12-29 11:41:45'),
+(185, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A07E6107B358DA661CC', 'recebido', NULL, '2025-12-29 11:41:46', '2025-12-29 11:41:46'),
+(186, NULL, 'entrada', '120363175746047388', 'texto', 'Qualquer um tem', 'false_120363175746047388@g.us_3EB0B0D70F9894C7146403_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:41:50', '2025-12-29 11:41:50'),
+(187, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3A4DFEC601B53C83031C', 'recebido', NULL, '2025-12-29 11:41:56', '2025-12-29 11:41:56'),
+(188, NULL, 'entrada', '120363175746047388', 'texto', 'Showw, vou assistir', 'false_120363175746047388@g.us_3EB05100088CC57408FBA6_232559795552442@lid', 'recebido', NULL, '2025-12-29 11:42:06', '2025-12-29 11:42:06'),
+(189, NULL, 'entrada', '120363175746047388', 'texto', 'Do Maicon ?', 'false_120363175746047388@g.us_2AB49905AE930776374A_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:42:06', '2025-12-29 11:42:06'),
+(190, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A66E4C1A492C8748198', 'recebido', NULL, '2025-12-29 11:42:14', '2025-12-29 11:42:14'),
+(191, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3A3E4B76D674540B18FC', 'recebido', NULL, '2025-12-29 11:42:21', '2025-12-29 11:42:21'),
+(192, NULL, 'entrada', '120363175746047388', 'texto', 'Eu tenho dois cursos dele, vou até procurar', 'false_120363175746047388@g.us_2AFE2EBADD22A32BA0C4_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:42:29', '2025-12-29 11:42:29'),
+(193, NULL, 'entrada', '120363175746047388', 'texto', '🤦🏽‍♂️ claro pow kkk', 'false_120363175746047388@g.us_ACF6A9D9EED1B2B9DF24F6122CDABDFF_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:42:35', '2025-12-29 11:42:35'),
+(194, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0F1E03AD8A08D35F04', 'recebido', NULL, '2025-12-29 11:42:37', '2025-12-29 11:42:37'),
+(195, 4, 'entrada', '557588890006', 'texto', '3', 'false_557588890006@c.us_3AAB2A8C9C9DF6E664E6', 'recebido', NULL, '2025-12-29 11:42:43', '2025-12-29 11:42:43'),
+(196, NULL, 'entrada', '120363175746047388', 'texto', 'Sei lá', 'false_120363175746047388@g.us_2AF63D85A7EB93C982D5_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:42:44', '2025-12-29 11:42:44'),
+(197, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3AA30C1D8735E5C30EF2', 'recebido', NULL, '2025-12-29 11:42:52', '2025-12-29 11:42:52'),
+(198, NULL, 'entrada', '120363175746047388', 'texto', 'Kkkkk', 'false_120363175746047388@g.us_AC9A4B2AE306E23CB2CB334E92E05915_252660326338796@lid', 'recebido', NULL, '2025-12-29 11:42:54', '2025-12-29 11:42:54'),
+(199, NULL, 'entrada', '120363175746047388', 'texto', '', 'false_120363175746047388@g.us_2AA16BCF790E99ED7AA8_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:42:55', '2025-12-29 11:42:55'),
+(200, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3AE94B65A9F58DB6A9C3', 'recebido', NULL, '2025-12-29 11:42:58', '2025-12-29 11:42:58'),
+(201, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3A60169D0F5451AA7E98', 'recebido', NULL, '2025-12-29 11:43:02', '2025-12-29 11:43:02'),
+(202, NULL, 'entrada', '120363175746047388', 'texto', '', 'false_120363175746047388@g.us_2A17D4E69824BB59D1AE_54683657855229@lid', 'recebido', NULL, '2025-12-29 11:43:19', '2025-12-29 11:43:19'),
+(203, 4, 'entrada', '557588890006', 'texto', 'Menu', 'false_557588890006@c.us_3A6ED5244ED8F7592DED', 'recebido', NULL, '2025-12-29 11:44:24', '2025-12-29 11:44:24'),
+(204, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A35221B9884BA1715F3', 'recebido', NULL, '2025-12-29 11:44:31', '2025-12-29 11:44:31'),
+(205, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3A2F61D837DEC4D62C01', 'recebido', NULL, '2025-12-29 11:44:39', '2025-12-29 11:44:39'),
+(206, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A198A93954EFD07E04F', 'recebido', NULL, '2025-12-29 11:57:06', '2025-12-29 11:57:06'),
+(207, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A8F81261D2DB541BD06', 'recebido', NULL, '2025-12-29 11:57:10', '2025-12-29 11:57:10'),
+(208, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A2A89F8A6D5AB9D1F5E', 'recebido', NULL, '2025-12-29 11:57:15', '2025-12-29 11:57:15'),
+(209, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A3CA61E9801982143C9', 'recebido', NULL, '2025-12-29 11:57:34', '2025-12-29 11:57:34'),
+(210, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3ACAB50BD8D9CE01A168', 'recebido', NULL, '2025-12-29 11:57:39', '2025-12-29 11:57:39'),
+(211, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:57:50', '2025-12-29 11:57:50'),
+(212, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:57:53', '2025-12-29 11:57:53'),
+(213, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:57:55', '2025-12-29 11:57:55'),
+(214, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:57:57', '2025-12-29 11:57:57'),
+(215, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:57:59', '2025-12-29 11:57:59'),
+(216, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:01', '2025-12-29 11:58:01'),
+(217, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:03', '2025-12-29 11:58:03'),
+(218, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:05', '2025-12-29 11:58:05'),
+(219, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:08', '2025-12-29 11:58:08'),
+(220, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:10', '2025-12-29 11:58:10'),
+(221, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:12', '2025-12-29 11:58:12'),
+(222, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:14', '2025-12-29 11:58:14'),
+(223, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:16', '2025-12-29 11:58:16'),
+(224, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:18', '2025-12-29 11:58:18'),
+(225, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:20', '2025-12-29 11:58:20'),
+(226, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A576986BCEE6EBFD44E', 'recebido', NULL, '2025-12-29 11:58:23', '2025-12-29 11:58:23'),
+(227, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:23', '2025-12-29 11:58:23'),
+(228, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:26', '2025-12-29 11:58:26'),
+(229, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:28', '2025-12-29 11:58:28'),
+(230, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:30', '2025-12-29 11:58:30'),
+(231, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:32', '2025-12-29 11:58:32'),
+(232, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:34', '2025-12-29 11:58:34'),
+(233, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:36', '2025-12-29 11:58:36'),
+(234, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:38', '2025-12-29 11:58:38'),
+(235, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:41', '2025-12-29 11:58:41'),
+(236, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:43', '2025-12-29 11:58:43'),
+(237, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:45', '2025-12-29 11:58:45'),
+(238, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:47', '2025-12-29 11:58:47'),
+(239, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:49', '2025-12-29 11:58:49'),
+(240, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:51', '2025-12-29 11:58:51'),
+(241, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:53', '2025-12-29 11:58:53'),
+(242, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3A8AD9E494F436C903A6', 'recebido', NULL, '2025-12-29 11:58:56', '2025-12-29 11:58:56'),
+(243, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A01440C4B85EC797AEC', 'recebido', NULL, '2025-12-29 12:03:37', '2025-12-29 12:03:37'),
+(244, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3AC670CCB240420626BA', 'recebido', NULL, '2025-12-29 12:09:16', '2025-12-29 12:09:16'),
+(245, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A2D78AF98AA2FBA8AC5', 'recebido', NULL, '2025-12-29 12:09:23', '2025-12-29 12:09:23'),
+(246, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3ADF08A4D8B9793EEC8C', 'recebido', NULL, '2025-12-29 12:09:31', '2025-12-29 12:09:31'),
+(247, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3AEA0AAFDFD1AAAE894E', 'recebido', NULL, '2025-12-29 12:09:36', '2025-12-29 12:09:36'),
+(248, 4, 'entrada', '557588890006', 'texto', 'Sim', 'false_557588890006@c.us_3AA74FA0F7B3FF8AA363', 'recebido', NULL, '2025-12-29 12:09:40', '2025-12-29 12:09:40'),
+(249, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A3D02DF73EA5F03C705', 'recebido', NULL, '2025-12-29 12:13:39', '2025-12-29 12:13:39'),
+(250, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3AC6AB3109EDA95AF7C6', 'recebido', NULL, '2025-12-29 12:13:44', '2025-12-29 12:13:44'),
+(251, 4, 'entrada', '557588890006', 'texto', '3', 'false_557588890006@c.us_3AC3C8E4398B9910C5E6', 'recebido', NULL, '2025-12-29 12:14:03', '2025-12-29 12:14:03'),
+(252, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3A513C50DFF0B4416C87', 'recebido', NULL, '2025-12-29 12:14:14', '2025-12-29 12:14:14'),
+(253, NULL, 'entrada', '120363424969304388', 'texto', '❌ *Você nunca mais vai precisar quebrar a cabeça com código…*\n\nTodo dev já ficou travado em alguma parte de uma aplicação por causa de um único bug – _e às vezes, era a coisa mais simples do mundo…_ 🥲\n\nTendo acesso ao Nexus.AI, você está, literalmente, a um print da resolução dos seus problemas! 📸\n\nPegue o print de onde está dando erro no seu projeto, envie ao agente da tecnologia específica e *tenha, em poucos segundos, o direcionamento necessário* para destravar em suas aplicações! ✅\n\nNão fica de fora. *O link de assinaturas está aqui!* 👇🏻\nhttps://www.fullstackclub.com.br/nexus\n', 'false_120363424969304388@g.us_3EB0D5C6407ADD9F825B96026D1345C2E8239329_93214212096251@lid', 'recebido', NULL, '2025-12-29 12:17:24', '2025-12-29 12:17:24'),
+(254, NULL, 'entrada', '38436031447258', 'texto', 'Certo, qual o seu email de cadastro?', 'false_38436031447258@lid_260881EF272A9C1562', 'recebido', NULL, '2025-12-29 12:22:48', '2025-12-29 12:22:48'),
+(255, NULL, 'entrada', '120363176780698645', 'texto', 'Pessoal, estou precisando de uma automação para redes sociais. Tenho um blog e quero compartilhar a cada novo artigo adicionado, nas redes sociais.\n\nMas como estou começando agora do absoluto zero, não tenho budget para investimento ilimitado. Preciso que seja uma ferramenta acessível financeiramente.\n\nTeriam alguma aí para indicar?', 'false_120363176780698645@g.us_3EB05F4ED3D264EDE41E28_232559795552442@lid', 'recebido', NULL, '2025-12-29 12:31:05', '2025-12-29 12:31:05'),
+(256, NULL, 'entrada', '38436031447258', 'texto', 'Um momento', 'false_38436031447258@lid_F34269434885068B82', 'recebido', NULL, '2025-12-29 12:34:24', '2025-12-29 12:34:24'),
+(257, NULL, 'entrada', '38436031447258', 'texto', 'Poderia informar o acesso ao Cloudflare deste domínio?\n\nOu, se preferir, pode adicionar este email como editor temporário: teste.npvh@gmail.com', 'false_38436031447258@lid_2BB9EE6BAB82CFB558', 'recebido', NULL, '2025-12-29 12:48:09', '2025-12-29 12:48:09'),
+(258, NULL, 'entrada', '38436031447258', 'texto', 'Isso! Apenas é necessário desmarcar essa opção, para que eu receba o email de confirmação', 'false_38436031447258@lid_28D8019EB51700601A', 'recebido', NULL, '2025-12-29 12:51:55', '2025-12-29 12:51:55'),
+(259, NULL, 'entrada', '38436031447258', 'texto', '', 'false_38436031447258@lid_E835D2A86E9A6D9561', 'recebido', NULL, '2025-12-29 12:51:57', '2025-12-29 12:51:57'),
+(260, NULL, 'entrada', '120363196591768177', 'texto', 'https://youtu.be/L1fzZyiQiP8?si=CS0x20A8ubxS3r_u', 'false_120363196591768177@g.us_AC9B757473DC8FD7EE99E1FF74CC0967_271523604615177@lid', 'recebido', NULL, '2025-12-29 12:52:00', '2025-12-29 12:52:00'),
+(261, NULL, 'entrada', '120363176780698645', 'texto', 'tem o late que integra com o n8n, mas nao é barato, pode usar plugin ta,mbem, eu uso em alguns sites o Social Auto Poster da Envato', 'false_120363176780698645@g.us_3EB0C218F4FF216838B25A_219382735216777@lid', 'recebido', NULL, '2025-12-29 12:53:55', '2025-12-29 12:53:55'),
+(262, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A3590B96911E65FA5C6', 'recebido', NULL, '2025-12-29 12:55:40', '2025-12-29 12:55:40'),
+(263, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A0350753BFBD75C0A33', 'recebido', NULL, '2025-12-29 12:55:44', '2025-12-29 12:55:44'),
+(264, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3AD6D57653E8B0ABC01C', 'recebido', NULL, '2025-12-29 12:55:48', '2025-12-29 12:55:48'),
+(265, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A50A70954D09209DCDE', 'recebido', NULL, '2025-12-29 12:55:57', '2025-12-29 12:55:57'),
+(266, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3AA9D42F6C809B5C9D47', 'recebido', NULL, '2025-12-29 12:56:02', '2025-12-29 12:56:02'),
+(267, NULL, 'entrada', '120363176780698645', 'texto', 'Obrigado', 'false_120363176780698645@g.us_3EB04768FE43476C6B6A4A_232559795552442@lid', 'recebido', NULL, '2025-12-29 12:56:05', '2025-12-29 12:56:05'),
+(268, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3ACDDD74F0DE1938375D', 'recebido', NULL, '2025-12-29 12:56:09', '2025-12-29 12:56:09'),
+(269, NULL, 'entrada', '38436031447258', 'texto', 'Acabei não recebendo nada no meu email\n\nPoderia tentar novamente, certificando-se de que a caixinha de \"Adicionar diretamente\" está desmarcada', 'false_38436031447258@lid_4B0276DB05A08C52E1', 'lido', NULL, '2025-12-29 12:56:10', '2025-12-29 13:01:58'),
+(270, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3AE440CBA4499BCE23D8', 'recebido', NULL, '2025-12-29 12:56:15', '2025-12-29 12:56:15'),
+(271, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A4E0A2C8E4FA7CCFAA5', 'recebido', NULL, '2025-12-29 12:56:18', '2025-12-29 12:56:18'),
+(272, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A83EF9404B6151F5777', 'recebido', NULL, '2025-12-29 12:56:22', '2025-12-29 12:56:22'),
+(273, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3AFD8BB983F8870B390F', 'recebido', NULL, '2025-12-29 12:56:26', '2025-12-29 12:56:26'),
+(274, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A12DFB4B3879C620BD8', 'recebido', NULL, '2025-12-29 12:56:31', '2025-12-29 12:56:31'),
+(275, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3AF255F478E85639BA8D', 'recebido', NULL, '2025-12-29 12:56:36', '2025-12-29 12:56:36'),
+(276, 4, 'saida', '557588890006', 'texto', 'Notificação de confirmacao - Agendamento #88', NULL, 'enviado', NULL, '2025-12-29 12:57:10', '2025-12-29 12:57:10'),
+(277, 4, 'entrada', '557588890006', 'texto', 'Oo', 'false_557588890006@c.us_3A686EE296088F07746B', 'recebido', NULL, '2025-12-29 12:59:07', '2025-12-29 12:59:07'),
+(278, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3AE8C26BC52F77EDB398', 'recebido', NULL, '2025-12-29 12:59:11', '2025-12-29 12:59:11'),
+(279, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A9CB6B12DF91A721A36', 'recebido', NULL, '2025-12-29 12:59:15', '2025-12-29 12:59:15'),
+(280, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3A5AF421BF74E2930FA4', 'recebido', NULL, '2025-12-29 12:59:20', '2025-12-29 12:59:20'),
+(281, 4, 'entrada', '557588890006', 'texto', '3', 'false_557588890006@c.us_3AB9E68789408D2AD5DB', 'recebido', NULL, '2025-12-29 12:59:26', '2025-12-29 12:59:26'),
+(282, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A54983B430B9E5973CC', 'recebido', NULL, '2025-12-29 12:59:33', '2025-12-29 12:59:33'),
+(283, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A8A720D758D6F31B0AE', 'recebido', NULL, '2025-12-29 12:59:38', '2025-12-29 12:59:38'),
+(284, NULL, 'entrada', '120363424969304388', 'texto', '👀 *Agora é decisão*\n\nDev, *o Combo 3 em 1 está disponível* e essa condição não vai se repetir.\n\nSão três formações completas, com projetos reais, acesso vitalício e *foco total em Next.js, React e IA* exatamente o que o mercado está pedindo agora. 🚀\n\nSe você quer evoluir de nível, esse é o momento.\n\nClique aqui e *garanta seu acesso ao Combo 3 em 1*\n👉🏻 https://www.fullstackclub.com.br/combo3em1', 'false_120363424969304388@g.us_3EB0C1483CFA61D933584FB3FC981A40C1F2EAC0_135867549147160@lid', 'recebido', NULL, '2025-12-29 13:00:10', '2025-12-29 13:00:10'),
+(285, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3A2E8B4AA2D130CF8D71', 'recebido', NULL, '2025-12-29 13:00:11', '2025-12-29 13:00:11'),
+(286, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A7BD112FADF3A2017AA', 'recebido', NULL, '2025-12-29 13:00:16', '2025-12-29 13:00:16'),
+(287, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3AE3913560C029BCF56E', 'recebido', NULL, '2025-12-29 13:00:23', '2025-12-29 13:00:23'),
+(288, 4, 'entrada', '557588890006', 'texto', '5', 'false_557588890006@c.us_3A79A85985519864EA27', 'recebido', NULL, '2025-12-29 13:00:37', '2025-12-29 13:00:37'),
+(289, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3ADFFDCE779BDB4A8F46', 'recebido', NULL, '2025-12-29 13:00:42', '2025-12-29 13:00:42'),
+(290, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A27359353F0F922A145', 'recebido', NULL, '2025-12-29 13:00:46', '2025-12-29 13:00:46'),
+(291, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3AFEE8E55DE7C60C60EF', 'recebido', NULL, '2025-12-29 13:01:10', '2025-12-29 13:01:10'),
+(292, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A049CF3874FEC9D8AFC', 'recebido', NULL, '2025-12-29 13:01:13', '2025-12-29 13:01:13'),
+(293, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3A9CF78BADBAE10C26A7', 'recebido', NULL, '2025-12-29 13:01:17', '2025-12-29 13:01:17'),
+(294, 4, 'entrada', '557588890006', 'texto', '6', 'false_557588890006@c.us_3A20CA3C97FE73278F29', 'recebido', NULL, '2025-12-29 13:01:23', '2025-12-29 13:01:23'),
+(295, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A5A519E6309F3D6C02F', 'recebido', NULL, '2025-12-29 13:01:35', '2025-12-29 13:01:35'),
+(296, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A053B217B3F7EE2ED59', 'recebido', NULL, '2025-12-29 13:01:38', '2025-12-29 13:01:38'),
+(297, NULL, 'entrada', '38436031447258', 'texto', 'Sim, recebi por aqui!', 'false_38436031447258@lid_5DD59368078BBDB964', 'lido', NULL, '2025-12-29 13:04:38', '2025-12-29 13:04:43'),
+(298, NULL, 'entrada', '145157395636280', 'texto', '', 'false_145157395636280@lid_ACD0E34D0C52D8EF111C5C36761127BB', 'enviado', NULL, '2025-12-29 13:05:57', '2025-12-29 13:08:50'),
+(299, NULL, 'entrada', '145157395636280', 'texto', 'Você saberia me dizer', 'false_145157395636280@lid_ACE1B865813592A8BED746414E028A8E', 'lido', NULL, '2025-12-29 13:06:02', '2025-12-29 13:08:49'),
+(300, NULL, 'entrada', '145157395636280', 'texto', '?', 'false_145157395636280@lid_ACB78D01E9640A2F7D9447A3C5BDC3C5', 'lido', NULL, '2025-12-29 13:06:25', '2025-12-29 13:08:49'),
+(301, NULL, 'entrada', '120363194524305647', 'texto', '👆 Uma das novidades do Novo Curso Método GEO IA , tem varias outras Novidades e Atualizações para 2026', 'false_120363194524305647@g.us_2A61EE82AA459AA0D7B3_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:07:24', '2025-12-29 13:07:24'),
+(302, NULL, 'entrada', '120363194524305647', 'texto', '', 'false_120363194524305647@g.us_2A1AA2BDE5BEB677347F_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:07:25', '2025-12-29 13:07:25'),
+(303, 4, 'saida', '557588890006', 'texto', 'Notificação de lembrete_pagamento - Agendamento #89', NULL, 'enviado', NULL, '2025-12-29 13:08:04', '2025-12-29 13:08:04'),
+(304, NULL, 'entrada', '120363194524305647', 'texto', 'Que curso é esse?', 'false_120363194524305647@g.us_A5F201BDB58D1483DF3EB9D88A0520C1_235085118869757@lid', 'recebido', NULL, '2025-12-29 13:08:10', '2025-12-29 13:08:10'),
+(305, NULL, 'entrada', '120363194524305647', 'texto', 'Método GEO IA', 'false_120363194524305647@g.us_3EB0FA9B70F9A68AA6E472_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:09:13', '2025-12-29 13:09:13'),
+(306, NULL, 'entrada', '120363194524305647', 'texto', 'Já lançou?', 'false_120363194524305647@g.us_A52E0B4048CCD7BD089426CCEEB62046_235085118869757@lid', 'recebido', NULL, '2025-12-29 13:09:50', '2025-12-29 13:09:50'),
+(307, 4, 'saida', '557588890006', 'texto', 'Notificação de cancelamento - Agendamento #89', NULL, 'enviado', NULL, '2025-12-29 13:10:03', '2025-12-29 13:10:03'),
+(308, NULL, 'entrada', '120363194524305647', 'texto', 'Estou Gravando as aulas, mais o pessoal já esta entrando , ja tem 20 alunos no curso, 50% de desconto para Alunos neste lançamento', 'false_120363194524305647@g.us_3EB0F7FE0DB67018A9E2EB_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:11:07', '2025-12-29 13:11:07'),
+(309, 4, 'entrada', '557588890006', 'texto', 'Oi', 'false_557588890006@c.us_3AB4997E351298C0EDE2', 'recebido', NULL, '2025-12-29 13:11:24', '2025-12-29 13:11:24'),
+(310, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3AD9AF711EEBA078D438', 'recebido', NULL, '2025-12-29 13:11:29', '2025-12-29 13:11:29'),
+(311, 4, 'entrada', '557588890006', 'texto', '3', 'false_557588890006@c.us_3ABF1FC46756CCCB8736', 'recebido', NULL, '2025-12-29 13:11:58', '2025-12-29 13:11:58'),
+(312, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3A02CCEF2C04D4BB2818', 'recebido', NULL, '2025-12-29 13:12:08', '2025-12-29 13:12:08'),
+(313, NULL, 'entrada', '120363194524305647', 'texto', 'qual o valor?', 'false_120363194524305647@g.us_3EB027AE235F36B971FDC0_278631909711987@lid', 'recebido', NULL, '2025-12-29 13:12:52', '2025-12-29 13:12:52'),
+(314, NULL, 'entrada', '120363194524305647', 'texto', 'Qual valor', 'false_120363194524305647@g.us_A58AA8E559E039A109C22B62F33C9C53_235085118869757@lid', 'recebido', NULL, '2025-12-29 13:12:53', '2025-12-29 13:12:53'),
+(315, NULL, 'entrada', '120363194524305647', 'texto', 'https://chat.whatsapp.com/InBtLO9Nyn7DTn8eiDq6pp', 'false_120363194524305647@g.us_3EB0B5570B5F52BDA364CF_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:13:15', '2025-12-29 13:13:15'),
+(316, NULL, 'entrada', '120363194524305647', 'texto', '👆👆👆👆', 'false_120363194524305647@g.us_3EB007B879CFA823990174_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:13:19', '2025-12-29 13:13:19'),
+(317, NULL, 'entrada', '38436031447258', 'texto', 'Nesse caso Ulisses, verifiquei por aqui que o domínio está apontando para um IP diferente do IP da sua revenda aqui conosco. Isso significa que o site está sendo gerenciado em outro local, bem como o certificado SSL\n\nÉ necessário verificar o motivo do erro crítico e da falta do certificado diretamente neste local onde o domínio está apontado, pois é lá que essa parte é gerenciada', 'false_38436031447258@lid_75EB4C8990AD059719', 'lido', NULL, '2025-12-29 13:14:09', '2025-12-29 13:17:45'),
+(318, NULL, 'entrada', '120363194524305647', 'texto', 'Tem um video lá na descrição do Grupo de Lançamento, e também o Link e Cupom de 50% de desconto para alunos , entra no Grupo', 'false_120363194524305647@g.us_3EB09296747DDB0DA4BFBE_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:14:23', '2025-12-29 13:14:23'),
+(319, NULL, 'entrada', '120363194524305647', 'texto', 'Tem um video lá na descrição do Grupo de Lançamento, e também o Link e Cupom de 50% de desconto para alunos , entra no Grupo', 'false_120363194524305647@g.us_3EB03C5E4B121E11C3D12C_233079369162944@lid', 'recebido', NULL, '2025-12-29 13:14:29', '2025-12-29 13:14:29'),
+(320, NULL, 'entrada', '38436031447258', 'texto', 'Imagina, sem problemas', 'false_38436031447258@lid_99E36E3FCAE5EDA483', 'recebido', NULL, '2025-12-29 13:18:06', '2025-12-29 13:18:06'),
+(321, NULL, 'entrada', '145157395636280', 'texto', '', 'false_145157395636280@lid_ACBA8388CEB243B3C33738B948061803', 'enviado', NULL, '2025-12-29 13:18:56', '2025-12-29 13:25:55'),
+(322, NULL, 'entrada', '120363176780698645', 'texto', 'Dependendo da rede social com o próprio n8n ....qual seria?', 'false_120363176780698645@g.us_A5A61524B65F997F192BA4430A645210_213717774004455@lid', 'recebido', NULL, '2025-12-29 13:24:03', '2025-12-29 13:24:03'),
+(323, NULL, 'entrada', '120363153211725317', 'texto', 'Bom dia Pessoal', 'false_120363153211725317@g.us_AC539594743FD133FFE840D254B5307C_153824337600730@lid', 'recebido', NULL, '2025-12-29 13:25:49', '2025-12-29 13:25:49'),
+(324, NULL, 'entrada', '120363153211725317', 'texto', 'Contador ao Vivo falando os novos impostos de 2026', 'false_120363153211725317@g.us_AC04E41F32FAD376755EDA9860AB9806_153824337600730@lid', 'recebido', NULL, '2025-12-29 13:25:54', '2025-12-29 13:25:54'),
+(325, NULL, 'entrada', '120363176780698645', 'texto', 'facebook, instagram e linkedin', 'false_120363176780698645@g.us_3EB0D3EE9C4D86BB443BE7_232559795552442@lid', 'recebido', NULL, '2025-12-29 13:25:55', '2025-12-29 13:25:55'),
+(326, NULL, 'entrada', '120363153211725317', 'texto', 'https://www.youtube.com/live/l9vIsthRJJE?si=-3S_GfAbTxWyxdSy', 'false_120363153211725317@g.us_ACE3A4788AA3BD8B0FA97AD8A972FE45_153824337600730@lid', 'recebido', NULL, '2025-12-29 13:25:55', '2025-12-29 13:25:55'),
+(327, NULL, 'entrada', '120363153211725317', 'texto', 'Reforma Tributária 2026', 'false_120363153211725317@g.us_AC028A7A334FB09654298DFA4AB5A7F0_153824337600730@lid', 'recebido', NULL, '2025-12-29 13:25:56', '2025-12-29 13:25:56'),
+(328, NULL, 'entrada', '145157395636280', 'texto', 'Fizemos', 'false_145157395636280@lid_ACA3C6576924C9CFA0B1188DAE0C1001', 'lido', NULL, '2025-12-29 13:28:25', '2025-12-29 13:28:37'),
+(329, NULL, 'entrada', '145157395636280', 'texto', 'Agora rsrs', 'false_145157395636280@lid_AC52476778488698D2658AB7CF67D8F4', 'lido', NULL, '2025-12-29 13:28:33', '2025-12-29 13:28:37'),
+(330, NULL, 'entrada', '145157395636280', 'texto', 'Como é seu nome', 'false_145157395636280@lid_ACC1596D4D0283D36A1A718124127901', 'lido', NULL, '2025-12-29 13:29:02', '2025-12-29 13:55:20'),
+(331, NULL, 'entrada', '145157395636280', 'texto', 'Eu me chamo Lainara \nFomos falando e esqueci de perguntar 😂', 'false_145157395636280@lid_ACF8A71BD069C13EE9A5A855F691D5CA', 'lido', NULL, '2025-12-29 13:29:21', '2025-12-29 13:55:20'),
+(332, NULL, 'entrada', '120363176780698645', 'texto', 'Consegue com próprio n8n', 'false_120363176780698645@g.us_A5099903F63688D81593FA6CD4DF7DEF_213717774004455@lid', 'recebido', NULL, '2025-12-29 13:34:15', '2025-12-29 13:34:15'),
+(333, NULL, 'entrada', '120363176780698645', 'texto', 'Obrigado amigo. 👍', 'false_120363176780698645@g.us_3EB0933A4EB7452A84F3B6_232559795552442@lid', 'recebido', NULL, '2025-12-29 13:36:25', '2025-12-29 13:36:25'),
+(334, NULL, 'entrada', '38436031447258', 'texto', 'Por aqui, posso auxiliar com algo mais no momento?', 'false_38436031447258@lid_E1969F3858B98CA683', 'recebido', NULL, '2025-12-29 13:47:23', '2025-12-29 13:47:23'),
+(335, NULL, 'entrada', '145157395636280', 'texto', 'Pronto, Rafael\nVamos nos falando, tô aqui articulando com o sócio pra irmos adiantando o lado.\n\nMuito obrigada 😊', 'false_145157395636280@lid_ACBB9769B8581B2857C49BC24E4D2503', 'lido', NULL, '2025-12-29 14:02:39', '2025-12-29 14:03:57'),
+(336, NULL, 'entrada', '120363175746047388', 'texto', 'Bom dia\nFalando em imagem, Pollination está mudando a partir de Janeiro\nVou começar a testar o Beta dele pra ver se melhorou a qualidade', 'false_120363175746047388@g.us_3EB0EAE1C2B16A38DBCFEA_198483541766250@lid', 'recebido', NULL, '2025-12-29 14:23:02', '2025-12-29 14:23:02'),
+(337, NULL, 'entrada', '120363175746047388', 'texto', 'Brother, te mandei uma mensagem no pv. Confere lá por favor 🙏🫠', 'false_120363175746047388@g.us_2A887E58C6D2ADAEEF2D_134484083126306@lid', 'recebido', NULL, '2025-12-29 14:29:56', '2025-12-29 14:29:56'),
+(338, NULL, 'entrada', '38436031447258', 'texto', 'Qualquer dúvida ficamos à completa disposição. 👊💥🚀', 'false_38436031447258@lid_51445499FD934E0529', 'recebido', NULL, '2025-12-29 14:51:24', '2025-12-29 14:51:24'),
+(339, NULL, 'entrada', '38436031447258', 'texto', 'Esse atendimento foi encerrado. Qualquer dúvida é só nos acionar novamente 👋 \n\nVocê gostou deste atendimento? ✍️', 'false_38436031447258@lid_05A072B1C26E5FFE26', 'recebido', NULL, '2025-12-29 14:51:34', '2025-12-29 14:51:34'),
+(340, NULL, 'entrada', '120363424969304388', 'texto', '', 'false_120363424969304388@g.us_3EB06270388B4A374A4104C9E0DBE067C68B4D74_135867549147160@lid', 'recebido', NULL, '2025-12-29 16:00:13', '2025-12-29 16:00:13'),
+(341, NULL, 'entrada', '120363424969304388', 'texto', '*O Nexus praticamente fará TUDO por você!* 👇🏻\n\n✔️ *Bug?* Nexus resolve.\n✔️ *Currículo?* Nexus resolve.\n✔️ *Entrevistas?* Nexus resolve\n✔️ *Tecnologias?* Nexus resolve.\n✔️ *Qualquer coisa,* o Nexus resolverá por você.\n\nIsso porque cada agente foi treinado com as documentações mais recentes e com os melhores conteúdos sobre cada assunto. *Desde tecnologias até entrevistas de emprego!* ✅\n\nNão fica de fora! *Aperta aqui e pegue a sua vaga* agora mesmo!\n➡️ https://www.fullstackclub.com.br/nexus', 'false_120363424969304388@g.us_3EB06DFE3CC45F6C97D1A1005140370B67D4EB3A_135867549147160@lid', 'recebido', NULL, '2025-12-29 16:00:14', '2025-12-29 16:00:14'),
+(342, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Operação Paredão intensifica fiscalização contra poluição sonora em Amargosa*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/operacao-paredao-intensifica-fiscalizacao-contra-poluicao-sonora-em-amargosa/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB01A1494ECF189863CA1_195953990619139@lid', 'recebido', NULL, '2025-12-29 16:06:34', '2025-12-29 16:06:34'),
+(343, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Pesquisa aponta aprovação de 89,47% da gestão do prefeito Rick de João Lulu em Brejões*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/pesquisa-aponta-aprovacao-de-8947-da-gestao-do-prefeito-rick-de-joao-lulu-em-brejoes/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB0FB460F436ADD5871EB_195953990619139@lid', 'recebido', NULL, '2025-12-29 17:00:13', '2025-12-29 17:00:13'),
+(344, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Muniz FM presta homenagem a Junão, criador do programa De Frente com o Povo*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/muniz-fm-presta-homenagem-a-junao-criador-do-programa-de-frente-com-o-povo/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB06A93421928B4C9850B_195953990619139@lid', 'recebido', NULL, '2025-12-29 17:00:20', '2025-12-29 17:00:20'),
+(345, NULL, 'entrada', '120363175746047388', 'texto', 'Boa tarde pessoal! Qual IA vocês tem usado pra gerar imagem com n8n? Preciso de uma API pra gerar 20 por dia, estava usando a Pollinations mas da muito erro....! precisando de uma nao tão caro!! No Gpt ta 0,02 por imagem', 'false_120363175746047388@g.us_AC3DDCB0151D294D3ED1E9B350C700D3_123480444023018@lid', 'recebido', NULL, '2025-12-29 17:13:39', '2025-12-29 17:13:39'),
+(346, NULL, 'entrada', '120363175746047388', 'texto', 'Z-image na kie\n0,004$', 'false_120363175746047388@g.us_3AB203223A19C37A7D93_193896499945644@lid', 'recebido', NULL, '2025-12-29 17:21:37', '2025-12-29 17:21:37'),
+(347, NULL, 'entrada', '120363175746047388', 'texto', 'Vlw vou conferir', 'false_120363175746047388@g.us_ACFBBC599DA444424210C2B4C5C55370_123480444023018@lid', 'recebido', NULL, '2025-12-29 17:30:42', '2025-12-29 17:30:42'),
+(348, NULL, 'entrada', '120363424969304388', 'texto', '⚠️ *Pra quem não entrou no FSC, isso é importante*\n\nSe você não conseguiu entrar no Full Stack Club, *eu separei três formações* que fazem parte da base do FSC pra você continuar evoluindo mesmo assim.\n\nÉ uma forma estratégica de não ficar parado e seguir crescendo como dev. 🔥\n\nEssa condição especial *vai encerrar em breve*\n\n_Acesse agora o Combo 3 em 1_\n👉🏻 https://www.fullstackclub.com.br/combo3em1', 'false_120363424969304388@g.us_3EB016A678384431810921B7754C98135BE265D4_135867549147160@lid', 'recebido', NULL, '2025-12-29 18:00:27', '2025-12-29 18:00:27'),
+(349, NULL, 'entrada', '120363153211725317', 'texto', 'Boa tarde a todos, eu ainda não atualizei para nova versao', 'false_120363153211725317@g.us_3EB0325153CF091FAD1050_175844634923065@lid', 'recebido', NULL, '2025-12-29 18:09:54', '2025-12-29 18:09:54'),
+(350, NULL, 'entrada', '120363153211725317', 'texto', 'mas to com esse erro, se atualizar será que resolve?', 'false_120363153211725317@g.us_3EB0F28E25E53715DBD26B_175844634923065@lid', 'recebido', NULL, '2025-12-29 18:09:54', '2025-12-29 18:09:54'),
+(351, NULL, 'entrada', '120363175746047388', 'texto', 'Está um show de terror , gerando rostos deformados, já tentei vários prompts, infelizmente, era bom.', 'false_120363175746047388@g.us_ACA8FCB56FC8E65FAFF84B3DA1E7B882_11781162463481@lid', 'recebido', NULL, '2025-12-29 19:03:06', '2025-12-29 19:03:06'),
+(352, 4, 'entrada', '557588890006', 'texto', 'oi', 'false_557588890006@c.us_3EB074AE54E041634CA070', 'recebido', NULL, '2025-12-29 19:18:09', '2025-12-29 19:18:09'),
+(353, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3EB07A8598B0C157184982', 'recebido', NULL, '2025-12-29 19:18:13', '2025-12-29 19:18:13'),
+(354, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0E1BC1B86A3D7D645E3', 'recebido', NULL, '2025-12-29 19:19:43', '2025-12-29 19:19:43'),
+(355, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:19:53', '2025-12-29 19:19:53'),
+(356, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:19:55', '2025-12-29 19:19:55'),
+(357, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:19:57', '2025-12-29 19:19:57'),
+(358, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:19:59', '2025-12-29 19:19:59'),
+(359, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:20:02', '2025-12-29 19:20:02'),
+(360, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:20:04', '2025-12-29 19:20:04'),
+(361, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:20:06', '2025-12-29 19:20:06'),
+(362, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:20:08', '2025-12-29 19:20:08'),
+(363, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:20:10', '2025-12-29 19:20:10'),
+(364, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB067FE0748BC81D376F8', 'recebido', NULL, '2025-12-29 19:20:11', '2025-12-29 19:20:11'),
+(365, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0081F8A8465D1F71DB1', 'recebido', NULL, '2025-12-29 19:20:12', '2025-12-29 19:20:12'),
+(366, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0E6DEC045760A25D4C5', 'recebido', NULL, '2025-12-29 19:24:49', '2025-12-29 19:24:49'),
+(367, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0C38151146715AD8BD4', 'recebido', NULL, '2025-12-29 19:24:55', '2025-12-29 19:24:55'),
+(368, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0B5A25B3A385E9218A7', 'recebido', NULL, '2025-12-29 19:25:03', '2025-12-29 19:25:03'),
+(369, 4, 'entrada', '557588890006', 'texto', 'fala irão', 'false_557588890006@c.us_3EB0727F32F8B96CB01002', 'recebido', NULL, '2025-12-29 19:25:10', '2025-12-29 19:25:10'),
+(370, 4, 'entrada', '557588890006', 'texto', 'fala man', 'false_557588890006@c.us_3EB05C8443313A3B84A729', 'recebido', NULL, '2025-12-29 19:25:16', '2025-12-29 19:25:16'),
+(371, 4, 'entrada', '557588890006', 'texto', 'ia pai', 'false_557588890006@c.us_3EB01AA0D03E0E34A6692C', 'recebido', NULL, '2025-12-29 19:25:22', '2025-12-29 19:25:22'),
+(372, 4, 'entrada', '557588890006', 'texto', 'oi', 'false_557588890006@c.us_3EB08B154DC3414348F174', 'recebido', NULL, '2025-12-29 19:25:25', '2025-12-29 19:25:25'),
+(373, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3EB04D8D6F2042DA8FC29E', 'recebido', NULL, '2025-12-29 19:25:33', '2025-12-29 19:25:33'),
+(374, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3EB00D1DB80ACE40891CDA', 'recebido', NULL, '2025-12-29 19:25:43', '2025-12-29 19:25:43'),
+(375, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:25:48', '2025-12-29 19:25:48'),
+(376, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:25:50', '2025-12-29 19:25:50'),
+(377, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:25:52', '2025-12-29 19:25:52'),
+(378, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:25:55', '2025-12-29 19:25:55'),
+(379, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:25:57', '2025-12-29 19:25:57'),
+(380, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:25:59', '2025-12-29 19:25:59'),
+(381, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:01', '2025-12-29 19:26:01'),
+(382, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:03', '2025-12-29 19:26:03'),
+(383, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:05', '2025-12-29 19:26:05'),
+(384, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:07', '2025-12-29 19:26:07'),
+(385, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:10', '2025-12-29 19:26:10'),
+(386, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:12', '2025-12-29 19:26:12'),
+(387, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:14', '2025-12-29 19:26:14'),
+(388, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:16', '2025-12-29 19:26:16'),
+(389, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:18', '2025-12-29 19:26:18'),
+(390, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0D0A35B49A637425C4B', 'recebido', NULL, '2025-12-29 19:26:20', '2025-12-29 19:26:20'),
+(391, NULL, 'entrada', '120363153211725317', 'texto', 'Boa tarde \nPollination?', 'false_120363153211725317@g.us_3EB0805B8FAA699F812C36_198483541766250@lid', 'recebido', NULL, '2025-12-29 19:27:36', '2025-12-29 19:27:36'),
+(392, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Transferências Presbiterais na Diocese de Amargosa, um novo capítulo de Fé e Comunhão*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/transferencias-presbiterais-na-diocese-de-amargosa-um-novo-capitulo-de-fe-e-comunhao/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB093D00BA09825EF87D0_195953990619139@lid', 'recebido', NULL, '2025-12-29 20:00:49', '2025-12-29 20:00:49'),
+(393, 4, 'entrada', '557588890006', 'texto', 'iai', 'false_557588890006@c.us_3EB074CD696E2720B284A2', 'recebido', NULL, '2025-12-29 20:04:38', '2025-12-29 20:04:38'),
+(394, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB046C0B7D0AEDA2369F5', 'recebido', NULL, '2025-12-29 20:04:47', '2025-12-29 20:04:47'),
+(395, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB046C0B7D0AEDA2369F5', 'recebido', NULL, '2025-12-29 20:04:49', '2025-12-29 20:04:49'),
+(396, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB046C0B7D0AEDA2369F5', 'recebido', NULL, '2025-12-29 20:04:51', '2025-12-29 20:04:51'),
+(397, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB046C0B7D0AEDA2369F5', 'recebido', NULL, '2025-12-29 20:04:53', '2025-12-29 20:04:53'),
+(398, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0A4205A418AB16E921B', 'recebido', NULL, '2025-12-29 20:04:53', '2025-12-29 20:04:53'),
+(399, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB046C0B7D0AEDA2369F5', 'recebido', NULL, '2025-12-29 20:04:55', '2025-12-29 20:04:55'),
+(400, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB05FBFC694DE014F7F39', 'recebido', NULL, '2025-12-29 20:05:06', '2025-12-29 20:05:06'),
+(401, 4, 'entrada', '557588890006', 'texto', 'boa tarde', 'false_557588890006@c.us_3EB07B21014D9B19B01E96', 'recebido', NULL, '2025-12-29 20:05:17', '2025-12-29 20:05:17'),
+(402, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB09A88A30DF52CC69F37', 'recebido', NULL, '2025-12-29 20:10:23', '2025-12-29 20:10:23'),
+(403, 4, 'entrada', '557588890006', 'texto', 'fala', 'false_557588890006@c.us_3EB0808D162C2EFCF64F4E', 'recebido', NULL, '2025-12-29 20:19:18', '2025-12-29 20:19:18'),
+(404, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0C0F7B6F994716A8D16', 'recebido', NULL, '2025-12-29 20:19:23', '2025-12-29 20:19:23'),
+(405, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB04E770228B8270EE38A', 'recebido', NULL, '2025-12-29 20:19:28', '2025-12-29 20:19:28'),
+(406, 4, 'entrada', '557588890006', 'texto', 'pega', 'false_557588890006@c.us_3EB0D08D1D55439529BF6A', 'recebido', NULL, '2025-12-29 20:19:41', '2025-12-29 20:19:41'),
+(407, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3EB099575CBF28668FB546', 'recebido', NULL, '2025-12-29 20:19:47', '2025-12-29 20:19:47'),
+(408, 4, 'entrada', '557588890006', 'texto', 'iai', 'false_557588890006@c.us_3EB05870B2450EA658C1A3', 'recebido', NULL, '2025-12-29 20:31:07', '2025-12-29 20:31:07'),
+(409, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0FF0C3E93DEF237E250', 'recebido', NULL, '2025-12-29 20:31:11', '2025-12-29 20:31:11'),
+(410, 4, 'entrada', '557588890006', 'texto', 'iai', 'false_557588890006@c.us_3EB04BFEA217F36B067C66', 'recebido', NULL, '2025-12-29 20:31:15', '2025-12-29 20:31:15'),
+(411, 4, 'entrada', '557588890006', 'texto', 'oi', 'false_557588890006@c.us_3EB0F8BE6A8E04210971E4', 'recebido', NULL, '2025-12-29 20:31:20', '2025-12-29 20:31:20'),
+(412, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3EB046F9335905FD67C2A2', 'recebido', NULL, '2025-12-29 20:31:25', '2025-12-29 20:31:25'),
+(413, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0D32327AE4455E2E3E9', 'recebido', NULL, '2025-12-29 20:31:36', '2025-12-29 20:31:36'),
+(414, 4, 'entrada', '557588890006', 'texto', 'oi', 'false_557588890006@c.us_3EB0C8046965CE14C80553', 'recebido', NULL, '2025-12-29 20:31:42', '2025-12-29 20:31:42'),
+(415, 4, 'entrada', '557588890006', 'texto', '3', 'false_557588890006@c.us_3EB00BB760D72E7BBDA49C', 'recebido', NULL, '2025-12-29 20:31:47', '2025-12-29 20:31:47'),
+(416, 4, 'entrada', '557588890006', 'texto', '1', 'false_557588890006@c.us_3EB0E71CE8013F21575AA6', 'recebido', NULL, '2025-12-29 20:31:51', '2025-12-29 20:31:51'),
+(417, 4, 'entrada', '557588890006', 'texto', 'oi', 'false_557588890006@c.us_3EB01A440F012F06FD3C4D', 'recebido', NULL, '2025-12-29 20:32:11', '2025-12-29 20:32:11'),
+(418, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0D44A90730C64F57E15', 'recebido', NULL, '2025-12-29 20:32:17', '2025-12-29 20:32:17'),
+(419, 4, 'entrada', '557588890006', 'texto', 'ui', 'false_557588890006@c.us_3EB0220287D061969ED2C7', 'recebido', NULL, '2025-12-29 20:32:25', '2025-12-29 20:32:25'),
+(420, NULL, 'entrada', '55719178077214530547', 'texto', '🔵 *Bela Vista* \n\nApartamento novo com 70m² 3 quartos -\n\nValor R$ R$ 660.000\n\nCondomínio R$ 620\n\nIPTU R$ 300\n\nApartamento 3 quartos  Bela Vista. Nascente, varanda, super ventilado, suite, armários na cozinha e banheiros, infraestrutura de lazer completa.\n\nRef:3467ed', 'false_557191780772-1453054742@g.us_AC0FF0BB93AE8A0563E56CC586358ACB_131056648851558@lid', 'recebido', NULL, '2025-12-29 20:34:01', '2025-12-29 20:34:01'),
+(421, NULL, 'entrada', '55719178077214530547', 'texto', '🟢 *Armação* \nOportunidade de Ap em Armação 39 m2 a 250 metros da praia\nValor R$ 215.000\nCondomínio\nR$ 600 / mês\nIPTU R$ 52\n\nApartamento 39 m2, nascente,\nQuarto e sala, \nbanheiro, \ncozinha integrada com área de serviço , com uma vaga de garagem,\nvaranda com vista pra piscina , garagem e área verde\nPisos em porcelanato polido, com banheiro reformado todo em porcelanato (piso e paredes).\nParede da sala com revestimento e porcelanato.\n\nÁrea de lazer com piscina, área gourmet para churrasco com banheiro integrado .\n\nRef\"', 'false_557191780772-1453054742@g.us_AC4C7C1BCE84345CD8D89956D89B6453_131056648851558@lid', 'recebido', NULL, '2025-12-29 20:34:01', '2025-12-29 20:34:01');
+INSERT INTO `whatsapp_mensagens` (`id`, `estabelecimento_id`, `direcao`, `numero_destino`, `tipo_mensagem`, `conteudo`, `message_id`, `status`, `erro_mensagem`, `created_at`, `updated_at`) VALUES
+(422, NULL, 'entrada', '55719178077214530547', 'texto', '🟢 *Itaigara* \nCobertura exclusiva no Alto Itaigara, em Salvador,totalmente reformado, com padrão das melhores coberturas de São Paulo e planta inspirada nas coberturas americanas de Nova York.\n\nApartamento · 270m² · 3 quartos (1 suíte master com closet) · dependência · 3 vagas soltas\nVenda: R$ 1.733.000\nCondomínio: R$ 2.900 · IPTU: R$ 850\n\nDestaques: vista panorâmica .\n1º andar (dia-a-dia): 3/4 (1 suíte master com closet), cozinha principal, dependência, e sala ampla de recepção.\n2º andar (festas e lazer): espaço aberto que pode ser transformado em salão para 50 pessoas, 2ª cozinha independente com ilha americana, e sala principal com grandes janelas e vista permanente da cidade.\n\nRooftop integrado dentro do apartamento: lareira ao ar livre, cinema ao céu aberto, piscina, jardim no rooftop – ambiente amplo e exclusivo de lazer privativo.\nCondomínio completo com lazer: academia ampla com 30+ equipamentos, piscina aquecida interna, piscina externa, brinquedoteca, salão de festas, quadras e outros itens de lazer. \n\nRef;ped4944', 'false_557191780772-1453054742@g.us_ACFF67DACE4D6FE2884261C6EDC8B3AB_131056648851558@lid', 'recebido', NULL, '2025-12-29 20:34:02', '2025-12-29 20:34:02'),
+(423, 4, 'entrada', '', 'texto', 'https://vt.tiktok.com/ZS5NtYXTV/', 'false_status@broadcast_ACF309E571CB04CF6144130D74B7101D_557598865285@c.us', 'recebido', NULL, '2025-12-29 21:03:54', '2025-12-29 21:03:54'),
+(424, NULL, 'entrada', '120363424969304388', 'texto', '', 'false_120363424969304388@g.us_3EB06B489A826EAAFC4625EA2BF1DB62D39951DE_135867549147160@lid', 'recebido', NULL, '2025-12-29 22:00:16', '2025-12-29 22:00:16'),
+(425, NULL, 'entrada', '120363424969304388', 'texto', '👀 *Veja o Nexus funcionando na prática!*\n\nDev, se liga nesse vídeo aqui, onde o Nexus funciona na prática, *ajudando a estruturar o currículo* do cliente! 📄\n\nE isso é só uma parte de tudo o que o Nexus pode fazer por você, dev! *São +15 agentes,* dedicados e desenvolvido *100% para programadores,* te ajudando com tudo:\n\n✅ _Tecnologias_\n✅ _Vagas de emprego_\n✅ _Documentação de projetos_\n\nE muito mais! Marca bobeira não. *Aperta aqui e garanta a sua vaga* agora mesmo!\n👉🏻 https://www.fullstackclub.com.br/nexus', 'false_120363424969304388@g.us_3EB0B2E0D53C632BDE02174C2EA07CC6743EC27C_135867549147160@lid', 'recebido', NULL, '2025-12-29 22:00:17', '2025-12-29 22:00:17'),
+(426, NULL, 'entrada', '120363049065419885', 'texto', 'povo. os seus clientes de site também ficam dando pitaco em coisas de design que eles nao entendem, ou é só comigo?', 'false_120363049065419885@g.us_3EB032917976BE73B0C4AD_140716097445995@lid', 'recebido', NULL, '2025-12-29 22:18:18', '2025-12-29 22:18:18'),
+(427, NULL, 'entrada', '120363049065419885', 'texto', 'quando eles ficam querendo shitificar o design, o que voces fazem?', 'false_120363049065419885@g.us_3EB08768A1E4ACCD21A4DB_140716097445995@lid', 'recebido', NULL, '2025-12-29 22:18:51', '2025-12-29 22:18:51'),
+(428, NULL, 'entrada', '120363049065419885', 'texto', 'eu quero traçar uma linha que eles nao passem, mas nao quero ser rude.', 'false_120363049065419885@g.us_3EB020D58FFA56FB3A5D22_140716097445995@lid', 'recebido', NULL, '2025-12-29 22:20:35', '2025-12-29 22:20:35'),
+(429, NULL, 'entrada', '120363153211725317', 'texto', 'https://www.testingcatalog.com/meta-acquires-manus-to-expand-its-ai-agents-platform/\n\n\ntio zuck ta animado', 'false_120363153211725317@g.us_3EB0FC483CDBB8B86C0EEB_193896499945644@lid', 'recebido', NULL, '2025-12-30 05:15:43', '2025-12-30 05:15:43'),
+(430, 4, 'entrada', '557588890006', 'texto', 'oi', 'false_557588890006@c.us_3EB0594ED399AD874008F4', 'recebido', NULL, '2025-12-30 05:15:43', '2025-12-30 05:15:43'),
+(431, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0E19443AC7E1BCBF450', 'recebido', NULL, '2025-12-30 05:15:43', '2025-12-30 05:15:43'),
+(432, NULL, 'entrada', '55719178077214530547', 'texto', 'Apresento esse belo apartamento no condominio Bosque Patamares na Colina A em Patamares. 65m2 , 2/4  sendo uma suite, cozinha, area de serviço . Varanda Gourmet e vista agradavel para o verde e Avenida Pinto de Aguiar. Condominio com excelente infraestrutura  e localização.\nValor R$ 650.000,00.\nInformações 71992765138.\n(#bosquepatamares),(#patamares),(#colinaA),(#apartamento ),(#empreendimento ),(#salvador ),(#bahia ),(#imoveis ),(#carlosatilaimoveis ).\n                 https://www.instagram.com/p/DRnfPvqgd24/?igsh=M2Zvd3NlOG94bG5t', 'false_557191780772-1453054742@g.us_AC4D26E1B5A8721E74611E8CF950DA74_221440074870948@lid', 'recebido', NULL, '2025-12-30 05:15:43', '2025-12-30 05:15:43'),
+(433, NULL, 'entrada', '55719178077214530547', 'texto', 'Apresento esse belo apartamento no condominio Bosque Patamares na Colina A em Patamares. 65m2 , 2/4  sendo uma suite, cozinha, area de serviço . Varanda Gourmet e vista agradavel para o verde e Avenida Pinto de Aguiar. Condominio com excelente infraestrutura  e localização.\nValor R$ 650.000,00.\nInformações 71992765138.\n(#bosquepatamares),(#patamares),(#colinaA),(#apartamento ),(#empreendimento ),(#salvador ),(#bahia ),(#imoveis ),(#carlosatilaimoveis ).\n                 https://www.instagram.com/p/DRnfPvqgd24/?igsh=M2Zvd3NlOG94bG5t', 'false_557191780772-1453054742@g.us_ACB51BB94EE700C30B338E32908AA11D_221440074870948@lid', 'recebido', NULL, '2025-12-30 05:15:43', '2025-12-30 05:15:43'),
+(434, NULL, 'entrada', '120363153211725317', 'texto', 'mentiraaaaa', 'false_120363153211725317@g.us_3BD03CE2E4ACF9F75E56_119447889137913@lid', 'recebido', NULL, '2025-12-30 05:15:43', '2025-12-30 05:15:43'),
+(435, NULL, 'entrada', '120363153211725317', 'texto', 'jurá?', 'false_120363153211725317@g.us_3BB980744E670012BF71_119447889137913@lid', 'recebido', NULL, '2025-12-30 05:15:43', '2025-12-30 05:15:43'),
+(436, NULL, 'entrada', '120363153211725317', 'texto', 'Pô, usava uma automação mais zuadinha antes de usar  a do Maicon. Estava gastando 50 dólares na openai e mais uns 20 reais no Google \n\nHj praticamente com o mês fechado calculei:\nGastei 25 reais no Google e 9 dólares na open ai. \n\nUsei praticamente na mesma quantidade. E só gastei mais no Google pq estava testando uns modelos mais caros e imagens do nanobanana. Se não ia ser uns 15 reais no Google', 'false_120363153211725317@g.us_ACBC4EF961F7AB46DF4A5981A1A173C4_235098070876234@lid', 'recebido', NULL, '2025-12-30 05:15:44', '2025-12-30 05:15:44'),
+(437, NULL, 'entrada', '120363153211725317', 'texto', 'Sem contar que a qualidade e consistência do fluxo tá bem melhor que a automação dura que tinha (não era n8n', 'false_120363153211725317@g.us_ACFD058E3B39BAC2EF1F0AB443862AAB_235098070876234@lid', 'recebido', NULL, '2025-12-30 05:15:44', '2025-12-30 05:15:44'),
+(438, NULL, 'entrada', '120363153211725317', 'texto', 'Só uma parte que achava legal da antiga e arcaica. Quando vc usava pra puxar a imagem da fonte (as vezes) ele puxava as imagens do corpo do artigo tbm', 'false_120363153211725317@g.us_AC8D467D69E9412D1AF878F2848D6082_235098070876234@lid', 'recebido', NULL, '2025-12-30 05:15:44', '2025-12-30 05:15:44'),
+(439, NULL, 'entrada', '', 'texto', 'Bora para mais uma noite', 'false_status@broadcast_AC6A0919FE8CB46047DB87A33F71E83F_557388589877@c.us', 'recebido', NULL, '2025-12-30 05:15:45', '2025-12-30 05:15:45'),
+(440, NULL, 'entrada', '120363102823068213', 'texto', 'Eu reniciei.', 'false_120363102823068213@g.us_AC2D74F2FC66AEF3541E57EEB521F9AB_27767064252474@lid', 'lido', NULL, '2025-12-30 05:16:51', '2025-12-30 11:08:40'),
+(441, NULL, 'entrada', '120363102823068213', 'texto', 'Voltou', 'false_120363102823068213@g.us_ACD90B2EE70DA2D34A49F66663681DF3_27767064252474@lid', 'lido', NULL, '2025-12-30 05:16:56', '2025-12-30 11:08:40'),
+(442, NULL, 'entrada', '', 'texto', 'https://youtu.be/DNHhX0DgjHU?si=mf4ZiSDKJYq0zzEl', 'false_status@broadcast_ACCD95C04A9E99E893552D1C17FAC71B_557583670721@c.us', 'recebido', NULL, '2025-12-30 08:24:41', '2025-12-30 08:24:41'),
+(443, NULL, 'entrada', '', 'texto', 'Final de festa 🚐', 'false_status@broadcast_AC747A044BC75AB64485A575D2CBCCAD_557388589877@c.us', 'recebido', NULL, '2025-12-30 08:34:51', '2025-12-30 08:34:51'),
+(444, 4, 'entrada', '', 'texto', 'https://vt.tiktok.com/ZS5YSxqkU/', 'false_status@broadcast_AC81A01DCCCCBD7A0C2812296C957F93_557598865285@c.us', 'recebido', NULL, '2025-12-30 10:56:35', '2025-12-30 10:56:35'),
+(445, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3AC3F9D20B8C50528C5A', 'recebido', NULL, '2025-12-30 11:09:03', '2025-12-30 11:09:03'),
+(446, NULL, 'entrada', '16754835235016', 'texto', '', 'false_16754835235016@lid_ACA62540B9F8AF741335084F90441E43', 'recebido', NULL, '2025-12-30 11:19:50', '2025-12-30 11:19:50'),
+(447, NULL, 'entrada', '16754835235016', 'texto', '', 'false_16754835235016@lid_ACA428790001C09D13C2D7F88B043F55', 'recebido', NULL, '2025-12-30 11:19:50', '2025-12-30 11:19:50'),
+(448, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Termina cirurgia de Bolsonaro para bloquear nervo do diafragma*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/termina-cirurgia-de-bolsonaro-para-bloquear-nervo-do-diafragma/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB05D7E5333FD99B9C0BB_195953990619139@lid', 'recebido', NULL, '2025-12-30 11:30:08', '2025-12-30 11:30:08'),
+(449, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Prisões são mantidas após audiência de custódia sobre a trama golpista*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/prisoes-sao-mantidas-apos-audiencia-de-custodia-sobre-a-trama-golpista/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB0106049B9E73753116D_195953990619139@lid', 'recebido', NULL, '2025-12-30 11:32:29', '2025-12-30 11:32:29'),
+(450, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Toffoli mantém participação de diretor do BC em acareação do Master*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/toffoli-mantem-participacao-de-diretor-do-bc-em-acareacao-do-master/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB0B7A5C435B08D8F6416_195953990619139@lid', 'recebido', NULL, '2025-12-30 11:34:46', '2025-12-30 11:34:46'),
+(451, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *PF considera que presidente do Instituto Voto Legal está foragido*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/pf-considera-que-presidente-do-instituto-voto-legal-esta-foragido/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB0FE1AF439ED7F3FCBB2_195953990619139@lid', 'recebido', NULL, '2025-12-30 11:37:24', '2025-12-30 11:37:24'),
+(452, NULL, 'entrada', '120363405505672490', 'texto', '😀 Mais alguém _animado_ pra Jornada Python? \n\n⭐ Teremos *Certificado de Participação* para todos _estiverem ao vivo comigo_! Ele será 100% gratuito.\n\n📅 Então minha dica para você não perder o evento de jeito nenhum, é já clicar nesse link e _marcar todas as 4 aulas na sua agenda_:\nhttps://tinyurl.com/agenda-py\n\n❓ Além disso, algumas pessoas tem me perguntado: *O que eu preciso para acompanhar a Jornada Python?*\n\n🤩 Pode ficar 100% tranquilo que você só precisa estar na aula ao vivo, o _resto a gente ensina_. Vamos dar orientações logo no início da primeira aula e tudo o que vocês precisarem saber vamos explicar do _absoluto zero_ durante o próprio evento!\n\n💻 Agora, se você quiser (mas é *totalmente opcional* mesmo, pois na aula também vou mostrar todo o passo a passo), você pode _adiantar a instalação do VSCode_, um editor de Python que além de ser um dos _mais usados_, deixa a aula bem didática! \n\nInclusive, se você já se acostumou com outro editor de código, _não está proibido de usar_! Maaaas se você usar o VSCode, a sua tela ficar exatamente igual à minha, então vai facilitar totalmente o seu aprendizado.\n\n▶️ Pra facilitar mais ainda, preparei um vídeo ensinando *como baixar o VSCode* no seu computador. Para acessá-lo é so clicar nesse link aqui:\nhttps://www.youtube.com/watch?v=Zy3iaMZbPO8\n\n✨ E lembre-se: Confie apenas nos administradores desse grupo e leia sempre a descrição do grupo. \n\n🫡 Nos vemos no dia *12 de Janeiro* às 19h30 (horário de Brasília) para a nossa primeira aula.', 'false_120363405505672490@g.us_3EB03AD6BB8A48D298461FA4547BC2C019788ABB_149332271591631@lid', 'recebido', NULL, '2025-12-30 12:05:04', '2025-12-30 12:05:04'),
+(453, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Sete pessoas são internadas por intoxicação em Ribeira do Pombal no Semiárido Nordeste II*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/sete-pessoas-sao-internadas-por-intoxicacao-em-ribeira-do-pombal-no-semiarido-nordeste-ii/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB0140028E486ABB09899_195953990619139@lid', 'recebido', NULL, '2025-12-30 12:12:22', '2025-12-30 12:12:22'),
+(454, NULL, 'entrada', '120363328506387946', 'texto', '➡️ *Governo Federal desembolsa R$ 1,53 bilhão em emendas parlamentares na última semana de 2025*\n\n📲 Veja agora:\nhttps://criativaonline.com.br/governo-federal-desembolsa-r-153-bilhao-em-emendas-parlamentares-na-ultima-semana-de-2025/\n\nCriativa On Line | Portal de Notícias da Bahia', 'false_120363328506387946@g.us_3EB0284394E219D9C8651A_195953990619139@lid', 'recebido', NULL, '2025-12-30 12:15:43', '2025-12-30 12:15:43'),
+(455, NULL, 'entrada', '120363405505672490', 'texto', '', 'false_120363405505672490@g.us_ACBA2CC95064F5BD7B853838EBA58DAD_71778147803208@lid', 'recebido', NULL, '2025-12-30 12:17:17', '2025-12-30 12:17:17'),
+(456, 4, 'entrada', '557588890006', 'texto', 'bom dia', 'false_557588890006@c.us_3EB0085B7C0FC776C23CF7', 'recebido', NULL, '2025-12-30 12:30:43', '2025-12-30 12:30:43'),
+(457, 4, 'entrada', '557588890006', 'texto', '2', 'false_557588890006@c.us_3EB092D52D3153C44CC005', 'recebido', NULL, '2025-12-30 12:30:53', '2025-12-30 12:30:53'),
+(458, 4, 'entrada', '557588890006', 'texto', '0', 'false_557588890006@c.us_3EB0D6B0E98DFCF4C67259', 'recebido', NULL, '2025-12-30 12:31:10', '2025-12-30 12:31:10'),
+(459, 4, 'entrada', '557588890006', 'texto', 'iai man', 'false_557588890006@c.us_3EB0550730E007931D44A8', 'recebido', NULL, '2025-12-30 12:31:59', '2025-12-30 12:31:59'),
+(460, 4, 'entrada', '557588890006', 'texto', 'oi', 'false_557588890006@c.us_3EB0B974BC1AC570203472', 'recebido', NULL, '2025-12-30 12:32:11', '2025-12-30 12:32:11'),
+(461, NULL, 'entrada', '120363405505672490', 'texto', '', 'false_120363405505672490@g.us_AC0DE06E0254FD0A74A7530EBA015C62_262551770239040@lid', 'recebido', NULL, '2025-12-30 12:35:24', '2025-12-30 12:35:24'),
+(462, NULL, 'entrada', '120363176780698645', 'texto', 'Por essa eu não esperava.\n\nPra fechar o ano:\n\nhttps://startups.com.br/negocios/ma/meta-adquire-manus-e-se-reforca-em-agentes-de-ia/ \n\nBomba no mercado da IA.', 'false_120363176780698645@g.us_3EB0C60D642EC0D96C195A_163380706935010@lid', 'recebido', NULL, '2025-12-30 12:39:21', '2025-12-30 12:39:21'),
+(463, NULL, 'entrada', '120363176780698645', 'texto', 'Meta vai ter que correr depois do fiasco do Llama \n_BUG: Na notícia está escrito 2 trilhões_', 'false_120363176780698645@g.us_3EB02E844EA4E39BF4A72D_198483541766250@lid', 'recebido', NULL, '2025-12-30 12:46:41', '2025-12-30 12:46:41'),
+(464, NULL, 'entrada', '120363405505672490', 'texto', '', 'false_120363405505672490@g.us_AC776A4D804482E11FF068CD77C1330C_239578308964429@lid', 'recebido', NULL, '2025-12-30 12:50:09', '2025-12-30 12:50:09'),
+(465, NULL, 'entrada', '120363176780698645', 'texto', 'eles so nao podem trocar o deepseek pelo llama', 'false_120363176780698645@g.us_3EB09DA2B26CFF24EC1216_163380706935010@lid', 'recebido', NULL, '2025-12-30 12:52:59', '2025-12-30 12:52:59'),
+(466, NULL, 'entrada', '120363176780698645', 'texto', 'iss q eu vi', 'false_120363176780698645@g.us_3B34B736865BDE3718F8_94944614154272@lid', 'recebido', NULL, '2025-12-30 12:53:17', '2025-12-30 12:53:17'),
+(467, NULL, 'entrada', '120363176780698645', 'texto', 'kkkk', 'false_120363176780698645@g.us_3BD637C9529B0714A352_94944614154272@lid', 'recebido', NULL, '2025-12-30 12:53:40', '2025-12-30 12:53:40'),
+(468, NULL, 'entrada', '120363176780698645', 'texto', '2 trilhões, e foda', 'false_120363176780698645@g.us_3B1DCCE512904DE37F81_94944614154272@lid', 'recebido', NULL, '2025-12-30 12:54:20', '2025-12-30 12:54:20'),
+(469, NULL, 'entrada', '120363176780698645', 'texto', 'oi', 'false_120363176780698645@g.us_3EB0D88FF96DCBB0E0CDC1_61211957850140@lid', 'recebido', NULL, '2025-12-30 12:54:56', '2025-12-30 12:54:56'),
+(470, NULL, 'entrada', '120363405505672490', 'texto', '', 'false_120363405505672490@g.us_ACE8D54712DA7E562762A39AD91355A6_86599459164216@lid', 'recebido', NULL, '2025-12-30 12:54:58', '2025-12-30 12:54:58');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `whatsapp_sessoes`
+--
+
+CREATE TABLE `whatsapp_sessoes` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `estabelecimento_id` int(11) UNSIGNED NOT NULL,
+  `numero` varchar(20) NOT NULL,
+  `instance_name` varchar(100) DEFAULT NULL,
+  `qr_code` text DEFAULT NULL,
+  `status` enum('desconectado','conectado','erro') DEFAULT 'desconectado',
+  `ultima_conexao` datetime DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `atualizado_em` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Índices para tabelas despejadas
+--
+
+--
+-- Índices de tabela `agendamentos`
+--
+ALTER TABLE `agendamentos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_data` (`data`),
+  ADD KEY `idx_profissional_data` (`profissional_id`,`data`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_cliente` (`cliente_id`),
+  ADD KEY `idx_servico` (`servico_id`),
+  ADD KEY `idx_estabelecimento_data` (`estabelecimento_id`,`data`),
+  ADD KEY `idx_profissional_status` (`profissional_id`,`status`),
+  ADD KEY `idx_pagamento_status` (`pagamento_status`),
+  ADD KEY `idx_pagamento_expira` (`pagamento_expira_em`),
+  ADD KEY `idx_pagamento_pendente` (`pagamento_status`,`pagamento_expira_em`),
+  ADD KEY `idx_pagamento_token` (`pagamento_token`);
+
+--
+-- Índices de tabela `assinaturas`
+--
+ALTER TABLE `assinaturas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_plano` (`plano_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_data_fim` (`data_fim`),
+  ADD KEY `idx_mercadopago` (`mercadopago_subscription_id`);
+
+--
+-- Índices de tabela `avaliacoes`
+--
+ALTER TABLE `avaliacoes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_nota` (`nota`),
+  ADD KEY `idx_agendamento` (`agendamento_id`);
+
+--
+-- Índices de tabela `bloqueios`
+--
+ALTER TABLE `bloqueios`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_profissional_data` (`profissional_id`,`data`),
+  ADD KEY `idx_profissional` (`profissional_id`),
+  ADD KEY `idx_tipo` (`tipo`),
+  ADD KEY `idx_data_inicio` (`data_inicio`),
+  ADD KEY `idx_datas` (`data_inicio`,`data_fim`),
+  ADD KEY `idx_criado_por` (`criado_por`);
+
+--
+-- Índices de tabela `bot_conversas`
+--
+ALTER TABLE `bot_conversas`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_estabelecimento_numero` (`estabelecimento_id`,`numero_whatsapp`),
+  ADD KEY `idx_ultima_interacao` (`ultima_interacao`);
+
+--
+-- Índices de tabela `clientes`
+--
+ALTER TABLE `clientes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `cpf` (`cpf`),
+  ADD KEY `idx_whatsapp` (`whatsapp`),
+  ADD KEY `idx_tipo` (`tipo`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_estabelecimento_tipo` (`estabelecimento_id`,`tipo`),
+  ADD KEY `idx_email` (`email`);
+
+--
+-- Índices de tabela `configuracoes`
+--
+ALTER TABLE `configuracoes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `chave` (`chave`),
+  ADD KEY `idx_grupo` (`grupo`);
+
+--
+-- Índices de tabela `cron_logs`
+--
+ALTER TABLE `cron_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_tipo_data` (`tipo`,`executado_em`);
+
+--
+-- Índices de tabela `disponibilidade`
+--
+ALTER TABLE `disponibilidade`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_profissional` (`profissional_id`);
+
+--
+-- Índices de tabela `estabelecimentos`
+--
+ALTER TABLE `estabelecimentos`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `cnpj_cpf` (`cnpj_cpf`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_plano_vencimento` (`plano_vencimento`),
+  ADD KEY `idx_usuario` (`usuario_id`),
+  ADD KEY `idx_plano` (`plano_id`),
+  ADD KEY `idx_waha_ativo` (`waha_ativo`),
+  ADD KEY `idx_whatsapp_api_tipo` (`whatsapp_api_tipo`);
+
+--
+-- Índices de tabela `feriados`
+--
+ALTER TABLE `feriados`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_data` (`data`),
+  ADD KEY `idx_tipo` (`tipo`),
+  ADD KEY `idx_ativo` (`ativo`);
+
+--
+-- Índices de tabela `horarios_estabelecimento`
+--
+ALTER TABLE `horarios_estabelecimento`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_estabelecimento_dia` (`estabelecimento_id`,`dia_semana`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_dia_semana` (`dia_semana`),
+  ADD KEY `idx_ativo` (`ativo`);
+
+--
+-- Índices de tabela `logs`
+--
+ALTER TABLE `logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_usuario` (`usuario_id`),
+  ADD KEY `idx_acao` (`acao`),
+  ADD KEY `idx_tabela` (`tabela`),
+  ADD KEY `idx_criado_em` (`criado_em`),
+  ADD KEY `idx_usuario_acao` (`usuario_id`,`acao`),
+  ADD KEY `idx_tabela_registro` (`tabela`,`registro_id`);
+
+--
+-- Índices de tabela `notificacoes`
+--
+ALTER TABLE `notificacoes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_usuario` (`usuario_id`),
+  ADD KEY `idx_lida` (`lida`),
+  ADD KEY `idx_criado_em` (`criado_em`);
+
+--
+-- Índices de tabela `notificacoes_config`
+--
+ALTER TABLE `notificacoes_config`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_estabelecimento_tipo` (`estabelecimento_id`,`tipo`);
+
+--
+-- Índices de tabela `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `mercadopago_id` (`mercadopago_id`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_agendamento` (`agendamento_id`);
+
+--
+-- Índices de tabela `planos`
+--
+ALTER TABLE `planos`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `idx_ativo` (`ativo`),
+  ADD KEY `idx_ordem` (`ordem`),
+  ADD KEY `idx_mp_plan` (`mercadopago_plan_id`);
+
+--
+-- Índices de tabela `profissionais`
+--
+ALTER TABLE `profissionais`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_usuario` (`usuario_id`),
+  ADD KEY `idx_tipo` (`tipo`);
+
+--
+-- Índices de tabela `profissional_servicos`
+--
+ALTER TABLE `profissional_servicos`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_profissional_servico` (`profissional_id`,`servico_id`),
+  ADD KEY `fk_ps_servico` (`servico_id`);
+
+--
+-- Índices de tabela `promocoes`
+--
+ALTER TABLE `promocoes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_datas` (`data_inicio`,`data_fim`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`);
+
+--
+-- Índices de tabela `servicos`
+--
+ALTER TABLE `servicos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Índices de tabela `templates_notificacao`
+--
+ALTER TABLE `templates_notificacao`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_estabelecimento_tipo_canal` (`estabelecimento_id`,`tipo`,`canal`),
+  ADD KEY `idx_tipo` (`tipo`),
+  ADD KEY `idx_canal` (`canal`),
+  ADD KEY `idx_ativo` (`ativo`);
+
+--
+-- Índices de tabela `usuarios`
+--
+ALTER TABLE `usuarios`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_tipo` (`tipo`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_profissional` (`profissional_id`),
+  ADD KEY `idx_ativo` (`ativo`);
+
+--
+-- Índices de tabela `usuarios_backup`
+--
+ALTER TABLE `usuarios_backup`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_nivel` (`nivel`);
+
+--
+-- Índices de tabela `waha_sessoes`
+--
+ALTER TABLE `waha_sessoes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `session_name` (`session_name`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- Índices de tabela `whatsapp_conversas`
+--
+ALTER TABLE `whatsapp_conversas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_whatsapp` (`whatsapp_numero`),
+  ADD KEY `idx_expira` (`expira_em`),
+  ADD KEY `idx_cliente` (`cliente_id`);
+
+--
+-- Índices de tabela `whatsapp_mensagens`
+--
+ALTER TABLE `whatsapp_mensagens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`),
+  ADD KEY `idx_numero` (`numero_destino`),
+  ADD KEY `idx_direcao` (`direcao`),
+  ADD KEY `idx_created` (`created_at`);
+
+--
+-- Índices de tabela `whatsapp_sessoes`
+--
+ALTER TABLE `whatsapp_sessoes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_numero` (`numero`),
+  ADD KEY `idx_estabelecimento` (`estabelecimento_id`);
+
+--
+-- AUTO_INCREMENT para tabelas despejadas
+--
+
+--
+-- AUTO_INCREMENT de tabela `agendamentos`
+--
+ALTER TABLE `agendamentos`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
+
+--
+-- AUTO_INCREMENT de tabela `assinaturas`
+--
+ALTER TABLE `assinaturas`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de tabela `avaliacoes`
+--
+ALTER TABLE `avaliacoes`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `bloqueios`
+--
+ALTER TABLE `bloqueios`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT de tabela `bot_conversas`
+--
+ALTER TABLE `bot_conversas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de tabela `clientes`
+--
+ALTER TABLE `clientes`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de tabela `configuracoes`
+--
+ALTER TABLE `configuracoes`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
+-- AUTO_INCREMENT de tabela `cron_logs`
+--
+ALTER TABLE `cron_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1250;
+
+--
+-- AUTO_INCREMENT de tabela `disponibilidade`
+--
+ALTER TABLE `disponibilidade`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `estabelecimentos`
+--
+ALTER TABLE `estabelecimentos`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de tabela `feriados`
+--
+ALTER TABLE `feriados`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT de tabela `horarios_estabelecimento`
+--
+ALTER TABLE `horarios_estabelecimento`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=316;
+
+--
+-- AUTO_INCREMENT de tabela `logs`
+--
+ALTER TABLE `logs`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=176;
+
+--
+-- AUTO_INCREMENT de tabela `notificacoes`
+--
+ALTER TABLE `notificacoes`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `notificacoes_config`
+--
+ALTER TABLE `notificacoes_config`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT de tabela `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+
+--
+-- AUTO_INCREMENT de tabela `planos`
+--
+ALTER TABLE `planos`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de tabela `profissionais`
+--
+ALTER TABLE `profissionais`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de tabela `profissional_servicos`
+--
+ALTER TABLE `profissional_servicos`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de tabela `promocoes`
+--
+ALTER TABLE `promocoes`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `servicos`
+--
+ALTER TABLE `servicos`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de tabela `templates_notificacao`
+--
+ALTER TABLE `templates_notificacao`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de tabela `usuarios`
+--
+ALTER TABLE `usuarios`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de tabela `usuarios_backup`
+--
+ALTER TABLE `usuarios_backup`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de tabela `waha_sessoes`
+--
+ALTER TABLE `waha_sessoes`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `whatsapp_conversas`
+--
+ALTER TABLE `whatsapp_conversas`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `whatsapp_mensagens`
+--
+ALTER TABLE `whatsapp_mensagens`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=471;
+
+--
+-- AUTO_INCREMENT de tabela `whatsapp_sessoes`
+--
+ALTER TABLE `whatsapp_sessoes`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- Restrições para tabelas despejadas
+--
+
+--
+-- Restrições para tabelas `agendamentos`
+--
+ALTER TABLE `agendamentos`
+  ADD CONSTRAINT `fk_agendamentos_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_agendamentos_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_agendamentos_profissional` FOREIGN KEY (`profissional_id`) REFERENCES `profissionais` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_agendamentos_servico` FOREIGN KEY (`servico_id`) REFERENCES `servicos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `assinaturas`
+--
+ALTER TABLE `assinaturas`
+  ADD CONSTRAINT `fk_assinaturas_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_assinaturas_plano` FOREIGN KEY (`plano_id`) REFERENCES `planos` (`id`);
+
+--
+-- Restrições para tabelas `avaliacoes`
+--
+ALTER TABLE `avaliacoes`
+  ADD CONSTRAINT `fk_avaliacoes_agendamento` FOREIGN KEY (`agendamento_id`) REFERENCES `agendamentos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `bloqueios`
+--
+ALTER TABLE `bloqueios`
+  ADD CONSTRAINT `fk_bloqueios_profissional` FOREIGN KEY (`profissional_id`) REFERENCES `profissionais` (`id`) ON DELETE SET NULL;
+
+--
+-- Restrições para tabelas `clientes`
+--
+ALTER TABLE `clientes`
+  ADD CONSTRAINT `fk_clientes_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `disponibilidade`
+--
+ALTER TABLE `disponibilidade`
+  ADD CONSTRAINT `fk_disponibilidade_profissional` FOREIGN KEY (`profissional_id`) REFERENCES `profissionais` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `estabelecimentos`
+--
+ALTER TABLE `estabelecimentos`
+  ADD CONSTRAINT `fk_estabelecimentos_plano` FOREIGN KEY (`plano_id`) REFERENCES `planos` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_estabelecimentos_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Restrições para tabelas `logs`
+--
+ALTER TABLE `logs`
+  ADD CONSTRAINT `fk_logs_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Restrições para tabelas `notificacoes`
+--
+ALTER TABLE `notificacoes`
+  ADD CONSTRAINT `fk_notificacoes_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios_backup` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `notificacoes_config`
+--
+ALTER TABLE `notificacoes_config`
+  ADD CONSTRAINT `fk_notificacoes_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `profissionais`
+--
+ALTER TABLE `profissionais`
+  ADD CONSTRAINT `fk_profissionais_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_profissionais_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Restrições para tabelas `profissional_servicos`
+--
+ALTER TABLE `profissional_servicos`
+  ADD CONSTRAINT `fk_ps_profissional` FOREIGN KEY (`profissional_id`) REFERENCES `profissionais` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_ps_servico` FOREIGN KEY (`servico_id`) REFERENCES `servicos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `promocoes`
+--
+ALTER TABLE `promocoes`
+  ADD CONSTRAINT `fk_promocoes_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `servicos`
+--
+ALTER TABLE `servicos`
+  ADD CONSTRAINT `fk_servicos_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `templates_notificacao`
+--
+ALTER TABLE `templates_notificacao`
+  ADD CONSTRAINT `fk_templates_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `usuarios`
+--
+ALTER TABLE `usuarios`
+  ADD CONSTRAINT `fk_usuarios_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_usuarios_profissional` FOREIGN KEY (`profissional_id`) REFERENCES `profissionais` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `whatsapp_conversas`
+--
+ALTER TABLE `whatsapp_conversas`
+  ADD CONSTRAINT `fk_conversas_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL;
+
+--
+-- Restrições para tabelas `whatsapp_sessoes`
+--
+ALTER TABLE `whatsapp_sessoes`
+  ADD CONSTRAINT `fk_whatsapp_estabelecimento` FOREIGN KEY (`estabelecimento_id`) REFERENCES `estabelecimentos` (`id`) ON DELETE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
