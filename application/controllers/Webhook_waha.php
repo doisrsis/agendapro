@@ -395,20 +395,48 @@ class Webhook_waha extends CI_Controller {
         }
 
         // Comandos globais (funcionam em qualquer estado)
-        $comandos_inicio = ['oi', 'olá', 'ola', 'menu', 'inicio', 'início', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite'];
+        $comandos_inicio = ['oi', 'olá', 'ola', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite'];
+        $comandos_menu = ['menu', 'inicio', 'início'];
+        $comandos_sair = ['0', 'sair', 'tchau', 'obrigado', 'obrigada'];
 
+        // Comandos de início - resetam conversa e mostram menu
         if (in_array($msg, $comandos_inicio)) {
             $this->Bot_conversa_model->resetar($conversa->id);
             $this->enviar_menu_principal($estabelecimento, $numero, $cliente);
             return;
         }
 
-        if (in_array($msg, ['0', 'sair', 'tchau', 'obrigado', 'obrigada'])) {
-            $this->Bot_conversa_model->encerrar($conversa->id);
+        // Comandos para voltar ao menu - resetam sem encerrar
+        // NOTA: "voltar" foi removido daqui para ser processado dentro de cada estado
+        if (in_array($msg, $comandos_menu)) {
+            $this->Bot_conversa_model->resetar($conversa->id);
             $this->waha_lib->enviar_texto($numero,
-                "Obrigado por entrar em contato! 😊\n\n" .
-                "Até a próxima! 👋\n\n" .
-                "_Digite *oi* quando precisar de mim novamente._"
+                "Voltando ao menu principal... 🔙\n\n"
+            );
+            $this->enviar_menu_principal($estabelecimento, $numero, $cliente);
+            return;
+        }
+
+        // Comando para sair - pede confirmação se não estiver no menu
+        if (in_array($msg, $comandos_sair)) {
+            // Se já está no menu ou em estado encerrada, encerra direto
+            if ($conversa->estado === 'menu' || $conversa->estado === 'encerrada') {
+                $this->Bot_conversa_model->encerrar($conversa->id);
+                $this->waha_lib->enviar_texto($numero,
+                    "Obrigado por entrar em contato! 😊\n\n" .
+                    "Até a próxima! 👋\n\n" .
+                    "_Digite *oi* quando precisar de mim novamente._"
+                );
+                return;
+            }
+
+            // Se está em outro estado, pede confirmação
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'confirmando_saida', []);
+            $this->waha_lib->enviar_texto($numero,
+                "Você tem certeza que deseja sair? 🤔\n\n" .
+                "*1* ou *Sim* - Confirmar saída\n" .
+                "*2* ou *Não* - Continuar conversa\n\n" .
+                "_Ou digite *menu* para voltar ao menu principal._"
             );
             return;
         }
@@ -441,6 +469,10 @@ class Webhook_waha extends CI_Controller {
 
             case 'aguardando_cancelamento':
                 $this->processar_estado_cancelamento($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
+            case 'confirmando_saida':
+                $this->processar_estado_confirmando_saida($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
 
             default:
@@ -479,6 +511,13 @@ class Webhook_waha extends CI_Controller {
      * Processa estado: Aguardando seleção de serviço
      */
     private function processar_estado_servico($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        // Comando voltar - retorna para menu principal
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            $this->Bot_conversa_model->resetar($conversa->id);
+            $this->enviar_menu_principal($estabelecimento, $numero, $cliente);
+            return;
+        }
+
         $servicos = $this->Servico_model->get_by_estabelecimento($estabelecimento->id);
 
         // Verificar se é um número válido
@@ -501,7 +540,7 @@ class Webhook_waha extends CI_Controller {
                 if (empty($profissionais)) {
                     $this->waha_lib->enviar_texto($numero,
                         "Desculpe, não há profissionais disponíveis para este serviço no momento. 😔\n\n" .
-                        "_Digite *oi* para voltar ao menu._"
+                        "_Digite *menu* para voltar ao menu._"
                     );
                     $this->Bot_conversa_model->resetar($conversa->id);
                     return;
@@ -528,7 +567,7 @@ class Webhook_waha extends CI_Controller {
         // Opção inválida
         $this->waha_lib->enviar_texto($numero,
             "Opção inválida. Por favor, digite o *número* do serviço desejado.\n\n" .
-            "_Digite *0* para voltar ao menu._"
+            "_Digite *voltar* para o menu principal._"
         );
     }
 
@@ -537,6 +576,13 @@ class Webhook_waha extends CI_Controller {
      */
     private function processar_estado_profissional($estabelecimento, $numero, $msg, $conversa, $cliente) {
         $dados = $conversa->dados;
+
+        // Comando voltar - retorna para seleção de serviço
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            $this->iniciar_agendamento($estabelecimento, $numero, $conversa, $cliente);
+            return;
+        }
+
         $profissionais = $this->Profissional_model->get_by_servico($dados['servico_id'], $estabelecimento->id);
 
         if (is_numeric($msg)) {
@@ -556,7 +602,7 @@ class Webhook_waha extends CI_Controller {
 
         $this->waha_lib->enviar_texto($numero,
             "Opção inválida. Por favor, digite o *número* do profissional.\n\n" .
-            "_Digite *0* para voltar ao menu._"
+            "_Digite *voltar* para escolher outro serviço ou *menu* para o menu principal._"
         );
     }
 
@@ -565,7 +611,15 @@ class Webhook_waha extends CI_Controller {
      */
     private function processar_estado_data($estabelecimento, $numero, $msg, $conversa, $cliente) {
         $dados = $conversa->dados;
-        $datas_disponiveis = $this->obter_datas_disponiveis($estabelecimento, $dados['profissional_id'], 7);
+
+        // Comando voltar - retorna para seleção de serviço
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            $this->iniciar_agendamento($estabelecimento, $numero, $conversa, $cliente);
+            return;
+        }
+
+        $duracao = $dados['servico_duracao'] ?? 30;
+        $datas_disponiveis = $this->obter_datas_disponiveis($estabelecimento, $dados['profissional_id'], 7, $duracao);
 
         if (is_numeric($msg)) {
             $indice = intval($msg) - 1;
@@ -583,7 +637,7 @@ class Webhook_waha extends CI_Controller {
 
         $this->waha_lib->enviar_texto($numero,
             "Opção inválida. Por favor, digite o *número* da data.\n\n" .
-            "_Digite *0* para voltar ao menu._"
+            "_Digite *voltar* para escolher outro serviço ou *menu* para o menu principal._"
         );
     }
 
@@ -592,6 +646,16 @@ class Webhook_waha extends CI_Controller {
      */
     private function processar_estado_hora($estabelecimento, $numero, $msg, $conversa, $cliente) {
         $dados = $conversa->dados;
+
+        // Comando voltar - retorna para seleção de data
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            // Remove a hora e volta para data
+            unset($dados['hora']);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_data', $dados);
+            $this->enviar_opcoes_data($estabelecimento, $numero, $dados);
+            return;
+        }
+
         $horarios = $this->obter_horarios_disponiveis($estabelecimento, $dados['profissional_id'], $dados['data'], $dados['servico_duracao']);
 
         if (is_numeric($msg)) {
@@ -610,7 +674,7 @@ class Webhook_waha extends CI_Controller {
 
         $this->waha_lib->enviar_texto($numero,
             "Opção inválida. Por favor, digite o *número* do horário.\n\n" .
-            "_Digite *0* para voltar ao menu._"
+            "_Digite *voltar* para escolher outra data ou *menu* para o menu principal._"
         );
     }
 
@@ -619,6 +683,15 @@ class Webhook_waha extends CI_Controller {
      */
     private function processar_estado_confirmacao($estabelecimento, $numero, $msg, $conversa, $cliente) {
         $dados = $conversa->dados;
+
+        // Comando voltar - retorna para seleção de horário
+        if (in_array($msg, ['voltar', 'anterior'])) {
+            // Remove a hora e volta para seleção de horário
+            unset($dados['hora']);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_hora', $dados);
+            $this->enviar_opcoes_hora($estabelecimento, $numero, $dados);
+            return;
+        }
 
         if (in_array($msg, ['sim', 's', '1', 'confirmar', 'confirmo'])) {
             $this->finalizar_agendamento($estabelecimento, $numero, $dados, $conversa, $cliente);
@@ -629,7 +702,7 @@ class Webhook_waha extends CI_Controller {
             $this->Bot_conversa_model->resetar($conversa->id);
             $this->waha_lib->enviar_texto($numero,
                 "Agendamento cancelado. ❌\n\n" .
-                "_Digite *oi* para voltar ao menu._"
+                "_Digite *menu* para voltar ao menu._"
             );
             return;
         }
@@ -638,7 +711,7 @@ class Webhook_waha extends CI_Controller {
             "Por favor, responda:\n\n" .
             "*1* ou *Sim* - Para confirmar\n" .
             "*2* ou *Não* - Para cancelar\n\n" .
-            "_Digite *0* para voltar ao menu._"
+            "_Digite *voltar* para escolher outro horário ou *menu* para o menu principal._"
         );
     }
 
@@ -673,7 +746,7 @@ class Webhook_waha extends CI_Controller {
                     "✅ Agendamento cancelado com sucesso!\n\n" .
                     "📅 *{$data}* às *{$hora}*\n" .
                     "💇 {$ag->servico_nome}\n\n" .
-                    "_Digite *oi* para voltar ao menu._"
+                    "_Digite *menu* para voltar ao menu._"
                 );
 
                 $this->Bot_conversa_model->resetar($conversa->id);
@@ -683,7 +756,40 @@ class Webhook_waha extends CI_Controller {
 
         $this->waha_lib->enviar_texto($numero,
             "Opção inválida. Por favor, digite o *número* do agendamento.\n\n" .
-            "_Digite *0* para voltar ao menu._"
+            "_Digite *menu* para voltar ao menu._"
+        );
+    }
+
+    /**
+     * Processa estado: Confirmando saída
+     */
+    private function processar_estado_confirmando_saida($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        // Confirmar saída
+        if (in_array($msg, ['1', 'sim', 's'])) {
+            $this->Bot_conversa_model->encerrar($conversa->id);
+            $this->waha_lib->enviar_texto($numero,
+                "Obrigado por entrar em contato! 😊\n\n" .
+                "Até a próxima! 👋\n\n" .
+                "_Digite *oi* quando precisar de mim novamente._"
+            );
+            return;
+        }
+
+        // Continuar conversa - volta ao menu
+        if (in_array($msg, ['2', 'não', 'nao', 'n'])) {
+            $this->Bot_conversa_model->resetar($conversa->id);
+            $this->waha_lib->enviar_texto($numero,
+                "Ok! Continuando... 😊\n\n"
+            );
+            $this->enviar_menu_principal($estabelecimento, $numero, $cliente);
+            return;
+        }
+
+        // Opção inválida
+        $this->waha_lib->enviar_texto($numero,
+            "Opção inválida. Por favor, escolha:\n\n" .
+            "*1* ou *Sim* - Confirmar saída\n" .
+            "*2* ou *Não* - Continuar conversa"
         );
     }
 
@@ -701,7 +807,7 @@ class Webhook_waha extends CI_Controller {
         $mensagem .= "2️⃣ *Meus Agendamentos* - Ver agendamentos\n";
         $mensagem .= "3️⃣ *Cancelar* - Cancelar agendamento\n";
         $mensagem .= "0️⃣ *Sair* - Encerrar atendimento\n\n";
-        $mensagem .= "_Digite o número da opção desejada._";
+        $mensagem .= "💡 *Dica:* Digite *menu* a qualquer momento para retornar aqui.";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
@@ -735,7 +841,7 @@ class Webhook_waha extends CI_Controller {
         }
 
         $mensagem .= "_Digite o número do serviço desejado._\n";
-        $mensagem .= "_Ou digite *0* para voltar ao menu._";
+        $mensagem .= "_Ou digite *voltar* para o menu principal._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
@@ -748,7 +854,7 @@ class Webhook_waha extends CI_Controller {
             $this->waha_lib->enviar_texto($numero,
                 "Não encontrei agendamentos para este número. 🔍\n\n" .
                 "Se você já é cliente, verifique se o número está cadastrado corretamente.\n\n" .
-                "_Digite *oi* para voltar ao menu._"
+                "_Digite *menu* para voltar ao menu._"
             );
             return;
         }
@@ -759,7 +865,7 @@ class Webhook_waha extends CI_Controller {
         if (empty($agendamentos)) {
             $this->waha_lib->enviar_texto($numero,
                 "Você não tem agendamentos futuros para cancelar. 📅\n\n" .
-                "_Digite *oi* para voltar ao menu._"
+                "_Digite *menu* para voltar ao menu._"
             );
             return;
         }
@@ -781,7 +887,7 @@ class Webhook_waha extends CI_Controller {
         }
 
         $mensagem .= "_Digite o número do agendamento._\n";
-        $mensagem .= "_Ou digite *0* para voltar ao menu._";
+        $mensagem .= "_Ou digite *menu* para voltar ao menu._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
@@ -799,7 +905,7 @@ class Webhook_waha extends CI_Controller {
         }
 
         $mensagem .= "\n_Digite o número do profissional._\n";
-        $mensagem .= "_Ou digite *0* para voltar ao menu._";
+        $mensagem .= "_Ou digite *menu* para voltar ao menu._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
@@ -808,12 +914,13 @@ class Webhook_waha extends CI_Controller {
      * Envia opções de data disponíveis
      */
     private function enviar_opcoes_data($estabelecimento, $numero, $dados) {
-        $datas = $this->obter_datas_disponiveis($estabelecimento, $dados['profissional_id'], 7);
+        $duracao = $dados['servico_duracao'] ?? 30;
+        $datas = $this->obter_datas_disponiveis($estabelecimento, $dados['profissional_id'], 7, $duracao);
 
         if (empty($datas)) {
             $this->waha_lib->enviar_texto($numero,
                 "Desculpe, não há datas disponíveis nos próximos dias. 😔\n\n" .
-                "_Digite *oi* para voltar ao menu._"
+                "_Digite *menu* para voltar ao menu._"
             );
             return;
         }
@@ -832,7 +939,7 @@ class Webhook_waha extends CI_Controller {
         }
 
         $mensagem .= "\n_Digite o número da data._\n";
-        $mensagem .= "_Ou digite *0* para voltar ao menu._";
+        $mensagem .= "_Ou digite *voltar* para escolher outro serviço ou *menu* para o menu principal._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
@@ -852,7 +959,7 @@ class Webhook_waha extends CI_Controller {
             $this->waha_lib->enviar_texto($numero,
                 "Desculpe, não há horários disponíveis nesta data. 😔\n\n" .
                 "Por favor, escolha outra data.\n\n" .
-                "_Digite *oi* para voltar ao menu._"
+                "_Digite *menu* para voltar ao menu._"
             );
             return;
         }
@@ -870,7 +977,7 @@ class Webhook_waha extends CI_Controller {
         }
 
         $mensagem .= "\n_Digite o número do horário._\n";
-        $mensagem .= "_Ou digite *0* para voltar ao menu._";
+        $mensagem .= "_Ou digite *voltar* para escolher outra data ou *menu* para o menu principal._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
@@ -890,7 +997,8 @@ class Webhook_waha extends CI_Controller {
         $mensagem .= "💰 Valor: *R$ {$preco_formatado}*\n\n";
         $mensagem .= "Deseja confirmar?\n\n";
         $mensagem .= "*1* ou *Sim* - Confirmar ✅\n";
-        $mensagem .= "*2* ou *Não* - Cancelar ❌";
+        $mensagem .= "*2* ou *Não* - Cancelar ❌\n\n";
+        $mensagem .= "_Ou digite *voltar* para escolher outro horário._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
@@ -954,7 +1062,7 @@ class Webhook_waha extends CI_Controller {
             $this->waha_lib->enviar_texto($numero,
                 "Desculpe, ocorreu um erro ao criar o agendamento. 😔\n\n" .
                 "Por favor, tente novamente ou entre em contato diretamente.\n\n" .
-                "_Digite *oi* para voltar ao menu._"
+                "_Digite *menu* para voltar ao menu._"
             );
             $this->Bot_conversa_model->resetar($conversa->id);
             return;
@@ -1044,7 +1152,7 @@ class Webhook_waha extends CI_Controller {
                 $mensagem .= "⏰ Expira em *{$tempo_expiracao} minutos*\n\n";
                 $mensagem .= "🔗 *Acesse o link para pagar:*\n{$link_pagamento}\n\n";
                 $mensagem .= "⚠️ _Seu agendamento só será confirmado após o pagamento._\n\n";
-                $mensagem .= "_Digite *oi* para voltar ao menu._";
+                $mensagem .= "_Digite *menu* para voltar ao menu._";
 
             } else {
                 // Erro ao gerar PIX - cancelar agendamento
@@ -1053,7 +1161,7 @@ class Webhook_waha extends CI_Controller {
 
                 $mensagem = "Desculpe, ocorreu um erro ao gerar o pagamento PIX. 😔\n\n";
                 $mensagem .= "Por favor, tente novamente ou entre em contato diretamente.\n\n";
-                $mensagem .= "_Digite *oi* para voltar ao menu._";
+                $mensagem .= "_Digite *menu* para voltar ao menu._";
             }
         } else {
             // Não requer pagamento - confirmar automaticamente
@@ -1070,7 +1178,7 @@ class Webhook_waha extends CI_Controller {
                 $mensagem .= "📌 {$estabelecimento->endereco}\n";
             }
             $mensagem .= "\nAté lá! 👋\n\n";
-            $mensagem .= "_Digite *oi* para voltar ao menu._";
+            $mensagem .= "_Digite *menu* para voltar ao menu._";
         }
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
@@ -1082,19 +1190,30 @@ class Webhook_waha extends CI_Controller {
     /**
      * Obtém datas disponíveis para agendamento
      * Usa horários do estabelecimento (tabela horarios_estabelecimento)
+     * Retorna apenas datas que realmente têm horários disponíveis
+     * Filtra feriados cadastrados
      */
-    private function obter_datas_disponiveis($estabelecimento, $profissional_id, $dias = 7) {
+    private function obter_datas_disponiveis($estabelecimento, $profissional_id, $dias = 7, $duracao_servico = 30) {
         $this->load->model('Horario_estabelecimento_model');
+        $this->load->model('Feriado_model');
 
         $datas = [];
         $data_atual = date('Y-m-d');
 
         log_message('debug', "Bot: obter_datas_disponiveis - estabelecimento_id={$estabelecimento->id}, data_atual={$data_atual}");
 
-        for ($i = 0; $i < 14 && count($datas) < $dias; $i++) {
+        // Buscar até 30 dias para garantir que encontramos datas suficientes com horários disponíveis
+        for ($i = 0; $i < 30 && count($datas) < $dias; $i++) {
             $data = date('Y-m-d', strtotime($data_atual . " +{$i} days"));
             // horarios_estabelecimento usa 0=Domingo, 6=Sábado (formato PHP date('w'))
             $dia_semana = date('w', strtotime($data));
+
+            // Verificar se é feriado
+            $eh_feriado = $this->Feriado_model->is_feriado($data, $estabelecimento->id);
+            if ($eh_feriado) {
+                log_message('debug', "Bot: data {$data} ignorada - é feriado");
+                continue;
+            }
 
             // Verificar se estabelecimento está aberto neste dia
             $horario = $this->Horario_estabelecimento_model->get_by_dia($estabelecimento->id, $dia_semana);
@@ -1102,7 +1221,15 @@ class Webhook_waha extends CI_Controller {
             log_message('debug', "Bot: verificando data={$data}, dia_semana={$dia_semana}, horario=" . ($horario ? "encontrado (ativo={$horario->ativo})" : "NAO encontrado"));
 
             if ($horario && $horario->ativo) {
-                $datas[] = $data;
+                // Verificar se realmente existem horários disponíveis nesta data
+                $horarios_disponiveis = $this->obter_horarios_disponiveis($estabelecimento, $profissional_id, $data, $duracao_servico);
+
+                if (!empty($horarios_disponiveis)) {
+                    $datas[] = $data;
+                    log_message('debug', "Bot: data {$data} adicionada - " . count($horarios_disponiveis) . " horários disponíveis");
+                } else {
+                    log_message('debug', "Bot: data {$data} ignorada - sem horários disponíveis");
+                }
             }
         }
 
@@ -1235,7 +1362,7 @@ class Webhook_waha extends CI_Controller {
             $mensagem .= "   com {$ag->profissional_nome}\n\n";
         }
 
-        $mensagem .= "_Digite *0* para voltar ao menu._";
+        $mensagem .= "_Digite *menu* para voltar ao menu._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
     }
