@@ -395,13 +395,15 @@ class Webhook_waha extends CI_Controller {
         }
 
         // Comandos globais (funcionam em qualquer estado)
-        if (in_array($msg, ['oi', 'olá', 'ola', 'menu', 'inicio', 'início', 'hi', 'hello'])) {
+        $comandos_inicio = ['oi', 'olá', 'ola', 'menu', 'inicio', 'início', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite'];
+
+        if (in_array($msg, $comandos_inicio)) {
             $this->Bot_conversa_model->resetar($conversa->id);
             $this->enviar_menu_principal($estabelecimento, $numero, $cliente);
             return;
         }
 
-        if (in_array($msg, ['0', 'sair', 'tchau', 'obrigado', 'obrigada', 'voltar'])) {
+        if (in_array($msg, ['0', 'sair', 'tchau', 'obrigado', 'obrigada'])) {
             $this->Bot_conversa_model->resetar($conversa->id);
             $this->waha_lib->enviar_texto($numero,
                 "Obrigado por entrar em contato! 😊\n\n" .

@@ -146,6 +146,11 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['waha_numero_conectado'])) $update_data['waha_numero_conectado'] = $data['waha_numero_conectado'];
         if (isset($data['waha_ativo'])) $update_data['waha_ativo'] = $data['waha_ativo'];
         if (isset($data['waha_bot_ativo'])) $update_data['waha_bot_ativo'] = $data['waha_bot_ativo'];
+        if (isset($data['bot_timeout_minutos'])) $update_data['bot_timeout_minutos'] = $data['bot_timeout_minutos'];
+
+        // Campos de reagendamento
+        if (isset($data['permite_reagendamento'])) $update_data['permite_reagendamento'] = $data['permite_reagendamento'];
+        if (isset($data['limite_reagendamentos'])) $update_data['limite_reagendamentos'] = $data['limite_reagendamentos'];
 
         if (empty($update_data)) {
             return false;

@@ -52,6 +52,11 @@ class Configuracoes extends CI_Controller {
             }
         }
 
+        // Se estiver na aba WhatsApp, verificar status real da conexão
+        if ($aba === 'whatsapp' && $this->estabelecimento->waha_ativo) {
+            $this->verificar_status_waha_real();
+        }
+
         $data['titulo'] = 'Configurações';
         $data['menu_ativo'] = 'configuracoes';
         $data['estabelecimento'] = $this->estabelecimento;
@@ -148,9 +153,93 @@ class Configuracoes extends CI_Controller {
      * As credenciais da API são herdadas do Super Admin
      */
     private function salvar_integracao_whatsapp() {
-        // Não há mais formulário para salvar - a conexão é feita via QR Code
-        // Este método é mantido para compatibilidade caso haja POST na aba whatsapp
+        // Salvar configurações do bot
+        $bot_timeout_minutos = $this->input->post('bot_timeout_minutos');
+
+        log_message('debug', "Configuracoes: POST bot_timeout_minutos = " . var_export($bot_timeout_minutos, true));
+
+        if ($bot_timeout_minutos !== null && $bot_timeout_minutos !== '') {
+            $timeout = (int) $bot_timeout_minutos;
+
+            log_message('debug', "Configuracoes: Timeout convertido = {$timeout}");
+
+            // Validar range (5 a 120 minutos)
+            if ($timeout >= 5 && $timeout <= 120) {
+                $dados = [
+                    'bot_timeout_minutos' => $timeout
+                ];
+
+                log_message('debug', "Configuracoes: Tentando atualizar estabelecimento {$this->estabelecimento_id} com dados: " . json_encode($dados));
+
+                $resultado = $this->Estabelecimento_model->update($this->estabelecimento_id, $dados);
+
+                log_message('debug', "Configuracoes: Resultado update = " . var_export($resultado, true));
+
+                if ($resultado) {
+                    $this->session->set_flashdata('sucesso', 'Configurações do bot atualizadas com sucesso!');
+                } else {
+                    log_message('error', "Configuracoes: Falha ao atualizar estabelecimento");
+                    $this->session->set_flashdata('erro', 'Erro ao atualizar configurações.');
+                }
+            } else {
+                log_message('debug', "Configuracoes: Timeout fora do range: {$timeout}");
+                $this->session->set_flashdata('erro', 'Timeout deve estar entre 5 e 120 minutos.');
+            }
+        } else {
+            log_message('debug', "Configuracoes: bot_timeout_minutos está vazio ou null");
+        }
+
         redirect('painel/configuracoes?aba=whatsapp');
+    }
+
+    /**
+     * Verificar status real da conexão WAHA e atualizar no banco
+     */
+    private function verificar_status_waha_real() {
+        if (!$this->configurar_waha_estabelecimento()) {
+            log_message('debug', 'Configuracoes: Falha ao configurar WAHA');
+            return;
+        }
+
+        // Buscar status da sessão na API WAHA
+        $resultado = $this->waha_lib->get_sessao();
+
+        log_message('debug', 'Configuracoes: Resultado get_sessao: ' . json_encode($resultado));
+
+        if ($resultado['success'] && isset($resultado['response']['status'])) {
+            $status_api = $resultado['response']['status'];
+            $me = $resultado['response']['me'] ?? null;
+
+            log_message('debug', "Configuracoes: Status API = {$status_api}, Status Banco Atual = {$this->estabelecimento->waha_status}");
+
+            // Mapear status da API para status do banco
+            $status_banco = 'desconectado';
+            if (in_array($status_api, ['WORKING', 'CONNECTED'])) {
+                $status_banco = 'conectado';
+            } elseif ($status_api === 'SCAN_QR_CODE') {
+                $status_banco = 'conectando';
+            }
+
+            log_message('debug', "Configuracoes: Status mapeado = {$status_banco}");
+
+            // Sempre atualizar para garantir sincronização
+            $dados_update = ['waha_status' => $status_banco];
+
+            // Se conectado, salvar número
+            if ($status_banco === 'conectado' && $me && isset($me['id'])) {
+                $dados_update['waha_numero_conectado'] = $me['id'];
+                log_message('debug', "Configuracoes: Número conectado = {$me['id']}");
+            }
+
+            $this->Estabelecimento_model->update($this->estabelecimento_id, $dados_update);
+            log_message('debug', 'Configuracoes: Banco atualizado com: ' . json_encode($dados_update));
+
+            // Recarregar estabelecimento com dados atualizados
+            $this->estabelecimento = $this->Estabelecimento_model->get_by_id($this->estabelecimento_id);
+            log_message('debug', "Configuracoes: Estabelecimento recarregado - waha_status = {$this->estabelecimento->waha_status}");
+        } else {
+            log_message('error', 'Configuracoes: Falha ao obter status da sessão WAHA');
+        }
     }
 
     /**
@@ -161,7 +250,6 @@ class Configuracoes extends CI_Controller {
         $nome = $this->estabelecimento->nome;
         // Remover acentos
         $nome = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nome);
-        // Converter para minúsculas
         $nome = strtolower($nome);
         // Substituir espaços por underline
         $nome = preg_replace('/\s+/', '_', $nome);

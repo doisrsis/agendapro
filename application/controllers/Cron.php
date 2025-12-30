@@ -16,6 +16,7 @@ class Cron extends CI_Controller {
         parent::__construct();
         $this->load->model('Agendamento_model');
         $this->load->model('Configuracao_model');
+        $this->load->model('Bot_conversa_model');
         $this->load->library('notificacao_whatsapp_lib');
     }
 
@@ -293,6 +294,33 @@ class Cron extends CI_Controller {
         echo json_encode([
             'success' => true,
             'logs_deletados' => $this->db->affected_rows()
+        ]);
+    }
+
+    /**
+     * Limpar conversas antigas do bot (mais de 24 horas)
+     *
+     * URL: /cron/limpar_conversas_bot?token=SEU_TOKEN
+     */
+    public function limpar_conversas_bot() {
+        if (!$this->verificar_token()) {
+            show_404();
+            return;
+        }
+
+        log_message('info', 'CRON: Iniciando limpeza de conversas antigas do bot');
+
+        $removidos = $this->Bot_conversa_model->limpar_antigas();
+
+        $this->registrar_log('limpar_conversas_bot', $removidos);
+
+        log_message('info', "CRON: {$removidos} conversas antigas removidas");
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'conversas_removidas' => $removidos
         ]);
     }
 }

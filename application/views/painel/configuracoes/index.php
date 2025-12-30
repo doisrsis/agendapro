@@ -534,6 +534,48 @@
                                 <?php endif; ?>
                             </div>
                         </div>
+
+                        <!-- Configurações do Bot WhatsApp -->
+                        <?php if ($waha_status == 'conectado'): ?>
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="ti ti-robot me-2"></i>
+                                    Configurações do Bot de Agendamento
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <form method="post">
+                                    <input type="hidden" name="aba" value="whatsapp">
+
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="ti ti-clock me-1"></i>
+                                            Timeout da Sessão (minutos)
+                                        </label>
+                                        <input type="number" class="form-control" name="bot_timeout_minutos"
+                                               value="<?= set_value('bot_timeout_minutos', $estabelecimento->bot_timeout_minutos ?? 30) ?>"
+                                               min="5" max="120" step="5">
+                                        <small class="form-hint">
+                                            Tempo de inatividade antes de resetar a conversa do bot.
+                                            <strong>Valores sugeridos:</strong> 15 min (rápido), 30 min (padrão), 60 min (longo)
+                                        </small>
+                                    </div>
+
+                                    <div class="alert alert-info">
+                                        <i class="ti ti-info-circle me-2"></i>
+                                        <strong>Como funciona:</strong> Se o cliente ficar inativo por mais tempo que o configurado,
+                                        a conversa será resetada automaticamente e ele precisará digitar "oi" para iniciar novamente.
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ti ti-device-floppy me-1"></i>
+                                        Salvar Configurações
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Script para polling do QR Code -->
