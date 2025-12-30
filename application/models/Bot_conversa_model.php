@@ -152,6 +152,28 @@ class Bot_conversa_model extends CI_Model
     }
 
     /**
+     * Encerra a sessão do bot
+     * Marca a conversa como encerrada e limpa dados temporários
+     *
+     * @param int $conversa_id
+     * @return bool
+     */
+    public function encerrar($conversa_id)
+    {
+        log_message('debug', "Bot: Encerrando sessão {$conversa_id}");
+
+        return $this->db
+            ->where('id', $conversa_id)
+            ->update($this->table, [
+                'estado' => 'encerrada',
+                'dados_temporarios' => json_encode([]),
+                'encerrada' => 1,
+                'data_encerramento' => date('Y-m-d H:i:s'),
+                'ultima_interacao' => date('Y-m-d H:i:s')
+            ]);
+    }
+
+    /**
      * Define o cliente da conversa
      *
      * @param int $conversa_id
@@ -170,15 +192,30 @@ class Bot_conversa_model extends CI_Model
 
     /**
      * Limpa conversas antigas (mais de 24 horas)
+     * Remove conversas encerradas ou inativas
      *
      * @return int Número de registros removidos
      */
     public function limpar_antigas()
     {
+        // Remover conversas encerradas há mais de 7 dias
         $this->db
+            ->where('encerrada', 1)
+            ->where('data_encerramento <', date('Y-m-d H:i:s', strtotime('-7 days')))
+            ->delete($this->table);
+
+        $encerradas = $this->db->affected_rows();
+
+        // Remover conversas inativas (não encerradas) há mais de 24 horas
+        $this->db
+            ->where('encerrada', 0)
             ->where('ultima_interacao <', date('Y-m-d H:i:s', strtotime('-24 hours')))
             ->delete($this->table);
 
-        return $this->db->affected_rows();
+        $inativas = $this->db->affected_rows();
+
+        log_message('debug', "Bot: Limpeza - {$encerradas} encerradas, {$inativas} inativas removidas");
+
+        return $encerradas + $inativas;
     }
 }

@@ -404,11 +404,11 @@ class Webhook_waha extends CI_Controller {
         }
 
         if (in_array($msg, ['0', 'sair', 'tchau', 'obrigado', 'obrigada'])) {
-            $this->Bot_conversa_model->resetar($conversa->id);
+            $this->Bot_conversa_model->encerrar($conversa->id);
             $this->waha_lib->enviar_texto($numero,
                 "Obrigado por entrar em contato! 😊\n\n" .
                 "Até a próxima! 👋\n\n" .
-                "_Digite *oi* para voltar ao menu._"
+                "_Digite *oi* quando precisar de mim novamente._"
             );
             return;
         }
