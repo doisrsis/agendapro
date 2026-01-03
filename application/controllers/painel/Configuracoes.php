@@ -125,11 +125,23 @@ class Configuracoes extends CI_Controller {
             'usar_intervalo_fixo' => (int)$this->input->post('usar_intervalo_fixo'),
             'intervalo_agendamento' => $this->input->post('intervalo_agendamento') ?? 30,
             'dias_antecedencia_agenda' => $this->input->post('dias_antecedencia_agenda') ?? 30,
+            'permite_reagendamento' => (int)$this->input->post('permite_reagendamento'),
+            'limite_reagendamentos' => $this->input->post('limite_reagendamentos') ?? 3,
             // Pagamento de agendamentos
             'agendamento_requer_pagamento' => $this->input->post('agendamento_requer_pagamento') ?? 'nao',
             'agendamento_taxa_fixa' => $this->input->post('agendamento_taxa_fixa') ?? 0.00,
             'agendamento_tempo_expiracao_pix' => $this->input->post('agendamento_tempo_expiracao_pix') ?? 30,
-            'agendamento_tempo_adicional_pix' => $this->input->post('agendamento_tempo_adicional_pix') ?? 5
+            'agendamento_tempo_adicional_pix' => $this->input->post('agendamento_tempo_adicional_pix') ?? 5,
+            // Confirmações e Lembretes
+            'solicitar_confirmacao' => (int)$this->input->post('solicitar_confirmacao'),
+            'confirmacao_horas_antes' => $this->input->post('confirmacao_horas_antes') ?? 24,
+            'confirmacao_dia_anterior' => (int)$this->input->post('confirmacao_dia_anterior'),
+            'confirmacao_horario_dia_anterior' => $this->input->post('confirmacao_horario_dia_anterior') ?? '18:00:00',
+            'enviar_lembrete_pre_atendimento' => (int)$this->input->post('enviar_lembrete_pre_atendimento'),
+            'lembrete_minutos_antes' => $this->input->post('lembrete_minutos_antes') ?? 60,
+            'lembrete_antecedencia_chegada' => $this->input->post('lembrete_antecedencia_chegada') ?? 10,
+            'cancelar_nao_confirmados' => (int)$this->input->post('cancelar_nao_confirmados'),
+            'cancelar_nao_confirmados_horas' => $this->input->post('cancelar_nao_confirmados_horas') ?? 2
         ];
 
         // DEBUG: Log dos dados que serão salvos

@@ -402,6 +402,207 @@
                             }
                             </script>
 
+                            <hr class="my-4">
+
+                            <!-- Confirmações e Lembretes -->
+                            <h3 class="mb-3">📋 Confirmações e Lembretes</h3>
+
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>Novo:</strong> Sistema automático de confirmação e lembretes via WhatsApp para agendamentos sem pagamento obrigatório.
+                            </div>
+
+                            <!-- Solicitação de Confirmação -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">✅ Solicitação de Confirmação</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="solicitar_confirmacao"
+                                                   id="solicitar_confirmacao"
+                                                   value="1"
+                                                   <?= ($estabelecimento->solicitar_confirmacao ?? 1) ? 'checked' : '' ?>>
+                                            <span class="form-check-label">
+                                                <strong>Solicitar confirmação do cliente antes do agendamento</strong>
+                                            </span>
+                                        </label>
+                                        <small class="text-muted d-block mt-1">
+                                            Quando ativado, o cliente receberá uma mensagem para confirmar presença e poderá reagendar ou cancelar.
+                                        </small>
+                                    </div>
+
+                                    <div id="confirmacao_opcoes" style="display: <?= ($estabelecimento->solicitar_confirmacao ?? 1) ? 'block' : 'none' ?>">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Solicitar quantas horas antes?</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" name="confirmacao_horas_antes"
+                                                           value="<?= $estabelecimento->confirmacao_horas_antes ?? 24 ?>"
+                                                           min="1" max="168">
+                                                    <span class="input-group-text">horas</span>
+                                                </div>
+                                                <small class="text-muted">Exemplo: 24 = 1 dia antes do agendamento</small>
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           name="confirmacao_dia_anterior"
+                                                           id="confirmacao_dia_anterior"
+                                                           value="1"
+                                                           <?= ($estabelecimento->confirmacao_dia_anterior ?? 1) ? 'checked' : '' ?>>
+                                                    <span class="form-check-label">
+                                                        <strong>Enviar também no dia anterior</strong>
+                                                    </span>
+                                                </label>
+                                                <small class="text-muted d-block mt-1">
+                                                    Envia um pedido de confirmação no dia anterior em horário fixo
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <div class="row" id="horario_dia_anterior_container" style="display: <?= ($estabelecimento->confirmacao_dia_anterior ?? 1) ? 'block' : 'none' ?>">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Horário para enviar no dia anterior</label>
+                                                <input type="time" class="form-control" name="confirmacao_horario_dia_anterior"
+                                                       value="<?= $estabelecimento->confirmacao_horario_dia_anterior ?? '18:00:00' ?>">
+                                                <small class="text-muted">Horário fixo para enviar a confirmação</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lembrete Pré-Atendimento -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">⏰ Lembrete Pré-Atendimento</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="enviar_lembrete_pre_atendimento"
+                                                   id="enviar_lembrete_pre_atendimento"
+                                                   value="1"
+                                                   <?= ($estabelecimento->enviar_lembrete_pre_atendimento ?? 1) ? 'checked' : '' ?>>
+                                            <span class="form-check-label">
+                                                <strong>Enviar lembrete minutos antes do atendimento</strong>
+                                            </span>
+                                        </label>
+                                        <small class="text-muted d-block mt-1">
+                                            Cliente receberá um lembrete próximo ao horário do agendamento
+                                        </small>
+                                    </div>
+
+                                    <div id="lembrete_opcoes" style="display: <?= ($estabelecimento->enviar_lembrete_pre_atendimento ?? 1) ? 'block' : 'none' ?>">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Enviar quantos minutos antes?</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" name="lembrete_minutos_antes"
+                                                           value="<?= $estabelecimento->lembrete_minutos_antes ?? 60 ?>"
+                                                           min="5" max="1440">
+                                                    <span class="input-group-text">minutos</span>
+                                                </div>
+                                                <small class="text-muted">Exemplo: 60 = 1 hora antes</small>
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Pedir para chegar com antecedência de:</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" name="lembrete_antecedencia_chegada"
+                                                           value="<?= $estabelecimento->lembrete_antecedencia_chegada ?? 10 ?>"
+                                                           min="0" max="60">
+                                                    <span class="input-group-text">minutos</span>
+                                                </div>
+                                                <small class="text-muted">Tempo de antecedência sugerido na mensagem</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cancelamento Automático -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">🚫 Cancelamento Automático (Opcional)</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="cancelar_nao_confirmados"
+                                                   id="cancelar_nao_confirmados"
+                                                   value="1"
+                                                   <?= ($estabelecimento->cancelar_nao_confirmados ?? 0) ? 'checked' : '' ?>>
+                                            <span class="form-check-label">
+                                                <strong>Cancelar automaticamente agendamentos não confirmados</strong>
+                                            </span>
+                                        </label>
+                                        <small class="text-muted d-block mt-1">
+                                            Se o cliente não confirmar presença, o agendamento será cancelado automaticamente
+                                        </small>
+                                    </div>
+
+                                    <div id="cancelamento_opcoes" style="display: <?= ($estabelecimento->cancelar_nao_confirmados ?? 0) ? 'block' : 'none' ?>">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Cancelar quantas horas antes do horário?</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" name="cancelar_nao_confirmados_horas"
+                                                           value="<?= $estabelecimento->cancelar_nao_confirmados_horas ?? 2 ?>"
+                                                           min="1" max="24">
+                                                    <span class="input-group-text">horas</span>
+                                                </div>
+                                                <small class="text-muted">Se não confirmar até X horas antes, será cancelado</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-warning">
+                                            <i class="ti ti-alert-triangle me-2"></i>
+                                            <strong>Atenção:</strong> O agendamento será cancelado automaticamente se o cliente não responder à confirmação no prazo configurado.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-secondary">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>Como funciona:</strong>
+                                <ol class="mb-0 mt-2">
+                                    <li>Cliente agenda sem pagamento → Status: <span class="badge bg-yellow">Pendente</span></li>
+                                    <li>Sistema envia pedido de confirmação → Cliente responde: Confirmar | Reagendar | Cancelar</li>
+                                    <li>Se confirmar → Status: <span class="badge bg-green">Confirmado</span> → Receberá lembrete antes do horário</li>
+                                    <li>Se não confirmar no prazo → Cancelamento automático (se ativado)</li>
+                                </ol>
+                            </div>
+
+                            <script>
+                            // Toggle confirmação
+                            document.getElementById('solicitar_confirmacao').addEventListener('change', function() {
+                                document.getElementById('confirmacao_opcoes').style.display = this.checked ? 'block' : 'none';
+                            });
+
+                            // Toggle dia anterior
+                            document.getElementById('confirmacao_dia_anterior').addEventListener('change', function() {
+                                document.getElementById('horario_dia_anterior_container').style.display = this.checked ? 'block' : 'none';
+                            });
+
+                            // Toggle lembrete
+                            document.getElementById('enviar_lembrete_pre_atendimento').addEventListener('change', function() {
+                                document.getElementById('lembrete_opcoes').style.display = this.checked ? 'block' : 'none';
+                            });
+
+                            // Toggle cancelamento
+                            document.getElementById('cancelar_nao_confirmados').addEventListener('change', function() {
+                                document.getElementById('cancelamento_opcoes').style.display = this.checked ? 'block' : 'none';
+                            });
+                            </script>
+
                             <div class="text-end">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="ti ti-device-floppy me-2"></i>
