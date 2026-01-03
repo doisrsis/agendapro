@@ -863,4 +863,116 @@ class Agendamento_model extends CI_Model {
             'limite' => $limite
         ];
     }
+
+    /**
+     * Buscar agendamentos pendentes que precisam de confirmação
+     *
+     * @return array Lista de agendamentos
+     */
+    public function get_pendentes_confirmacao() {
+        $sql = "
+            SELECT
+                a.*,
+                e.nome as estabelecimento_nome,
+                e.endereco as estabelecimento_endereco,
+                e.solicitar_confirmacao,
+                e.confirmacao_horas_antes,
+                e.confirmacao_dia_anterior,
+                e.confirmacao_horario_dia_anterior,
+                c.nome as cliente_nome,
+                c.whatsapp as cliente_whatsapp,
+                s.nome as servico_nome,
+                s.duracao as servico_duracao,
+                s.preco as servico_preco,
+                p.nome as profissional_nome
+            FROM agendamentos a
+            JOIN estabelecimentos e ON a.estabelecimento_id = e.id
+            JOIN clientes c ON a.cliente_id = c.id
+            JOIN servicos s ON a.servico_id = s.id
+            JOIN profissionais p ON a.profissional_id = p.id
+            WHERE a.status = 'pendente'
+              AND a.confirmacao_enviada = 0
+              AND a.data >= CURDATE()
+              AND e.agendamento_requer_pagamento = 'nao'
+              AND e.solicitar_confirmacao = 1
+              AND (
+                  -- Opção 1: X horas antes
+                  TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.confirmacao_horas_antes
+                  OR
+                  -- Opção 2: Dia anterior no horário configurado
+                  (e.confirmacao_dia_anterior = 1
+                   AND a.data = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                   AND TIME(NOW()) >= e.confirmacao_horario_dia_anterior)
+              )
+            ORDER BY a.data, a.hora_inicio
+        ";
+
+        return $this->db->query($sql)->result();
+    }
+
+    /**
+     * Buscar agendamentos confirmados que precisam de lembrete
+     *
+     * @return array Lista de agendamentos
+     */
+    public function get_para_lembrete() {
+        $sql = "
+            SELECT
+                a.*,
+                e.nome as estabelecimento_nome,
+                e.endereco as estabelecimento_endereco,
+                e.lembrete_minutos_antes,
+                e.lembrete_antecedencia_chegada,
+                c.nome as cliente_nome,
+                c.whatsapp as cliente_whatsapp,
+                s.nome as servico_nome,
+                s.duracao as servico_duracao,
+                p.nome as profissional_nome
+            FROM agendamentos a
+            JOIN estabelecimentos e ON a.estabelecimento_id = e.id
+            JOIN clientes c ON a.cliente_id = c.id
+            JOIN servicos s ON a.servico_id = s.id
+            JOIN profissionais p ON a.profissional_id = p.id
+            WHERE a.status = 'confirmado'
+              AND a.lembrete_enviado = 0
+              AND a.data = CURDATE()
+              AND e.enviar_lembrete_pre_atendimento = 1
+              AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.lembrete_minutos_antes
+              AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0
+            ORDER BY a.hora_inicio
+        ";
+
+        return $this->db->query($sql)->result();
+    }
+
+    /**
+     * Buscar agendamentos não confirmados que expiraram
+     *
+     * @return array Lista de agendamentos
+     */
+    public function get_nao_confirmados_expirados() {
+        $sql = "
+            SELECT
+                a.*,
+                e.nome as estabelecimento_nome,
+                e.cancelar_nao_confirmados_horas,
+                c.nome as cliente_nome,
+                c.whatsapp as cliente_whatsapp,
+                s.nome as servico_nome,
+                p.nome as profissional_nome
+            FROM agendamentos a
+            JOIN estabelecimentos e ON a.estabelecimento_id = e.id
+            JOIN clientes c ON a.cliente_id = c.id
+            JOIN servicos s ON a.servico_id = s.id
+            JOIN profissionais p ON a.profissional_id = p.id
+            WHERE a.status = 'pendente'
+              AND a.confirmacao_enviada = 1
+              AND a.data >= CURDATE()
+              AND e.cancelar_nao_confirmados = 1
+              AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.cancelar_nao_confirmados_horas
+            ORDER BY a.data, a.hora_inicio
+        ";
+
+        return $this->db->query($sql)->result();
+    }
 }

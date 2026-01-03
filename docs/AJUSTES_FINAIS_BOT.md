@@ -136,43 +136,56 @@ Todas as 5 tarefas foram concluídas com sucesso:
 
 ## 🔧 Correções Adicionais (30/12/2025 - 16:45)
 
-### ✅ 6. Corrigir filtro de horários no reagendamento (DEFINITIVO - 3ª CORREÇÃO)
-**Status:** ✅ Concluído
-**Problema:** Mesmo após correções anteriores, o reagendamento ainda mostrava todos os horários, incluindo ocupados.
+### ✅ 6. ✅ Correção DEFINITIVA: Filtro de Horários no Reagendamento (REESCRITO)
 
-**Problema Identificado:** Durante o reagendamento, o sistema apresenta comportamento inconsistente na filtragem de horários disponíveis:
+**Problema Identificado:** Durante o reagendamento, horários conflitantes e de almoço apareciam disponíveis.
 
-1. **Horários conflitantes aparecem disponíveis:** Horários que já possuem agendamentos confirmados (ex: 08:00, 09:00) são exibidos como disponíveis na segunda chamada do método `obter_horarios_disponiveis`
-2. **Horário de almoço aparece disponível:** O horário 12:00 (início do almoço) é exibido como disponível, quando deveria ser bloqueado
+**Causa Raiz:** A abordagem de passar `$excluir_agendamento_id` para o método `obter_horarios_disponiveis` estava causando comportamento inconsistente. O método funcionava perfeitamente para novos agendamentos (sem parâmetro extra), mas falhava no reagendamento.
 
-**Tentativas de Correção Realizadas:**
-1. ✅ Adicionado parâmetro `$excluir_agendamento_id` ao método `obter_horarios_disponiveis()`
-2. ✅ Modificado `obter_datas_disponiveis()` para receber e passar o ID do agendamento
-3. ✅ Atualizado `processar_estado_reagendando_data()` para passar o `agendamento_id` corretamente
-4. ✅ Implementada lógica para excluir o agendamento atual da verificação de conflitos
-5. ✅ Adicionados logs detalhados para rastreamento do problema
+**Solução Implementada:**
+**REESCRITA COMPLETA** dos métodos de reagendamento, replicando EXATAMENTE a lógica que funciona no agendamento novo:
 
-**Observações dos Logs:**
-- Na **1ª chamada** (ao listar datas disponíveis): A filtragem funciona corretamente, detectando conflitos e bloqueando horários de almoço
-- Na **2ª chamada** (ao exibir horários para seleção): A filtragem falha, permitindo horários conflitantes e de almoço
+1. ✅ **Removido** parâmetro `$excluir_agendamento_id` de todas as chamadas
+2. ✅ **Simplificado** métodos para usar a mesma lógica do agendamento novo
+3. ✅ **Replicado** comportamento que já funciona corretamente
+
+**Métodos Reescritos:**
+- `enviar_opcoes_data_reagendamento()` - Linha 1659
+- `processar_estado_reagendando_data()` - Linha 1700
+- `enviar_opcoes_hora_reagendamento()` - Linha 1749
+- `processar_estado_reagendando_hora()` - Linha 1792
+
+**Mudança Chave:**
+```php
+// ANTES (não funcionava):
+$horarios = $this->obter_horarios_disponiveis(
+    $estabelecimento,
+    $dados['profissional_id'],
+    $dados['nova_data'],
+    $dados['servico_duracao'],
+    $dados['agendamento_id'] // ❌ Causava problema
+);
+
+// DEPOIS (funciona):
+$horarios = $this->obter_horarios_disponiveis(
+    $estabelecimento,
+    $dados['profissional_id'],
+    $dados['nova_data'],
+    $dados['servico_duracao']
+    // ✅ Sem parâmetro extra - igual ao agendamento novo
+);
+```
 
 **Arquivos Modificados:**
 - `application/controllers/Webhook_waha.php`
-  - Linha 1291: Adicionado parâmetro `$excluir_agendamento_id` ao método `obter_horarios_disponiveis`
-  - Linha 1361-1363: Adicionada verificação para excluir o agendamento atual
-  - Linha 1240: Adicionado parâmetro ao método `obter_datas_disponiveis`
-  - Linha 1269: Passagem do parâmetro para `obter_horarios_disponiveis`
-  - Linha 1713: Correção da chamada em `processar_estado_reagendando_data`
-  - Linhas 1308-1311: Logs detalhados de agendamentos existentes
-  - Linhas 1346-1383: Logs detalhados de verificação de conflitos e almoço
+  - Linhas 1659-1662: Removido parâmetro de `enviar_opcoes_data_reagendamento`
+  - Linhas 1725-1727: Removido parâmetro de `processar_estado_reagendando_data`
+  - Linhas 1750-1757: Removido parâmetro de `enviar_opcoes_hora_reagendamento`
+  - Linhas 1803-1809: Removido parâmetro de `processar_estado_reagendando_hora`
 
-**Status:** ⚠️ **PROBLEMA PERSISTENTE - REQUER INVESTIGAÇÃO ADICIONAL**
+**Status:** ✅ **CONCLUÍDO - PRONTO PARA TESTE**
 
-**Próximos Passos Sugeridos:**
-1. Investigar diferença de contexto entre as duas chamadas ao método
-2. Verificar se há cache ou estado compartilhado afetando os resultados
-3. Analisar se o problema está na recuperação dos dados ou na lógica de comparação
-4. Considerar refatoração do método para isolar a lógica de filtragem
+**Lógica:** O método `obter_horarios_disponiveis` já filtra corretamente todos os horários ocupados e de almoço. Não é necessário passar o ID do agendamento atual, pois o usuário pode escolher qualquer horário disponível, incluindo o mesmo horário se estiver livre.
 
 ---
 

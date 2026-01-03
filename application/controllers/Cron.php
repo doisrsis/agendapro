@@ -323,4 +323,362 @@ class Cron extends CI_Controller {
             'conversas_removidas' => $removidos
         ]);
     }
+
+    /**
+     * Enviar pedidos de confirmação para agendamentos pendentes
+     *
+     * URL: /cron/enviar_confirmacoes?token=TOKEN
+     * Frequência: A cada 1 hora
+     */
+    public function enviar_confirmacoes() {
+        if (!$this->verificar_token()) {
+            log_message('error', 'CRON: Tentativa de acesso sem token válido - enviar_confirmacoes');
+            show_404();
+            return;
+        }
+
+        log_message('info', 'CRON: Iniciando envio de confirmações');
+
+        $resultado = [
+            'confirmacoes_enviadas' => 0,
+            'erros' => []
+        ];
+
+        // Buscar agendamentos que precisam de confirmação
+        $agendamentos = $this->Agendamento_model->get_pendentes_confirmacao();
+
+        log_message('info', "CRON: Encontrados " . count($agendamentos) . " agendamentos para confirmar");
+
+        foreach ($agendamentos as $agendamento) {
+            try {
+                // Enviar mensagem de confirmação via WhatsApp
+                $this->enviar_mensagem_confirmacao($agendamento);
+
+                // Atualizar flags
+                $this->Agendamento_model->update($agendamento->id, [
+                    'confirmacao_enviada' => 1,
+                    'confirmacao_enviada_em' => date('Y-m-d H:i:s')
+                ]);
+
+                $resultado['confirmacoes_enviadas']++;
+
+                log_message('info', "CRON: Confirmação enviada para agendamento #{$agendamento->id}");
+
+            } catch (Exception $e) {
+                $resultado['erros'][] = "Agendamento #{$agendamento->id}: " . $e->getMessage();
+                log_message('error', "CRON: Erro ao enviar confirmação #{$agendamento->id}: " . $e->getMessage());
+            }
+        }
+
+        // Registrar log
+        $this->registrar_log('enviar_confirmacoes', $resultado['confirmacoes_enviadas'], json_encode($resultado));
+
+        log_message('info', 'CRON: Confirmações concluídas - ' . json_encode($resultado));
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'resultado' => $resultado
+        ]);
+    }
+
+    /**
+     * Enviar lembretes pré-atendimento
+     *
+     * URL: /cron/enviar_lembretes?token=TOKEN
+     * Frequência: A cada 15 minutos
+     */
+    public function enviar_lembretes() {
+        if (!$this->verificar_token()) {
+            log_message('error', 'CRON: Tentativa de acesso sem token válido - enviar_lembretes');
+            show_404();
+            return;
+        }
+
+        log_message('info', 'CRON: Iniciando envio de lembretes');
+
+        $resultado = [
+            'lembretes_enviados' => 0,
+            'erros' => []
+        ];
+
+        // Buscar agendamentos confirmados que precisam de lembrete
+        $agendamentos = $this->Agendamento_model->get_para_lembrete();
+
+        log_message('info', "CRON: Encontrados " . count($agendamentos) . " agendamentos para lembrete");
+
+        foreach ($agendamentos as $agendamento) {
+            try {
+                // Enviar lembrete via WhatsApp
+                $this->enviar_mensagem_lembrete($agendamento);
+
+                // Atualizar flags
+                $this->Agendamento_model->update($agendamento->id, [
+                    'lembrete_enviado' => 1,
+                    'lembrete_enviado_em' => date('Y-m-d H:i:s')
+                ]);
+
+                $resultado['lembretes_enviados']++;
+
+                log_message('info', "CRON: Lembrete enviado para agendamento #{$agendamento->id}");
+
+            } catch (Exception $e) {
+                $resultado['erros'][] = "Agendamento #{$agendamento->id}: " . $e->getMessage();
+                log_message('error', "CRON: Erro ao enviar lembrete #{$agendamento->id}: " . $e->getMessage());
+            }
+        }
+
+        // Registrar log
+        $this->registrar_log('enviar_lembretes', $resultado['lembretes_enviados'], json_encode($resultado));
+
+        log_message('info', 'CRON: Lembretes concluídos - ' . json_encode($resultado));
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'resultado' => $resultado
+        ]);
+    }
+
+    /**
+     * Cancelar agendamentos não confirmados (OPCIONAL)
+     *
+     * URL: /cron/cancelar_nao_confirmados?token=TOKEN
+     * Frequência: A cada 1 hora
+     */
+    public function cancelar_nao_confirmados() {
+        if (!$this->verificar_token()) {
+            log_message('error', 'CRON: Tentativa de acesso sem token válido - cancelar_nao_confirmados');
+            show_404();
+            return;
+        }
+
+        log_message('info', 'CRON: Iniciando cancelamento de não confirmados');
+
+        $resultado = [
+            'cancelados' => 0,
+            'erros' => []
+        ];
+
+        // Buscar agendamentos pendentes que expiraram
+        $agendamentos = $this->Agendamento_model->get_nao_confirmados_expirados();
+
+        log_message('info', "CRON: Encontrados " . count($agendamentos) . " agendamentos para cancelar");
+
+        foreach ($agendamentos as $agendamento) {
+            try {
+                // Cancelar agendamento
+                $this->Agendamento_model->update($agendamento->id, [
+                    'status' => 'cancelado',
+                    'cancelado_por' => 'sistema',
+                    'motivo_cancelamento' => 'Não confirmado pelo cliente'
+                ]);
+
+                // Enviar notificação de cancelamento
+                $this->enviar_notificacao_cancelamento_automatico($agendamento);
+
+                $resultado['cancelados']++;
+
+                log_message('info', "CRON: Agendamento #{$agendamento->id} cancelado por falta de confirmação");
+
+            } catch (Exception $e) {
+                $resultado['erros'][] = "Agendamento #{$agendamento->id}: " . $e->getMessage();
+                log_message('error', "CRON: Erro ao cancelar #{$agendamento->id}: " . $e->getMessage());
+            }
+        }
+
+        // Registrar log
+        $this->registrar_log('cancelar_nao_confirmados', $resultado['cancelados'], json_encode($resultado));
+
+        log_message('info', 'CRON: Cancelamentos concluídos - ' . json_encode($resultado));
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'resultado' => $resultado
+        ]);
+    }
+
+    /**
+     * Enviar mensagem de confirmação via WhatsApp
+     */
+    private function enviar_mensagem_confirmacao($agendamento) {
+        $this->load->library('waha_lib');
+        $this->load->model('Estabelecimento_model');
+
+        // Buscar estabelecimento completo
+        $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
+
+        if (!$estabelecimento || !$estabelecimento->waha_ativo) {
+            throw new Exception("Estabelecimento sem WAHA ativo");
+        }
+
+        // Configurar WAHA
+        $this->waha_lib->set_credentials(
+            $estabelecimento->waha_api_url,
+            $estabelecimento->waha_api_key,
+            $estabelecimento->waha_session_name
+        );
+
+        // Formatar dados
+        $data_formatada = date('d/m/Y (l)', strtotime($agendamento->data));
+        $data_formatada = str_replace(
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+            $data_formatada
+        );
+
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+
+        // Saudação contextual
+        $hora_atual = (int)date('H');
+        if ($hora_atual >= 6 && $hora_atual < 12) {
+            $saudacao = 'Bom dia';
+        } elseif ($hora_atual >= 12 && $hora_atual < 18) {
+            $saudacao = 'Boa tarde';
+        } else {
+            $saudacao = 'Boa noite';
+        }
+
+        $primeiro_nome = explode(' ', $agendamento->cliente_nome)[0];
+
+        // Montar mensagem
+        $mensagem = "{$saudacao}, {$primeiro_nome}! 👋\n\n";
+        $mensagem .= "📅 *Confirmação de Agendamento*\n\n";
+        $mensagem .= "Você tem um agendamento marcado:\n";
+        $mensagem .= "📆 Data: *{$data_formatada}*\n";
+        $mensagem .= "🕐 Horário: *{$hora_formatada}*\n";
+        $mensagem .= "💈 Serviço: *{$agendamento->servico_nome}*\n";
+        $mensagem .= "👤 Profissional: *{$agendamento->profissional_nome}*\n";
+        $mensagem .= "📍 Local: *{$agendamento->estabelecimento_nome}*\n\n";
+        $mensagem .= "Por favor, confirme sua presença:\n\n";
+        $mensagem .= "1️⃣ *Confirmar* - Estarei presente ✅\n";
+        $mensagem .= "2️⃣ *Reagendar* - Preciso mudar 🔄\n";
+        $mensagem .= "3️⃣ *Cancelar* - Não poderei ir ❌\n\n";
+        $mensagem .= "Aguardamos sua resposta! 😊";
+
+        // Limpar número (remover caracteres especiais)
+        $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+
+        // Enviar mensagem
+        $this->waha_lib->enviar_texto($numero, $mensagem);
+
+        // Criar conversa no bot para processar resposta
+        $this->load->model('Bot_conversa_model');
+        $this->Bot_conversa_model->criar_ou_atualizar(
+            $numero,
+            $agendamento->estabelecimento_id,
+            'confirmando_agendamento',
+            json_encode(['agendamento_id' => $agendamento->id])
+        );
+    }
+
+    /**
+     * Enviar mensagem de lembrete via WhatsApp
+     */
+    private function enviar_mensagem_lembrete($agendamento) {
+        $this->load->library('waha_lib');
+        $this->load->model('Estabelecimento_model');
+
+        // Buscar estabelecimento completo
+        $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
+
+        if (!$estabelecimento || !$estabelecimento->waha_ativo) {
+            throw new Exception("Estabelecimento sem WAHA ativo");
+        }
+
+        // Configurar WAHA
+        $this->waha_lib->set_credentials(
+            $estabelecimento->waha_api_url,
+            $estabelecimento->waha_api_key,
+            $estabelecimento->waha_session_name
+        );
+
+        // Formatar dados
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+        $minutos_faltando = round((strtotime($agendamento->data . ' ' . $agendamento->hora_inicio) - time()) / 60);
+
+        // Saudação contextual
+        $hora_atual = (int)date('H');
+        if ($hora_atual >= 6 && $hora_atual < 12) {
+            $saudacao = 'Bom dia';
+        } elseif ($hora_atual >= 12 && $hora_atual < 18) {
+            $saudacao = 'Boa tarde';
+        } else {
+            $saudacao = 'Boa noite';
+        }
+
+        $primeiro_nome = explode(' ', $agendamento->cliente_nome)[0];
+
+        // Montar mensagem
+        $mensagem = "{$saudacao}, {$primeiro_nome}! ⏰\n\n";
+        $mensagem .= "🔔 *Lembrete de Agendamento*\n\n";
+        $mensagem .= "Seu atendimento está chegando!\n";
+        $mensagem .= "⏱️ Faltam aproximadamente *{$minutos_faltando} minutos*\n\n";
+        $mensagem .= "🕐 Horário: *{$hora_formatada}*\n";
+        $mensagem .= "💈 Serviço: *{$agendamento->servico_nome}*\n";
+        $mensagem .= "👤 Profissional: *{$agendamento->profissional_nome}*\n";
+        $mensagem .= "📍 Local: *{$agendamento->estabelecimento_nome}*\n";
+
+        if ($agendamento->estabelecimento_endereco) {
+            $mensagem .= "📌 {$agendamento->estabelecimento_endereco}\n";
+        }
+
+        $antecedencia = $agendamento->lembrete_antecedencia_chegada ?? 10;
+        $mensagem .= "\n💡 Por favor, chegue com *{$antecedencia} minutos de antecedência*.\n\n";
+        $mensagem .= "Até logo! 👋";
+
+        // Limpar número
+        $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+
+        // Enviar mensagem
+        $this->waha_lib->enviar_texto($numero, $mensagem);
+    }
+
+    /**
+     * Enviar notificação de cancelamento automático
+     */
+    private function enviar_notificacao_cancelamento_automatico($agendamento) {
+        $this->load->library('waha_lib');
+        $this->load->model('Estabelecimento_model');
+
+        // Buscar estabelecimento completo
+        $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
+
+        if (!$estabelecimento || !$estabelecimento->waha_ativo) {
+            return; // Não lançar exceção, apenas não enviar
+        }
+
+        // Configurar WAHA
+        $this->waha_lib->set_credentials(
+            $estabelecimento->waha_api_url,
+            $estabelecimento->waha_api_key,
+            $estabelecimento->waha_session_name
+        );
+
+        // Formatar dados
+        $data_formatada = date('d/m/Y', strtotime($agendamento->data));
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+
+        $primeiro_nome = explode(' ', $agendamento->cliente_nome)[0];
+
+        // Montar mensagem
+        $mensagem = "Olá, {$primeiro_nome}! 😔\n\n";
+        $mensagem .= "⚠️ *Agendamento Cancelado Automaticamente*\n\n";
+        $mensagem .= "Seu agendamento foi cancelado por falta de confirmação:\n\n";
+        $mensagem .= "📅 Data: {$data_formatada}\n";
+        $mensagem .= "⏰ Horário: {$hora_formatada}\n";
+        $mensagem .= "💈 Serviço: {$agendamento->servico_nome}\n\n";
+        $mensagem .= "Se ainda tiver interesse, entre em contato para reagendar.\n\n";
+        $mensagem .= "Digite *menu* para fazer um novo agendamento.";
+
+        // Limpar número
+        $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+
+        // Enviar mensagem
+        $this->waha_lib->enviar_texto($numero, $mensagem);
+    }
 }
