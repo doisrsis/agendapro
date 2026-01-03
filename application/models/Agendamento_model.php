@@ -686,7 +686,7 @@ class Agendamento_model extends CI_Model {
      */
     public function get_proximos_by_cliente($cliente_id, $limite = 5) {
         return $this->db
-            ->select('a.*, s.nome as servico_nome, p.nome as profissional_nome')
+            ->select('a.*, s.nome as servico_nome, s.duracao as duracao_minutos, s.preco, p.nome as profissional_nome')
             ->from($this->table . ' a')
             ->join('servicos s', 'a.servico_id = s.id')
             ->join('profissionais p', 'a.profissional_id = p.id')
