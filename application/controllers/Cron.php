@@ -706,8 +706,19 @@ class Cron extends CI_Controller {
         // Limpar número
         $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
 
+        // Log detalhado antes de enviar
+        log_message('debug', "CRON Cancelamento: Tentando enviar para {$numero}");
+        log_message('debug', "CRON Cancelamento: WAHA URL: {$estabelecimento->waha_api_url}");
+        log_message('debug', "CRON Cancelamento: Session: {$estabelecimento->waha_session_name}");
+
         // Enviar mensagem
-        $this->waha_lib->enviar_texto($numero, $mensagem);
+        try {
+            $resultado = $this->waha_lib->enviar_texto($numero, $mensagem);
+            log_message('debug', "CRON Cancelamento: Resultado WAHA: " . json_encode($resultado));
+        } catch (Exception $e) {
+            log_message('error', "CRON Cancelamento: Erro ao enviar via WAHA: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**

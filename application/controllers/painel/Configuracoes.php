@@ -302,10 +302,35 @@ class Configuracoes extends CI_Controller {
         $session_name = $this->estabelecimento->waha_session_name;
         if (empty($session_name)) {
             $session_name = $this->gerar_session_name();
-            // Salvar o nome da sessão gerado
-            $this->Estabelecimento_model->update($this->estabelecimento_id, [
-                'waha_session_name' => $session_name
-            ]);
+        }
+
+        // Verificar se as configurações WAHA do estabelecimento estão vazias
+        // Se estiverem, copiar as configurações globais para o estabelecimento
+        $precisa_atualizar = false;
+        $dados_update = [];
+
+        if (empty($this->estabelecimento->waha_api_url)) {
+            $dados_update['waha_api_url'] = $config_array['waha_api_url'];
+            $precisa_atualizar = true;
+        }
+
+        if (empty($this->estabelecimento->waha_api_key)) {
+            $dados_update['waha_api_key'] = $config_array['waha_api_key'];
+            $precisa_atualizar = true;
+        }
+
+        if (empty($this->estabelecimento->waha_session_name)) {
+            $dados_update['waha_session_name'] = $session_name;
+            $precisa_atualizar = true;
+        }
+
+        // Salvar as configurações no estabelecimento se necessário
+        if ($precisa_atualizar) {
+            $this->Estabelecimento_model->update($this->estabelecimento_id, $dados_update);
+            log_message('info', "WAHA: Configurações copiadas para estabelecimento #{$this->estabelecimento_id}");
+
+            // Recarregar estabelecimento com dados atualizados
+            $this->estabelecimento = $this->Estabelecimento_model->get_by_id($this->estabelecimento_id);
         }
 
         // Configurar a library com credenciais do SaaS mas sessão do estabelecimento
