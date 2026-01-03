@@ -152,6 +152,17 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['permite_reagendamento'])) $update_data['permite_reagendamento'] = $data['permite_reagendamento'];
         if (isset($data['limite_reagendamentos'])) $update_data['limite_reagendamentos'] = $data['limite_reagendamentos'];
 
+        // Campos de confirmação e lembretes
+        if (isset($data['solicitar_confirmacao'])) $update_data['solicitar_confirmacao'] = $data['solicitar_confirmacao'];
+        if (isset($data['confirmacao_horas_antes'])) $update_data['confirmacao_horas_antes'] = $data['confirmacao_horas_antes'];
+        if (isset($data['confirmacao_dia_anterior'])) $update_data['confirmacao_dia_anterior'] = $data['confirmacao_dia_anterior'];
+        if (isset($data['confirmacao_horario_dia_anterior'])) $update_data['confirmacao_horario_dia_anterior'] = $data['confirmacao_horario_dia_anterior'];
+        if (isset($data['enviar_lembrete_pre_atendimento'])) $update_data['enviar_lembrete_pre_atendimento'] = $data['enviar_lembrete_pre_atendimento'];
+        if (isset($data['lembrete_minutos_antes'])) $update_data['lembrete_minutos_antes'] = $data['lembrete_minutos_antes'];
+        if (isset($data['lembrete_antecedencia_chegada'])) $update_data['lembrete_antecedencia_chegada'] = $data['lembrete_antecedencia_chegada'];
+        if (isset($data['cancelar_nao_confirmados'])) $update_data['cancelar_nao_confirmados'] = $data['cancelar_nao_confirmados'];
+        if (isset($data['cancelar_nao_confirmados_horas'])) $update_data['cancelar_nao_confirmados_horas'] = $data['cancelar_nao_confirmados_horas'];
+
         if (empty($update_data)) {
             return false;
         }
