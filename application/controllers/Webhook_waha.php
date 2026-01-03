@@ -491,6 +491,10 @@ class Webhook_waha extends CI_Controller {
                 $this->processar_estado_confirmando_reagendamento($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
 
+            case 'confirmando_agendamento':
+                $this->processar_estado_confirmando_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
             case 'confirmando_saida':
                 $this->processar_estado_confirmando_saida($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
@@ -2044,6 +2048,132 @@ class Webhook_waha extends CI_Controller {
         }
 
         return 'texto';
+    }
+
+    /**
+     * Processar resposta de confirmação de agendamento
+     */
+    private function processar_estado_confirmando_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $dados = json_decode($conversa->dados, true);
+        $agendamento_id = $dados['agendamento_id'] ?? null;
+
+        if (!$agendamento_id) {
+            $this->waha_lib->enviar_texto($numero, "Erro ao processar confirmação. Por favor, entre em contato.");
+            $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+            return;
+        }
+
+        $opcao = strtolower(trim($msg));
+
+        // 1 ou Sim ou Confirmar - Confirmar presença
+        if ($opcao == '1' || $opcao == 'sim' || $opcao == 'confirmar') {
+            $this->Agendamento_model->update($agendamento_id, [
+                'status' => 'confirmado',
+                'confirmado_em' => date('Y-m-d H:i:s')
+            ]);
+
+            $this->waha_lib->enviar_texto($numero,
+                "✅ *Agendamento Confirmado!*\n\n" .
+                "Obrigado por confirmar sua presença!\n\n" .
+                "Você receberá um lembrete próximo ao horário do seu atendimento.\n\n" .
+                "Até breve! 👋\n\n" .
+                "_Digite *menu* para voltar ao menu principal._"
+            );
+
+            log_message('info', "Bot: Agendamento #{$agendamento_id} confirmado pelo cliente via bot");
+
+            $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+            return;
+        }
+
+        // 2 ou Reagendar - Iniciar fluxo de reagendamento
+        if ($opcao == '2' || $opcao == 'reagendar') {
+            // Buscar agendamento completo
+            $agendamento = $this->Agendamento_model->get($agendamento_id);
+
+            if (!$agendamento) {
+                $this->waha_lib->enviar_texto($numero, "Agendamento não encontrado.");
+                $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+                return;
+            }
+
+            // Verificar limite de reagendamentos
+            $limite_check = $this->Agendamento_model->verificar_limite_reagendamentos($agendamento_id);
+
+            if (!$limite_check['pode_reagendar']) {
+                $this->waha_lib->enviar_texto($numero,
+                    "⚠️ *Limite de Reagendamentos Atingido*\n\n" .
+                    "Este agendamento já foi reagendado {$limite_check['qtd_atual']} vez(es).\n" .
+                    "Limite permitido: {$limite_check['limite']} reagendamento(s).\n\n" .
+                    "Para alterações, entre em contato diretamente com o estabelecimento.\n\n" .
+                    "_Digite *menu* para voltar ao menu principal._"
+                );
+                $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+                return;
+            }
+
+            // Iniciar fluxo de reagendamento
+            $this->iniciar_reagendamento_direto($estabelecimento, $numero, $conversa, $cliente, $agendamento);
+            return;
+        }
+
+        // 3 ou Cancelar - Cancelar agendamento
+        if ($opcao == '3' || $opcao == 'cancelar' || $opcao == 'nao' || $opcao == 'não') {
+            $this->Agendamento_model->update($agendamento_id, [
+                'status' => 'cancelado',
+                'cancelado_por' => 'cliente',
+                'motivo_cancelamento' => 'Cancelado via confirmação WhatsApp'
+            ]);
+
+            $this->waha_lib->enviar_texto($numero,
+                "❌ *Agendamento Cancelado*\n\n" .
+                "Seu agendamento foi cancelado com sucesso.\n\n" .
+                "Quando precisar, é só entrar em contato novamente!\n\n" .
+                "Digite *menu* para voltar ao menu principal."
+            );
+
+            log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação");
+
+            $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+            return;
+        }
+
+        // Opção inválida
+        $this->waha_lib->enviar_texto($numero,
+            "❌ Opção inválida.\n\n" .
+            "Por favor, responda:\n" .
+            "1️⃣ para *Confirmar*\n" .
+            "2️⃣ para *Reagendar*\n" .
+            "3️⃣ para *Cancelar*"
+        );
+    }
+
+    /**
+     * Iniciar reagendamento direto (a partir da confirmação)
+     */
+    private function iniciar_reagendamento_direto($estabelecimento, $numero, $conversa, $cliente, $agendamento) {
+        // Salvar dados do agendamento na conversa
+        $dados = [
+            'agendamento_id' => $agendamento->id,
+            'agendamento_data_original' => $agendamento->data,
+            'agendamento_hora_original' => $agendamento->hora_inicio,
+            'servico_id' => $agendamento->servico_id,
+            'servico_nome' => $agendamento->servico_nome,
+            'servico_duracao' => $agendamento->duracao_minutos,
+            'servico_preco' => $agendamento->servico_preco ?? 0,
+            'profissional_id' => $agendamento->profissional_id,
+            'profissional_nome' => $agendamento->profissional_nome
+        ];
+
+        $this->Bot_conversa_model->criar_ou_atualizar(
+            $numero,
+            $estabelecimento->id,
+            'reagendando_data',
+            json_encode($dados)
+        );
+
+        // Enviar opções de data
+        $this->enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados);
     }
 
     /**
