@@ -563,8 +563,19 @@ class Cron extends CI_Controller {
         // Limpar número (remover caracteres especiais)
         $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
 
+        // Log detalhado antes de enviar
+        log_message('debug', "CRON Confirmacao: Tentando enviar para {$numero}");
+        log_message('debug', "CRON Confirmacao: WAHA URL: {$estabelecimento->waha_api_url}");
+        log_message('debug', "CRON Confirmacao: Session: {$estabelecimento->waha_session_name}");
+
         // Enviar mensagem
-        $this->waha_lib->enviar_texto($numero, $mensagem);
+        try {
+            $resultado = $this->waha_lib->enviar_texto($numero, $mensagem);
+            log_message('debug', "CRON Confirmacao: Resultado WAHA: " . json_encode($resultado));
+        } catch (Exception $e) {
+            log_message('error', "CRON Confirmacao: Erro ao enviar via WAHA: " . $e->getMessage());
+            throw $e;
+        }
 
         // Criar conversa no bot para processar resposta
         $this->load->model('Bot_conversa_model');
@@ -639,8 +650,20 @@ class Cron extends CI_Controller {
         // Limpar número
         $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
 
+        // Log detalhado antes de enviar
+        log_message('debug', "CRON Lembrete: Tentando enviar para {$numero}");
+        log_message('debug', "CRON Lembrete: WAHA URL: {$estabelecimento->waha_api_url}");
+        log_message('debug', "CRON Lembrete: Session: {$estabelecimento->waha_session_name}");
+        log_message('debug', "CRON Lembrete: Mensagem: " . substr($mensagem, 0, 100) . "...");
+
         // Enviar mensagem
-        $this->waha_lib->enviar_texto($numero, $mensagem);
+        try {
+            $resultado = $this->waha_lib->enviar_texto($numero, $mensagem);
+            log_message('debug', "CRON Lembrete: Resultado WAHA: " . json_encode($resultado));
+        } catch (Exception $e) {
+            log_message('error', "CRON Lembrete: Erro ao enviar via WAHA: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -685,5 +708,56 @@ class Cron extends CI_Controller {
 
         // Enviar mensagem
         $this->waha_lib->enviar_texto($numero, $mensagem);
+    }
+
+    /**
+     * Página de teste de cron jobs
+     */
+    public function test() {
+        if (!$this->verificar_token()) {
+            show_404();
+            return;
+        }
+
+        $config = $this->Configuracao_model->get_by_chave('cron_token');
+        $data['token'] = $config->valor;
+
+        $this->load->view('painel/cron_test', $data);
+    }
+
+    /**
+     * Debug: Listar agendamentos pendentes
+     */
+    public function debug_agendamentos_pendentes() {
+        if (!$this->verificar_token()) {
+            show_404();
+            return;
+        }
+
+        $agendamentos = $this->Agendamento_model->get_pendentes_confirmacao();
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'total' => count($agendamentos),
+            'agendamentos' => $agendamentos
+        ]);
+    }
+
+    /**
+     * Debug: Listar agendamentos confirmados que precisam de lembrete
+     */
+    public function debug_agendamentos_confirmados() {
+        if (!$this->verificar_token()) {
+            show_404();
+            return;
+        }
+
+        $agendamentos = $this->Agendamento_model->get_para_lembrete();
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'total' => count($agendamentos),
+            'agendamentos' => $agendamentos
+        ]);
     }
 }
