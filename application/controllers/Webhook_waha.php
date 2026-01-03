@@ -1318,8 +1318,9 @@ class Webhook_waha extends CI_Controller {
         $almoco_inicio = null;
         $almoco_fim = null;
         if ($horario_dia->almoco_ativo && $horario_dia->almoco_inicio && $horario_dia->almoco_fim) {
-            $almoco_inicio = strtotime($horario_dia->almoco_inicio);
-            $almoco_fim = strtotime($horario_dia->almoco_fim);
+            // CORREÇÃO: Usar data + hora para comparação correta de timestamps
+            $almoco_inicio = strtotime($data . ' ' . $horario_dia->almoco_inicio);
+            $almoco_fim = strtotime($data . ' ' . $horario_dia->almoco_fim);
         }
 
         // Se for hoje, começar do horário atual + 1 hora
