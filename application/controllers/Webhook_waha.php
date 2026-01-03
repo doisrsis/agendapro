@@ -1606,7 +1606,22 @@ class Webhook_waha extends CI_Controller {
 
         // Opção 1: Reagendar
         if (in_array($msg, ['1', 'reagendar'])) {
-            // Iniciar fluxo de reagendamento
+            // Verificar limite de reagendamentos
+            $agendamento = $this->Agendamento_model->get_by_id($dados['agendamento_id']);
+            $qtd_atual = isset($agendamento->qtd_reagendamentos) ? (int)$agendamento->qtd_reagendamentos : 0;
+            $limite = isset($estabelecimento->limite_reagendamentos) ? (int)$estabelecimento->limite_reagendamentos : 0;
+
+            if ($limite > 0 && $qtd_atual >= $limite) {
+                $this->waha_lib->enviar_texto($numero,
+                    "⚠️ *Limite de Reagendamentos Atingido*\n\n" .
+                    "Este agendamento já foi reagendado *{$qtd_atual}* vez(es).\n" .
+                    "Limite permitido: *{$limite}* reagendamento(s).\n\n" .
+                    "Para alterar, por favor entre em contato diretamente com o estabelecimento.\n\n" .
+                    "_Digite *menu* para voltar ao menu._"
+                );
+                return;
+            }
+
             $this->Bot_conversa_model->atualizar_estado($conversa->id, 'reagendando_data', $dados);
             $this->enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados);
             return;
@@ -1851,11 +1866,31 @@ class Webhook_waha extends CI_Controller {
         $hora_original = date('H:i', strtotime($dados['agendamento_hora_original']));
         $nova_data_formatada = date('d/m/Y', strtotime($dados['nova_data']));
 
+        // Buscar informações de reagendamento
+        $agendamento = $this->Agendamento_model->get_by_id($dados['agendamento_id']);
+        $qtd_atual = isset($agendamento->qtd_reagendamentos) ? (int)$agendamento->qtd_reagendamentos : 0;
+        $limite = isset($estabelecimento->limite_reagendamentos) ? (int)$estabelecimento->limite_reagendamentos : 0;
+
         $mensagem = "✅ *Confirme o Reagendamento:*\n\n";
         $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
         $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n\n";
         $mensagem .= "❌ *De:* {$data_original} às {$hora_original}\n";
         $mensagem .= "✅ *Para:* {$nova_data_formatada} às {$dados['nova_hora']}\n\n";
+
+        // Adicionar informações de contador
+        if ($limite > 0) {
+            $qtd_apos = $qtd_atual + 1;
+            $restantes = $limite - $qtd_apos;
+            $mensagem .= "ℹ️ *Reagendamentos:* {$qtd_atual} vez(es) | Após confirmar: {$qtd_apos}/{$limite}\n";
+            if ($restantes > 0) {
+                $mensagem .= "   Você ainda poderá reagendar *{$restantes}* vez(es) após este.\n\n";
+            } else {
+                $mensagem .= "   ⚠️ Este será seu último reagendamento permitido.\n\n";
+            }
+        } else {
+            $mensagem .= "ℹ️ *Reagendamentos:* {$qtd_atual} vez(es) | Após confirmar: " . ($qtd_atual + 1) . "\n\n";
+        }
+
         $mensagem .= "Deseja confirmar o reagendamento?\n\n";
         $mensagem .= "*1* ou *Sim* - Confirmar ✅\n";
         $mensagem .= "*2* ou *Não* - Cancelar ❌\n\n";
@@ -1888,16 +1923,26 @@ class Webhook_waha extends CI_Controller {
             $duracao = $dados['servico_duracao'];
             $hora_fim = date('H:i:s', strtotime($hora_inicio) + ($duracao * 60));
 
+            // Buscar agendamento atual para incrementar contador
+            $agendamento_atual = $this->Agendamento_model->get_by_id($agendamento_id);
+
+            // Calcular novo contador de reagendamentos
+            $qtd_atual = 0;
+            if (isset($agendamento_atual->qtd_reagendamentos)) {
+                $qtd_atual = (int)$agendamento_atual->qtd_reagendamentos;
+            }
+
             // Atualizar agendamento
             $update_data = [
                 'data' => $dados['nova_data'],
                 'hora_inicio' => $hora_inicio,
-                'hora_fim' => $hora_fim
+                'hora_fim' => $hora_fim,
+                'qtd_reagendamentos' => $qtd_atual + 1
             ];
 
             $this->Agendamento_model->update($agendamento_id, $update_data);
 
-            log_message('info', "Bot: Reagendamento confirmado - ID: {$agendamento_id}");
+            log_message('info', "Bot: Reagendamento confirmado - ID: {$agendamento_id}, qtd_reagendamentos: " . ($qtd_atual + 1));
 
             $data_original = date('d/m/Y', strtotime($dados['agendamento_data_original']));
             $hora_original = date('H:i', strtotime($dados['agendamento_hora_original']));
