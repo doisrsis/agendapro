@@ -106,7 +106,7 @@ class Waha_lib {
      * @param string $session_name Nome da sessão
      */
     public function set_credentials($api_url, $api_key, $session_name = 'default') {
-        $this->api_url = rtrim($api_url, '/');
+        $this->api_url = $api_url ? rtrim($api_url, '/') : '';
         $this->api_key = $api_key;
         $this->session_name = $session_name;
     }

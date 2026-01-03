@@ -568,11 +568,16 @@ class Cron extends CI_Controller {
 
         // Criar conversa no bot para processar resposta
         $this->load->model('Bot_conversa_model');
-        $this->Bot_conversa_model->criar_ou_atualizar(
-            $numero,
+        $conversa = $this->Bot_conversa_model->get_ou_criar(
             $agendamento->estabelecimento_id,
+            $numero
+        );
+
+        // Atualizar estado para confirmando_agendamento
+        $this->Bot_conversa_model->atualizar_estado(
+            $conversa->id,
             'confirmando_agendamento',
-            json_encode(['agendamento_id' => $agendamento->id])
+            ['agendamento_id' => $agendamento->id]
         );
     }
 
