@@ -225,6 +225,13 @@ class Agendamento_model extends CI_Model {
         if (isset($data['pagamento_token'])) $update_data['pagamento_token'] = $data['pagamento_token'];
         if (isset($data['pagamento_expira_adicional_em'])) $update_data['pagamento_expira_adicional_em'] = $data['pagamento_expira_adicional_em'];
 
+        // Campos de Notificação / Controle
+        if (isset($data['confirmacao_enviada'])) $update_data['confirmacao_enviada'] = $data['confirmacao_enviada'];
+        if (isset($data['confirmacao_enviada_em'])) $update_data['confirmacao_enviada_em'] = $data['confirmacao_enviada_em'];
+        if (isset($data['lembrete_enviado'])) $update_data['lembrete_enviado'] = $data['lembrete_enviado'];
+        if (isset($data['lembrete_enviado_em'])) $update_data['lembrete_enviado_em'] = $data['lembrete_enviado_em'];
+        if (isset($data['confirmado_em'])) $update_data['confirmado_em'] = $data['confirmado_em'];
+
         if (empty($update_data)) {
             return false;
         }
@@ -838,15 +845,20 @@ class Agendamento_model extends CI_Model {
         $CI->load->model('Estabelecimento_model');
         $estabelecimento = $CI->Estabelecimento_model->get_by_id($agendamento->estabelecimento_id);
 
-        // Verificar se estabelecimento permite
-        if (!$estabelecimento->permite_reagendamento) {
-            return ['pode_reagendar' => false, 'motivo' => 'Estabelecimento não permite reagendamento'];
-        }
-
-        // Verificar limite
         $qtd_atual = $agendamento->qtd_reagendamentos ?? 0;
         $limite = $estabelecimento->limite_reagendamentos ?? 3;
 
+        // Verificar se estabelecimento permite
+        if (!$estabelecimento->permite_reagendamento) {
+            return [
+                'pode_reagendar' => false,
+                'motivo' => 'Este estabelecimento não aceita reagendamentos automáticos.',
+                'qtd_atual' => $qtd_atual,
+                'limite' => $limite
+            ];
+        }
+
+        // Verificar limite
         if ($qtd_atual >= $limite) {
             return [
                 'pode_reagendar' => false,
@@ -895,6 +907,11 @@ class Agendamento_model extends CI_Model {
               AND a.data >= CURDATE()
               AND e.agendamento_requer_pagamento = 'nao'
               AND e.solicitar_confirmacao = 1
+              -- Verifica se nunca foi enviado OU se já passou o tempo de cooldown (23h) para tentar novamente
+              AND (
+                  a.confirmacao_enviada = 0
+                  OR (a.confirmacao_enviada_em IS NOT NULL AND TIMESTAMPDIFF(HOUR, a.confirmacao_enviada_em, NOW()) >= 23)
+              )
               AND (
                   -- Opção 1: X horas antes
                   TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.confirmacao_horas_antes
@@ -934,11 +951,21 @@ class Agendamento_model extends CI_Model {
             JOIN servicos s ON a.servico_id = s.id
             JOIN profissionais p ON a.profissional_id = p.id
             WHERE a.status = 'confirmado'
-              AND a.lembrete_enviado = 0
               AND a.data = CURDATE()
               AND e.enviar_lembrete_pre_atendimento = 1
+
+              -- Cooldown e envio único
+              AND (
+                  a.lembrete_enviado = 0
+                  OR (a.lembrete_enviado_em IS NOT NULL AND TIMESTAMPDIFF(MINUTE, a.lembrete_enviado_em, NOW()) >= 14)
+              )
+
+              -- Janela de envio (dentro dos minutos configurados)
               AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.lembrete_minutos_antes
               AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0
+
+              -- Otimização: Tentar enviar o mais próximo possível do tempo configurado (margem de 15 min)
+              AND ABS(TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) - e.lembrete_minutos_antes) <= 15
             ORDER BY a.hora_inicio
         ";
 

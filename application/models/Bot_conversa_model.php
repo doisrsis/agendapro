@@ -218,4 +218,35 @@ class Bot_conversa_model extends CI_Model
 
         return $encerradas + $inativas;
     }
+
+    /**
+     * Limpar conversa do usuário (Delete)
+     *
+     * @param string $numero
+     * @param int $estabelecimento_id
+     * @return bool
+     */
+    public function limpar($numero, $estabelecimento_id) {
+        return $this->db
+            ->where('numero_whatsapp', $numero)
+            ->where('estabelecimento_id', $estabelecimento_id)
+            ->delete($this->table);
+    }
+
+    /**
+     * Criar ou atualizar conversa
+     *
+     * @param string $numero
+     * @param int $estabelecimento_id
+     * @param string $estado
+     * @param string|array $dados
+     * @return bool
+     */
+    public function criar_ou_atualizar($numero, $estabelecimento_id, $estado, $dados) {
+        $conversa = $this->get_ou_criar($estabelecimento_id, $numero);
+
+        $dados_array = is_string($dados) ? (json_decode($dados, true) ?: []) : $dados;
+
+        return $this->atualizar_estado($conversa->id, $estado, $dados_array);
+    }
 }

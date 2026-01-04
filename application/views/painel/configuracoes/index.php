@@ -298,7 +298,7 @@
 
                             <div class="mb-3">
                                 <label class="form-check">
-                                    <input type="checkbox" class="form-check-input" name="permite_reagendamento" id="permite_reagendamento"
+                                    <input type="checkbox" class="form-check-input" name="permite_reagendamento" id="permite_reagendamento" value="1"
                                            <?= ($estabelecimento->permite_reagendamento ?? 1) ? 'checked' : '' ?>>
                                     <span class="form-check-label">Permitir Reagendamento</span>
                                 </label>

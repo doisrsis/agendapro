@@ -2053,8 +2053,9 @@ class Webhook_waha extends CI_Controller {
     /**
      * Processar resposta de confirmação de agendamento
      */
-    private function processar_estado_confirmando_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente) {
-        $dados = json_decode($conversa->dados, true);
+     private function processar_estado_confirmando_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        // Dados já são decodificados pelo model em get_ou_criar
+        $dados = $conversa->dados ?? [];
         $agendamento_id = $dados['agendamento_id'] ?? null;
 
         if (!$agendamento_id) {
@@ -2098,16 +2099,30 @@ class Webhook_waha extends CI_Controller {
             }
 
             // Verificar limite de reagendamentos
-            $limite_check = $this->Agendamento_model->verificar_limite_reagendamentos($agendamento_id);
+            $limite_check = $this->Agendamento_model->pode_reagendar($agendamento_id);
 
             if (!$limite_check['pode_reagendar']) {
-                $this->waha_lib->enviar_texto($numero,
-                    "⚠️ *Limite de Reagendamentos Atingido*\n\n" .
-                    "Este agendamento já foi reagendado {$limite_check['qtd_atual']} vez(es).\n" .
-                    "Limite permitido: {$limite_check['limite']} reagendamento(s).\n\n" .
-                    "Para alterações, entre em contato diretamente com o estabelecimento.\n\n" .
-                    "_Digite *menu* para voltar ao menu principal._"
-                );
+                $motivo = $limite_check['motivo'] ?? 'Reagendamento não permitido';
+
+                // Se for limite atingido, mostra mensagem detalhada de limite
+                if (strpos($motivo, 'Limite') !== false || strpos($motivo, 'limite') !== false) {
+                    $this->waha_lib->enviar_texto($numero,
+                        "⚠️ *Limite de Reagendamentos Atingido*\n\n" .
+                        "Este agendamento já foi reagendado *{$limite_check['qtd_atual']}* vez(es).\n" .
+                        "Limite permitido: *{$limite_check['limite']}* reagendamento(s).\n\n" .
+                        "Para alterações, entre em contato diretamente com o estabelecimento.\n\n" .
+                        "_Digite *menu* para voltar ao menu principal._"
+                    );
+                } else {
+                    // Outro motivo (ex: estabelecimento não permite)
+                    $this->waha_lib->enviar_texto($numero,
+                        "⚠️ *Reagendamento Indisponível*\n\n" .
+                        "{$motivo}\n\n" .
+                        "Para alterações, entre em contato diretamente com o estabelecimento.\n\n" .
+                        "_Digite *menu* para voltar ao menu principal._"
+                    );
+                }
+
                 $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
                 return;
             }
