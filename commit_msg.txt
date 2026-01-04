@@ -1,0 +1,38 @@
+﻿feat: Implementacao de melhorias de UX no Bot e confirmacao de cancelamento
+
+MELHORIAS DE UX E FLUXO SEGURO
+
+=== 1. CONFIRMACAO DE CANCELAMENTO ===
+
+Arquivo: application/controllers/Webhook_waha.php
+
+PROBLEMA:
+- A opcao '3' (Cancelar) executava o cancelamento imediatamente.
+- Risco alto de cancelamento acidental pelo usuario.
+
+SOLUCAO:
+- Criado novo estado no bot: 'confirmando_cancelamento'.
+- Ao digitar '3', o usuario recebe uma pergunta de seguranca:
+  "Tem certeza? 1-Sim / 2-Nao".
+- Implementado metodo 'processar_estado_confirmando_cancelamento'.
+  - Opcao 1: Cancela o agendamento (Update status = cancelado).
+  - Opcao 2: Aborta e retorna ao menu anterior (mantendo agendamento).
+
+=== 2. FILTRO DE CONTEXTO (ANTI-ERRORS) ===
+
+Arquivo: application/controllers/Webhook_waha.php
+
+PROBLEMA:
+- Se o bot enviava mensagem e usuario respondia "Obrigado" ou "Ok", o bot respondia "Opcao Invalida".
+- Gerava frustracao e sensacao de "robô burro".
+
+SOLUCAO:
+- Implementado filtro no inicio do processamento de mensagens.
+- Ignora automaticamente palavras de cortesia (ok, obrigado, valeu, etc) quando espera comando numerico.
+- O bot apenas loga "Ignorando mensagem irrelevante" e nao polui o chat.
+
+=== 3. REFINAMENTOS VISUAIS ===
+- Padronizacao de emojis nos menus (Alertas, Cancelamento, Confirmacao).
+- Textos mais claros e convidativos.
+
+Autor: Rafael Dias - doisr.com.br (04/01/2026)

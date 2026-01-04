@@ -495,6 +495,10 @@ class Webhook_waha extends CI_Controller {
                 $this->processar_estado_confirmando_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
 
+            case 'confirmando_cancelamento':
+                $this->processar_estado_confirmando_cancelamento($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
             case 'confirmando_saida':
                 $this->processar_estado_confirmando_saida($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
@@ -2132,8 +2136,61 @@ class Webhook_waha extends CI_Controller {
             return;
         }
 
-        // 3 ou Cancelar - Cancelar agendamento
+        // 3 ou Cancelar - Iniciar fluxo de cancelamento
         if ($opcao == '3' || $opcao == 'cancelar' || $opcao == 'nao' || $opcao == 'não') {
+
+            // Salvar dados e mudar estado
+            $this->Bot_conversa_model->criar_ou_atualizar(
+                $numero,
+                $estabelecimento->id,
+                'confirmando_cancelamento',
+                json_encode(['agendamento_id' => $agendamento_id])
+            );
+
+            $this->waha_lib->enviar_texto($numero,
+                "⚠️ *Confirmar Cancelamento*\n\n" .
+                "Tem certeza que deseja cancelar este agendamento?\n\n" .
+                "1️⃣ *Sim, Cancelar* ❌\n" .
+                "2️⃣ *Não, Voltar* 🔙"
+            );
+            return;
+        }
+
+        // Filtro de Contexto: Ignorar mensagens curtas de agradecimento/confirmação que não são comandos
+        $msg_lower = strtolower(trim($msg));
+        $ignorar = ['ok', 'ta', 'tá', 'bom', 'beleza', 'blz', 'obrigado', 'obrigada', 'valeu', 'vlw', 'top', 'show', 'certo'];
+
+        if (in_array($msg_lower, $ignorar)) {
+            // Apenas logar e ignorar (não enviar menu nem erro)
+            log_message('debug', "Bot: Ignorando mensagem de contexto irrelevante: {$msg}");
+            return;
+        }
+
+        // Opção inválida
+        $this->waha_lib->enviar_texto($numero,
+            "❌ *Opção inválida.*\n\n" .
+            "Por favor, digite apenas o número:\n" .
+            "1️⃣ para *Confirmar*\n" .
+            "2️⃣ para *Reagendar*\n" .
+            "3️⃣ para *Cancelar*"
+        );
+    }
+
+    /**
+     * Processar estado: Confirmando Cancelamento (Novo UX)
+     */
+    private function processar_estado_confirmando_cancelamento($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $opcao = strtolower(trim($msg));
+        $dados = $conversa->dados ?? [];
+        $agendamento_id = $dados['agendamento_id'] ?? null;
+
+        if (!$agendamento_id) {
+            $this->waha_lib->enviar_texto($numero, "Erro ao identificar agendamento. Digite *menu* para reiniciar.");
+            return;
+        }
+
+        // 1 ou Sim - Confirmar Cancelamento
+        if ($opcao == '1' || $opcao == 'sim' || $opcao == 's' || $opcao == 'confirmar') {
             $this->Agendamento_model->update($agendamento_id, [
                 'status' => 'cancelado',
                 'cancelado_por' => 'cliente',
@@ -2143,23 +2200,42 @@ class Webhook_waha extends CI_Controller {
             $this->waha_lib->enviar_texto($numero,
                 "❌ *Agendamento Cancelado*\n\n" .
                 "Seu agendamento foi cancelado com sucesso.\n\n" .
-                "Quando precisar, é só entrar em contato novamente!\n\n" .
-                "Digite *menu* para voltar ao menu principal."
+                "Quando precisar, é só entrar em contato novamente! 👋\n\n" .
+                "_Digite *menu* para voltar ao menu principal._"
             );
 
-            log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação");
-
+            log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação segura");
             $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
             return;
         }
 
-        // Opção inválida
+        // 2 ou Não/Voltar - Desistir do Cancelamento
+        if ($opcao == '2' || $opcao == 'nao' || $opcao == 'não' || $opcao == 'n' || $opcao == 'voltar') {
+            // Voltar para o estado anterior (confirmando_agendamento)
+            $this->Bot_conversa_model->atualizar_estado(
+                $conversa->id,
+                'confirmando_agendamento',
+                ['agendamento_id' => $agendamento_id]
+            );
+
+            // Reenviar as opções originais para o usuário se localizar
+            $this->waha_lib->enviar_texto($numero,
+                "👍 *Cancelamento Abortado*\n\n" .
+                "Seu agendamento continua ativo!\n\n" .
+                "O que deseja fazer?\n\n" .
+                "1️⃣ *Confirmar Presença* ✅\n" .
+                "2️⃣ *Reagendar* 🔄\n" .
+                "3️⃣ *Cancelar* ❌"
+            );
+            return;
+        }
+
+        // Opção Inválida (no fluxo de cancelamento)
         $this->waha_lib->enviar_texto($numero,
-            "❌ Opção inválida.\n\n" .
-            "Por favor, responda:\n" .
-            "1️⃣ para *Confirmar*\n" .
-            "2️⃣ para *Reagendar*\n" .
-            "3️⃣ para *Cancelar*"
+            "⚠️ *Opção Inválida*\n\n" .
+            "Tem certeza que deseja cancelar?\n\n" .
+            "1️⃣ *Sim, Cancelar*\n" .
+            "2️⃣ *Não, Voltar*"
         );
     }
 
