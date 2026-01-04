@@ -315,6 +315,15 @@ class Webhook_waha extends CI_Controller {
 
         log_message('info', "WAHA Mensagem de {$numero}: " . substr($body, 0, 100));
 
+        // Verificação de Idempotência: Se mensagem já foi processada, ignorar
+        if ($message_id) {
+            $msg_existente = $this->db->where('message_id', $message_id)->count_all_results('whatsapp_mensagens');
+            if ($msg_existente > 0) {
+                log_message('warning', "WAHA Webhook: Mensagem duplicada ignorada - ID: {$message_id}");
+                return;
+            }
+        }
+
         // Salvar mensagem no log
         $this->salvar_log_mensagem([
             'estabelecimento_id' => $estabelecimento_id,
@@ -493,6 +502,10 @@ class Webhook_waha extends CI_Controller {
 
             case 'confirmando_agendamento':
                 $this->processar_estado_confirmando_agendamento($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
+            case 'confirmando_cancelamento':
+                $this->processar_estado_confirmando_cancelamento($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
 
             case 'confirmando_saida':
@@ -1628,6 +1641,9 @@ class Webhook_waha extends CI_Controller {
                 return;
             }
 
+            // Salvar estado de origem para o botão voltar funcionar corretamente
+            $dados['origin_state'] = 'aguardando_acao_agendamento';
+
             $this->Bot_conversa_model->atualizar_estado($conversa->id, 'reagendando_data', $dados);
             $this->enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados);
             return;
@@ -1670,7 +1686,26 @@ class Webhook_waha extends CI_Controller {
      * Envia opções de data para reagendamento
      * REPLICA EXATAMENTE: enviar_opcoes_data (agendamento novo)
      */
-    private function enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados) {
+    private function enviar_opcoes_data_reagendamento($estabelecimento, $numero, &$dados) {
+        // Garantir que temos a duração do serviço
+        if (empty($dados['servico_duracao']) || $dados['servico_duracao'] <= 0) {
+            $this->load->model('Servico_model');
+            // Tentar pegar do agendamento primeiro (mais confiável se salvo)
+            if (!empty($dados['agendamento_id'])) {
+                $ag = $this->Agendamento_model->get_by_id($dados['agendamento_id']);
+                // Se agendamento tem servico_id, buscar serviço atualizado ou usar snapshot se houver
+                if ($ag && $ag->servico_id) {
+                    $servico = $this->Servico_model->get_by_id($ag->servico_id);
+                    if ($servico) {
+                        $dados['servico_duracao'] = $servico->duracao;
+                        // Atualizar estado com a duração correta para persistir nas próximas etapas
+                        $this->Bot_conversa_model->atualizar_estado($this->Bot_conversa_model->get_conversa_id($estabelecimento->id, $numero), 'reagendando_data', $dados);
+                        log_message('info', "Bot: Duração recuperada do banco: {$dados['servico_duracao']} min");
+                    }
+                }
+            }
+        }
+
         $duracao = $dados['servico_duracao'] ?? 30;
 
         // CORREÇÃO: Passar agendamento_id para excluir o agendamento atual
@@ -1723,6 +1758,31 @@ class Webhook_waha extends CI_Controller {
 
         // Comando voltar - retorna para ações do agendamento
         if (in_array($msg, ['voltar', 'anterior'])) {
+            // Verificar origem para retornar ao fluxo correto
+            if (isset($dados['origin_state']) && $dados['origin_state'] == 'confirmando_agendamento') {
+                 $this->Bot_conversa_model->atualizar_estado($conversa->id, 'confirmando_agendamento', $dados);
+                 // Precisamos reenviar as opções de confirmação (1. Sim, 2. Negar/Reagendar, 3. Cancelar)
+                 // Reconstruir contexto de confirmação
+                 $this->load->model('Agendamento_model');
+                 $agendamento = $this->Agendamento_model->get_by_id($dados['agendamento_id']);
+
+                 // Simular mensagem de confirmação inicial ou simplificada
+                 $data_formatada = date('d/m/Y', strtotime($dados['agendamento_data_original']));
+                 $hora_formatada = date('H:i', strtotime($dados['agendamento_hora_original']));
+
+                 $mensagem = "🔔 *Confirmação de Agendamento*\n\n";
+                 $mensagem .= "Recuperando opções para:\n";
+                 $mensagem .= "📅 {$data_formatada} às {$hora_formatada}\n";
+                 $mensagem .= "💇 {$dados['servico_nome']}\n\n";
+                 $mensagem .= "Escolha:\n";
+                 $mensagem .= "*1* - ✅ Confirmar\n";
+                 $mensagem .= "*2* - 🔄 Reagendar\n";
+                 $mensagem .= "*3* - ❌ Cancelar\n";
+
+                 $this->waha_lib->enviar_texto($numero, $mensagem);
+                 return;
+            }
+
             $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_acao_agendamento', $dados);
 
             $data = date('d/m/Y', strtotime($dados['agendamento_data_original']));
@@ -1776,7 +1836,21 @@ class Webhook_waha extends CI_Controller {
      * Envia opções de horário para reagendamento
      * REPLICA EXATAMENTE: enviar_opcoes_hora (agendamento novo)
      */
-    private function enviar_opcoes_hora_reagendamento($estabelecimento, $numero, $dados) {
+    private function enviar_opcoes_hora_reagendamento($estabelecimento, $numero, &$dados) {
+        // Garantir que temos a duração válida (>0) antes de buscar horários
+        // O bug de disponibilidade ocorria porque duracao NULL ou 0 não gerava conflito
+        if (empty($dados['servico_duracao']) || $dados['servico_duracao'] <= 0) {
+            $this->load->model('Servico_model');
+            if (!empty($dados['servico_id'])) {
+                 $servico = $this->Servico_model->get_by_id($dados['servico_id']);
+                 if ($servico) {
+                     $dados['servico_duracao'] = $servico->duracao;
+                 }
+            }
+            // Fallback final segura
+            if (empty($dados['servico_duracao'])) $dados['servico_duracao'] = 30;
+        }
+
         // LOG INFO: Rastrear execução do reagendamento
         log_message('info', "Bot REAGENDAMENTO INICIO: nova_data={$dados['nova_data']}, profissional_id={$dados['profissional_id']}, agendamento_id=" . ($dados['agendamento_id'] ?? 'NULL') . ", duracao={$dados['servico_duracao']}");
 
@@ -2132,8 +2206,61 @@ class Webhook_waha extends CI_Controller {
             return;
         }
 
-        // 3 ou Cancelar - Cancelar agendamento
+        // 3 ou Cancelar - Iniciar fluxo de cancelamento
         if ($opcao == '3' || $opcao == 'cancelar' || $opcao == 'nao' || $opcao == 'não') {
+
+            // Salvar dados e mudar estado
+            $this->Bot_conversa_model->criar_ou_atualizar(
+                $numero,
+                $estabelecimento->id,
+                'confirmando_cancelamento',
+                json_encode(['agendamento_id' => $agendamento_id])
+            );
+
+            $this->waha_lib->enviar_texto($numero,
+                "⚠️ *Confirmar Cancelamento*\n\n" .
+                "Tem certeza que deseja cancelar este agendamento?\n\n" .
+                "1️⃣ *Sim, Cancelar* ❌\n" .
+                "2️⃣ *Não, Voltar* 🔙"
+            );
+            return;
+        }
+
+        // Filtro de Contexto: Ignorar mensagens curtas de agradecimento/confirmação que não são comandos
+        $msg_lower = strtolower(trim($msg));
+        $ignorar = ['ok', 'ta', 'tá', 'bom', 'beleza', 'blz', 'obrigado', 'obrigada', 'valeu', 'vlw', 'top', 'show', 'certo'];
+
+        if (in_array($msg_lower, $ignorar)) {
+            // Apenas logar e ignorar (não enviar menu nem erro)
+            log_message('debug', "Bot: Ignorando mensagem de contexto irrelevante: {$msg}");
+            return;
+        }
+
+        // Opção inválida
+        $this->waha_lib->enviar_texto($numero,
+            "❌ *Opção inválida.*\n\n" .
+            "Por favor, digite apenas o número:\n" .
+            "1️⃣ para *Confirmar*\n" .
+            "2️⃣ para *Reagendar*\n" .
+            "3️⃣ para *Cancelar*"
+        );
+    }
+
+    /**
+     * Processar estado: Confirmando Cancelamento (Novo UX)
+     */
+    private function processar_estado_confirmando_cancelamento($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $opcao = strtolower(trim($msg));
+        $dados = $conversa->dados ?? [];
+        $agendamento_id = $dados['agendamento_id'] ?? null;
+
+        if (!$agendamento_id) {
+            $this->waha_lib->enviar_texto($numero, "Erro ao identificar agendamento. Digite *menu* para reiniciar.");
+            return;
+        }
+
+        // 1 ou Sim - Confirmar Cancelamento
+        if ($opcao == '1' || $opcao == 'sim' || $opcao == 's' || $opcao == 'confirmar') {
             $this->Agendamento_model->update($agendamento_id, [
                 'status' => 'cancelado',
                 'cancelado_por' => 'cliente',
@@ -2143,23 +2270,42 @@ class Webhook_waha extends CI_Controller {
             $this->waha_lib->enviar_texto($numero,
                 "❌ *Agendamento Cancelado*\n\n" .
                 "Seu agendamento foi cancelado com sucesso.\n\n" .
-                "Quando precisar, é só entrar em contato novamente!\n\n" .
-                "Digite *menu* para voltar ao menu principal."
+                "Quando precisar, é só entrar em contato novamente! 👋\n\n" .
+                "_Digite *menu* para voltar ao menu principal._"
             );
 
-            log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação");
-
+            log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação segura");
             $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
             return;
         }
 
-        // Opção inválida
+        // 2 ou Não/Voltar - Desistir do Cancelamento
+        if ($opcao == '2' || $opcao == 'nao' || $opcao == 'não' || $opcao == 'n' || $opcao == 'voltar') {
+            // Voltar para o estado anterior (confirmando_agendamento)
+            $this->Bot_conversa_model->atualizar_estado(
+                $conversa->id,
+                'confirmando_agendamento',
+                ['agendamento_id' => $agendamento_id]
+            );
+
+            // Reenviar as opções originais para o usuário se localizar
+            $this->waha_lib->enviar_texto($numero,
+                "👍 *Cancelamento Abortado*\n\n" .
+                "Seu agendamento continua ativo!\n\n" .
+                "O que deseja fazer?\n\n" .
+                "1️⃣ *Confirmar Presença* ✅\n" .
+                "2️⃣ *Reagendar* 🔄\n" .
+                "3️⃣ *Cancelar* ❌"
+            );
+            return;
+        }
+
+        // Opção Inválida (no fluxo de cancelamento)
         $this->waha_lib->enviar_texto($numero,
-            "❌ Opção inválida.\n\n" .
-            "Por favor, responda:\n" .
-            "1️⃣ para *Confirmar*\n" .
-            "2️⃣ para *Reagendar*\n" .
-            "3️⃣ para *Cancelar*"
+            "⚠️ *Opção Inválida*\n\n" .
+            "Tem certeza que deseja cancelar?\n\n" .
+            "1️⃣ *Sim, Cancelar*\n" .
+            "2️⃣ *Não, Voltar*"
         );
     }
 
@@ -2177,7 +2323,8 @@ class Webhook_waha extends CI_Controller {
             'servico_duracao' => $agendamento->duracao_minutos,
             'servico_preco' => $agendamento->servico_preco ?? 0,
             'profissional_id' => $agendamento->profissional_id,
-            'profissional_nome' => $agendamento->profissional_nome
+            'profissional_nome' => $agendamento->profissional_nome,
+            'origin_state' => 'confirmando_agendamento' // Para botão voltar funcionar corretamente
         ];
 
         $this->Bot_conversa_model->criar_ou_atualizar(
