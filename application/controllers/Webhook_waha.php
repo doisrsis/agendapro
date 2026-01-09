@@ -316,7 +316,7 @@ class Webhook_waha extends CI_Controller {
         log_message('info', "WAHA Mensagem de {$numero}: " . substr($body, 0, 100));
 
         // Verificação de Idempotência: Se mensagem já foi processada, ignorar
-        if ($message_id) {
+        if ($message_id && $this->db->table_exists('whatsapp_mensagens')) {
             $msg_existente = $this->db->where('message_id', $message_id)->count_all_results('whatsapp_mensagens');
             if ($msg_existente > 0) {
                 log_message('warning', "WAHA Webhook: Mensagem duplicada ignorada - ID: {$message_id}");
@@ -1699,7 +1699,8 @@ class Webhook_waha extends CI_Controller {
                     if ($servico) {
                         $dados['servico_duracao'] = $servico->duracao;
                         // Atualizar estado com a duração correta para persistir nas próximas etapas
-                        $this->Bot_conversa_model->atualizar_estado($this->Bot_conversa_model->get_conversa_id($estabelecimento->id, $numero), 'reagendando_data', $dados);
+                        $conversa_atual = $this->Bot_conversa_model->get_ou_criar($estabelecimento->id, $numero);
+                        $this->Bot_conversa_model->atualizar_estado($conversa_atual->id, 'reagendando_data', $dados);
                         log_message('info', "Bot: Duração recuperada do banco: {$dados['servico_duracao']} min");
                     }
                 }
@@ -1746,7 +1747,9 @@ class Webhook_waha extends CI_Controller {
         $mensagem .= "\n_Digite o número da nova data._\n";
         $mensagem .= "_Ou digite *voltar* para escolher outra ação._";
 
+        log_message('info', "Bot Reagendamento: Enviando opcoes de data - total_datas=" . count($datas));
         $this->waha_lib->enviar_texto($numero, $mensagem);
+        log_message('info', "Bot Reagendamento: Mensagem de datas enviada via WAHA");
     }
 
     /**
@@ -2163,17 +2166,23 @@ class Webhook_waha extends CI_Controller {
 
         // 2 ou Reagendar - Iniciar fluxo de reagendamento
         if ($opcao == '2' || $opcao == 'reagendar') {
+            log_message('info', "Bot Confirmacao: Cliente escolheu reagendar - agendamento_id={$agendamento_id}");
+
             // Buscar agendamento completo
             $agendamento = $this->Agendamento_model->get($agendamento_id);
 
             if (!$agendamento) {
+                log_message('error', "Bot Confirmacao: Agendamento #{$agendamento_id} não encontrado");
                 $this->waha_lib->enviar_texto($numero, "Agendamento não encontrado.");
                 $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
                 return;
             }
 
+            log_message('info', "Bot Confirmacao: Agendamento encontrado - status={$agendamento->status}");
+
             // Verificar limite de reagendamentos
             $limite_check = $this->Agendamento_model->pode_reagendar($agendamento_id);
+            log_message('info', "Bot Confirmacao: Verificacao limite - pode_reagendar=" . ($limite_check['pode_reagendar'] ? 'SIM' : 'NAO') . ", motivo={$limite_check['motivo']}");
 
             if (!$limite_check['pode_reagendar']) {
                 $motivo = $limite_check['motivo'] ?? 'Reagendamento não permitido';
@@ -2202,7 +2211,9 @@ class Webhook_waha extends CI_Controller {
             }
 
             // Iniciar fluxo de reagendamento
+            log_message('info', "Bot Confirmacao: Iniciando reagendamento direto");
             $this->iniciar_reagendamento_direto($estabelecimento, $numero, $conversa, $cliente, $agendamento);
+            log_message('info', "Bot Confirmacao: Reagendamento direto iniciado com sucesso");
             return;
         }
 
@@ -2313,6 +2324,13 @@ class Webhook_waha extends CI_Controller {
      * Iniciar reagendamento direto (a partir da confirmação)
      */
     private function iniciar_reagendamento_direto($estabelecimento, $numero, $conversa, $cliente, $agendamento) {
+        log_message('info', "Bot Reagendamento Direto: Iniciando - agendamento_id={$agendamento->id}");
+
+        // Buscar duração do serviço
+        $this->load->model('Servico_model');
+        $servico = $this->Servico_model->get_by_id($agendamento->servico_id);
+        $duracao_servico = $servico ? $servico->duracao : 30;
+
         // Salvar dados do agendamento na conversa
         $dados = [
             'agendamento_id' => $agendamento->id,
@@ -2320,22 +2338,29 @@ class Webhook_waha extends CI_Controller {
             'agendamento_hora_original' => $agendamento->hora_inicio,
             'servico_id' => $agendamento->servico_id,
             'servico_nome' => $agendamento->servico_nome,
-            'servico_duracao' => $agendamento->duracao_minutos,
+            'servico_duracao' => $duracao_servico,
             'servico_preco' => $agendamento->servico_preco ?? 0,
             'profissional_id' => $agendamento->profissional_id,
             'profissional_nome' => $agendamento->profissional_nome,
             'origin_state' => 'confirmando_agendamento' // Para botão voltar funcionar corretamente
         ];
 
+        log_message('info', "Bot Reagendamento Direto: Dados preparados - " . json_encode($dados));
+
+        // CORREÇÃO: Não fazer json_encode pois criar_ou_atualizar já faz internamente
         $this->Bot_conversa_model->criar_ou_atualizar(
             $numero,
             $estabelecimento->id,
             'reagendando_data',
-            json_encode($dados)
+            $dados
         );
+
+        log_message('info', "Bot Reagendamento Direto: Estado atualizado para reagendando_data");
 
         // Enviar opções de data
         $this->enviar_opcoes_data_reagendamento($estabelecimento, $numero, $dados);
+
+        log_message('info', "Bot Reagendamento Direto: Opcoes de data enviadas");
     }
 
     /**

@@ -584,18 +584,11 @@ class Cron extends CI_Controller {
             $numero
         );
 
-        // Proteção de estado: Não sobrescrever se já estiver confirmando ESTE agendamento
-        $dados_conversa = isset($conversa->dados_temporarios) ? json_decode($conversa->dados_temporarios, true) : [];
+        // SEMPRE atualizar estado para confirmando_agendamento
+        // Isso garante que mesmo se houver um estado anterior (ex: reagendando_hora de teste anterior)
+        // o cliente possa responder à confirmação
+        log_message('info', "CRON Confirmacao: Atualizando estado para confirmando_agendamento - agendamento_id={$agendamento->id}");
 
-        if ($conversa->estado === 'confirmando_agendamento' &&
-            isset($dados_conversa['agendamento_id']) &&
-            $dados_conversa['agendamento_id'] == $agendamento->id) {
-
-            log_message('info', "CRON Confirmacao: Conversa já em fluxo de confirmação para agendamento #{$agendamento->id} - Mantendo estado");
-            return;
-        }
-
-        // Atualizar estado para confirmando_agendamento
         $this->Bot_conversa_model->atualizar_estado(
             $conversa->id,
             'confirmando_agendamento',
