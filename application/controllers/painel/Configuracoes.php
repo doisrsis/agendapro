@@ -137,9 +137,15 @@ class Configuracoes extends CI_Controller {
             'confirmacao_horas_antes' => $this->input->post('confirmacao_horas_antes') ?? 24,
             'confirmacao_dia_anterior' => (int)$this->input->post('confirmacao_dia_anterior'),
             'confirmacao_horario_dia_anterior' => $this->input->post('confirmacao_horario_dia_anterior') ?? '18:00:00',
+            // Tentativas múltiplas de confirmação
+            'confirmacao_max_tentativas' => $this->input->post('confirmacao_max_tentativas') ?? 3,
+            'confirmacao_intervalo_tentativas_minutos' => $this->input->post('confirmacao_intervalo_tentativas_minutos') ?? 30,
+            'confirmacao_cancelar_automatico' => $this->input->post('confirmacao_cancelar_automatico') ?? 'sim',
+            // Lembretes
             'enviar_lembrete_pre_atendimento' => (int)$this->input->post('enviar_lembrete_pre_atendimento'),
             'lembrete_minutos_antes' => $this->input->post('lembrete_minutos_antes') ?? 60,
             'lembrete_antecedencia_chegada' => $this->input->post('lembrete_antecedencia_chegada') ?? 10,
+            // Cancelamento automático (sistema antigo)
             'cancelar_nao_confirmados' => (int)$this->input->post('cancelar_nao_confirmados'),
             'cancelar_nao_confirmados_horas' => $this->input->post('cancelar_nao_confirmados_horas') ?? 2
         ];

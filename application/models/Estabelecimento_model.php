@@ -157,9 +157,15 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['confirmacao_horas_antes'])) $update_data['confirmacao_horas_antes'] = $data['confirmacao_horas_antes'];
         if (isset($data['confirmacao_dia_anterior'])) $update_data['confirmacao_dia_anterior'] = $data['confirmacao_dia_anterior'];
         if (isset($data['confirmacao_horario_dia_anterior'])) $update_data['confirmacao_horario_dia_anterior'] = $data['confirmacao_horario_dia_anterior'];
+        // Tentativas múltiplas de confirmação
+        if (isset($data['confirmacao_max_tentativas'])) $update_data['confirmacao_max_tentativas'] = $data['confirmacao_max_tentativas'];
+        if (isset($data['confirmacao_intervalo_tentativas_minutos'])) $update_data['confirmacao_intervalo_tentativas_minutos'] = $data['confirmacao_intervalo_tentativas_minutos'];
+        if (isset($data['confirmacao_cancelar_automatico'])) $update_data['confirmacao_cancelar_automatico'] = $data['confirmacao_cancelar_automatico'];
+        // Lembretes
         if (isset($data['enviar_lembrete_pre_atendimento'])) $update_data['enviar_lembrete_pre_atendimento'] = $data['enviar_lembrete_pre_atendimento'];
         if (isset($data['lembrete_minutos_antes'])) $update_data['lembrete_minutos_antes'] = $data['lembrete_minutos_antes'];
         if (isset($data['lembrete_antecedencia_chegada'])) $update_data['lembrete_antecedencia_chegada'] = $data['lembrete_antecedencia_chegada'];
+        // Cancelamento automático (sistema antigo)
         if (isset($data['cancelar_nao_confirmados'])) $update_data['cancelar_nao_confirmados'] = $data['cancelar_nao_confirmados'];
         if (isset($data['cancelar_nao_confirmados_horas'])) $update_data['cancelar_nao_confirmados_horas'] = $data['cancelar_nao_confirmados_horas'];
 

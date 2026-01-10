@@ -338,6 +338,8 @@ class Cron extends CI_Controller {
         }
 
         log_message('info', 'CRON: Iniciando envio de confirmações');
+        log_message('info', 'CRON: Data/Hora atual: ' . date('Y-m-d H:i:s'));
+        log_message('info', 'CRON: Data de amanhã: ' . date('Y-m-d', strtotime('+1 day')));
 
         $resultado = [
             'confirmacoes_enviadas' => 0,
@@ -351,18 +353,32 @@ class Cron extends CI_Controller {
 
         foreach ($agendamentos as $agendamento) {
             try {
-                // Enviar mensagem de confirmação via WhatsApp
-                $this->enviar_mensagem_confirmacao($agendamento);
+                // Incrementar contador de tentativas
+                $nova_tentativa = $agendamento->confirmacao_tentativas + 1;
+                $max_tentativas = $agendamento->confirmacao_max_tentativas ?? 3;
 
-                // Atualizar flags
+                // Determinar tipo de mensagem baseado na tentativa
+                $tipo_mensagem = 'padrao';
+                if ($nova_tentativa == 2) {
+                    $tipo_mensagem = 'urgente';
+                } elseif ($nova_tentativa >= $max_tentativas) {
+                    $tipo_mensagem = 'ultima_chance';
+                }
+
+                // Enviar mensagem de confirmação via WhatsApp
+                $this->enviar_mensagem_confirmacao($agendamento, $tipo_mensagem);
+
+                // Atualizar tentativas e timestamp
                 $this->Agendamento_model->update($agendamento->id, [
+                    'confirmacao_tentativas' => $nova_tentativa,
+                    'confirmacao_ultima_tentativa' => date('Y-m-d H:i:s'),
                     'confirmacao_enviada' => 1,
                     'confirmacao_enviada_em' => date('Y-m-d H:i:s')
                 ]);
 
                 $resultado['confirmacoes_enviadas']++;
 
-                log_message('info', "CRON: Confirmação enviada para agendamento #{$agendamento->id}");
+                log_message('info', "CRON: Confirmação enviada para agendamento #{$agendamento->id} - Tentativa {$nova_tentativa}/{$max_tentativas} - Tipo: {$tipo_mensagem}");
 
             } catch (Exception $e) {
                 $resultado['erros'][] = "Agendamento #{$agendamento->id}: " . $e->getMessage();
@@ -504,8 +520,11 @@ class Cron extends CI_Controller {
 
     /**
      * Enviar mensagem de confirmação via WhatsApp
+     *
+     * @param object $agendamento Dados do agendamento
+     * @param string $tipo_mensagem Tipo: 'padrao', 'urgente', 'ultima_chance'
      */
-    private function enviar_mensagem_confirmacao($agendamento) {
+    private function enviar_mensagem_confirmacao($agendamento, $tipo_mensagem = 'padrao') {
         $this->load->library('waha_lib');
         $this->load->model('Estabelecimento_model');
 
@@ -545,20 +564,51 @@ class Cron extends CI_Controller {
 
         $primeiro_nome = explode(' ', $agendamento->cliente_nome)[0];
 
-        // Montar mensagem
-        $mensagem = "{$saudacao}, {$primeiro_nome}! 👋\n\n";
-        $mensagem .= "📅 *Confirmação de Agendamento*\n\n";
-        $mensagem .= "Você tem um agendamento marcado:\n";
-        $mensagem .= "📆 Data: *{$data_formatada}*\n";
-        $mensagem .= "🕐 Horário: *{$hora_formatada}*\n";
-        $mensagem .= "💈 Serviço: *{$agendamento->servico_nome}*\n";
-        $mensagem .= "👤 Profissional: *{$agendamento->profissional_nome}*\n";
-        $mensagem .= "📍 Local: *{$agendamento->estabelecimento_nome}*\n\n";
-        $mensagem .= "Por favor, confirme sua presença:\n\n";
-        $mensagem .= "1️⃣ *Confirmar* - Estarei presente ✅\n";
-        $mensagem .= "2️⃣ *Reagendar* - Preciso mudar 🔄\n";
-        $mensagem .= "3️⃣ *Cancelar* - Não poderei ir ❌\n\n";
-        $mensagem .= "Aguardamos sua resposta! 😊";
+        // Montar mensagem baseada no tipo
+        if ($tipo_mensagem == 'urgente') {
+            // Segunda tentativa - mais direto
+            $mensagem = "{$saudacao}, {$primeiro_nome}! 👋\n\n";
+            $mensagem .= "⚠️ *CONFIRMAÇÃO PENDENTE*\n\n";
+            $mensagem .= "Ainda não recebemos sua confirmação para:\n\n";
+            $mensagem .= "📆 Data: *{$data_formatada}*\n";
+            $mensagem .= "🕐 Horário: *{$hora_formatada}*\n";
+            $mensagem .= "💈 Serviço: *{$agendamento->servico_nome}*\n";
+            $mensagem .= "👤 Profissional: *{$agendamento->profissional_nome}*\n\n";
+            $mensagem .= "Por favor, responda agora:\n\n";
+            $mensagem .= "1️⃣ *Confirmar* ✅\n";
+            $mensagem .= "2️⃣ *Reagendar* 🔄\n";
+            $mensagem .= "3️⃣ *Cancelar* ❌\n\n";
+            $mensagem .= "Aguardamos sua resposta! 😊";
+        } elseif ($tipo_mensagem == 'ultima_chance') {
+            // Terceira tentativa - aviso de cancelamento
+            $intervalo = $agendamento->confirmacao_intervalo_tentativas_minutos ?? 30;
+            $mensagem = "{$saudacao}, {$primeiro_nome}! 👋\n\n";
+            $mensagem .= "🚨 *ÚLTIMA CHANCE - AGENDAMENTO SERÁ CANCELADO*\n\n";
+            $mensagem .= "Seu agendamento será *CANCELADO AUTOMATICAMENTE* em *{$intervalo} minutos* se não confirmar:\n\n";
+            $mensagem .= "📆 Data: *{$data_formatada}*\n";
+            $mensagem .= "🕐 Horário: *{$hora_formatada}*\n";
+            $mensagem .= "💈 Serviço: *{$agendamento->servico_nome}*\n";
+            $mensagem .= "👤 Profissional: *{$agendamento->profissional_nome}*\n\n";
+            $mensagem .= "⏰ *RESPONDA AGORA:*\n\n";
+            $mensagem .= "1️⃣ *Confirmar* ✅\n";
+            $mensagem .= "2️⃣ *Reagendar* 🔄\n";
+            $mensagem .= "3️⃣ *Cancelar* ❌";
+        } else {
+            // Primeira tentativa - padrão
+            $mensagem = "{$saudacao}, {$primeiro_nome}! 👋\n\n";
+            $mensagem .= "📅 *Confirmação de Agendamento*\n\n";
+            $mensagem .= "Você tem um agendamento marcado:\n";
+            $mensagem .= "📆 Data: *{$data_formatada}*\n";
+            $mensagem .= "🕐 Horário: *{$hora_formatada}*\n";
+            $mensagem .= "💈 Serviço: *{$agendamento->servico_nome}*\n";
+            $mensagem .= "👤 Profissional: *{$agendamento->profissional_nome}*\n";
+            $mensagem .= "📍 Local: *{$agendamento->estabelecimento_nome}*\n\n";
+            $mensagem .= "Por favor, confirme sua presença:\n\n";
+            $mensagem .= "1️⃣ *Confirmar* - Estarei presente ✅\n";
+            $mensagem .= "2️⃣ *Reagendar* - Preciso mudar 🔄\n";
+            $mensagem .= "3️⃣ *Cancelar* - Não poderei ir ❌\n\n";
+            $mensagem .= "Aguardamos sua resposta! 😊";
+        }
 
         // Limpar número (remover caracteres especiais)
         $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);

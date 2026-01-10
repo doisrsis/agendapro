@@ -472,6 +472,54 @@
                                                 <small class="text-muted">Horário fixo para enviar a confirmação</small>
                                             </div>
                                         </div>
+
+                                        <hr class="my-4">
+                                        <h5 class="mb-3">🔄 Tentativas Múltiplas de Confirmação</h5>
+                                        <p class="text-muted small">Configure quantas vezes o sistema tentará confirmar com o cliente no dia anterior</p>
+
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Máximo de tentativas</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" name="confirmacao_max_tentativas"
+                                                           value="<?= $estabelecimento->confirmacao_max_tentativas ?? 3 ?>"
+                                                           min="1" max="5">
+                                                    <span class="input-group-text">vezes</span>
+                                                </div>
+                                                <small class="text-muted">Quantas vezes tentar antes de cancelar (padrão: 3)</small>
+                                            </div>
+
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Intervalo entre tentativas</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" name="confirmacao_intervalo_tentativas_minutos"
+                                                           value="<?= $estabelecimento->confirmacao_intervalo_tentativas_minutos ?? 30 ?>"
+                                                           min="15" max="180">
+                                                    <span class="input-group-text">minutos</span>
+                                                </div>
+                                                <small class="text-muted">Tempo de espera entre cada tentativa (padrão: 30min)</small>
+                                            </div>
+
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Cancelar automaticamente?</label>
+                                                <select class="form-select" name="confirmacao_cancelar_automatico">
+                                                    <option value="sim" <?= ($estabelecimento->confirmacao_cancelar_automatico ?? 'sim') == 'sim' ? 'selected' : '' ?>>Sim</option>
+                                                    <option value="nao" <?= ($estabelecimento->confirmacao_cancelar_automatico ?? 'sim') == 'nao' ? 'selected' : '' ?>>Não</option>
+                                                </select>
+                                                <small class="text-muted">Cancelar após todas as tentativas sem resposta</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-info">
+                                            <i class="ti ti-info-circle me-2"></i>
+                                            <strong>Exemplo de fluxo (intervalo de 30 minutos):</strong>
+                                            <ul class="mb-0 mt-2">
+                                                <li><strong>19:00</strong> - 1ª tentativa (mensagem padrão)</li>
+                                                <li><strong>19:30</strong> - 2ª tentativa (mensagem urgente) <em>se não respondeu</em></li>
+                                                <li><strong>20:00</strong> - 3ª tentativa (última chance - aviso de cancelamento) <em>se não respondeu</em></li>
+                                                <li><strong>20:30</strong> - Cancelamento automático <em>se não respondeu</em></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

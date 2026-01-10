@@ -228,6 +228,8 @@ class Agendamento_model extends CI_Model {
         // Campos de Notificação / Controle
         if (isset($data['confirmacao_enviada'])) $update_data['confirmacao_enviada'] = $data['confirmacao_enviada'];
         if (isset($data['confirmacao_enviada_em'])) $update_data['confirmacao_enviada_em'] = $data['confirmacao_enviada_em'];
+        if (isset($data['confirmacao_tentativas'])) $update_data['confirmacao_tentativas'] = $data['confirmacao_tentativas'];
+        if (isset($data['confirmacao_ultima_tentativa'])) $update_data['confirmacao_ultima_tentativa'] = $data['confirmacao_ultima_tentativa'];
         if (isset($data['lembrete_enviado'])) $update_data['lembrete_enviado'] = $data['lembrete_enviado'];
         if (isset($data['lembrete_enviado_em'])) $update_data['lembrete_enviado_em'] = $data['lembrete_enviado_em'];
         if (isset($data['confirmado_em'])) $update_data['confirmado_em'] = $data['confirmado_em'];
@@ -888,9 +890,11 @@ class Agendamento_model extends CI_Model {
                 e.nome as estabelecimento_nome,
                 e.endereco as estabelecimento_endereco,
                 e.solicitar_confirmacao,
-                e.confirmacao_horas_antes,
                 e.confirmacao_dia_anterior,
                 e.confirmacao_horario_dia_anterior,
+                e.confirmacao_max_tentativas,
+                e.confirmacao_intervalo_tentativas_minutos,
+                e.confirmacao_cancelar_automatico,
                 c.nome as cliente_nome,
                 c.whatsapp as cliente_whatsapp,
                 s.nome as servico_nome,
@@ -903,28 +907,33 @@ class Agendamento_model extends CI_Model {
             JOIN servicos s ON a.servico_id = s.id
             JOIN profissionais p ON a.profissional_id = p.id
             WHERE a.status = 'pendente'
-              AND a.confirmacao_enviada = 0
-              AND a.data >= CURDATE()
               AND e.agendamento_requer_pagamento = 'nao'
               AND e.solicitar_confirmacao = 1
-              -- Verifica se nunca foi enviado OU se já passou o tempo de cooldown (23h) para tentar novamente
+              AND e.confirmacao_dia_anterior = 1
+              -- IMPORTANTE: Apenas agendamentos para AMANHÃ (dia anterior)
+              AND a.data = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
               AND (
-                  a.confirmacao_enviada = 0
-                  OR (a.confirmacao_enviada_em IS NOT NULL AND TIMESTAMPDIFF(HOUR, a.confirmacao_enviada_em, NOW()) >= 23)
-              )
-              AND (
-                  -- Opção 1: X horas antes
-                  TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.confirmacao_horas_antes
-                  OR
-                  -- Opção 2: Dia anterior no horário configurado
-                  (e.confirmacao_dia_anterior = 1
-                   AND a.data = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                  -- Primeira tentativa: horário configurado passou E ainda não enviou
+                  (a.confirmacao_tentativas = 0
                    AND TIME(NOW()) >= e.confirmacao_horario_dia_anterior)
+                  OR
+                  -- Tentativas subsequentes: já passou o intervalo desde a última tentativa
+                  (a.confirmacao_tentativas > 0
+                   AND a.confirmacao_tentativas < COALESCE(e.confirmacao_max_tentativas, 3)
+                   AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30))
               )
             ORDER BY a.data, a.hora_inicio
         ";
 
-        return $this->db->query($sql)->result();
+        $result = $this->db->query($sql)->result();
+
+        // Log detalhado para debug
+        log_message('info', 'CRON: get_pendentes_confirmacao - Total encontrado: ' . count($result));
+        foreach ($result as $ag) {
+            log_message('info', "CRON: Agendamento #{$ag->id} - Data: {$ag->data}, Tentativas: {$ag->confirmacao_tentativas}/{$ag->confirmacao_max_tentativas}");
+        }
+
+        return $result;
     }
 
     /**
@@ -982,6 +991,10 @@ class Agendamento_model extends CI_Model {
             SELECT
                 a.*,
                 e.nome as estabelecimento_nome,
+                e.confirmacao_max_tentativas,
+                e.confirmacao_intervalo_tentativas_minutos,
+                e.confirmacao_cancelar_automatico,
+                e.cancelar_nao_confirmados,
                 e.cancelar_nao_confirmados_horas,
                 c.nome as cliente_nome,
                 c.whatsapp as cliente_whatsapp,
@@ -993,10 +1006,21 @@ class Agendamento_model extends CI_Model {
             JOIN servicos s ON a.servico_id = s.id
             JOIN profissionais p ON a.profissional_id = p.id
             WHERE a.status = 'pendente'
-              AND a.confirmacao_enviada = 1
               AND a.data >= CURDATE()
-              AND e.cancelar_nao_confirmados = 1
-              AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.cancelar_nao_confirmados_horas
+              AND (
+                  -- OPÇÃO 1: Sistema de tentativas múltiplas (NOVO)
+                  -- Cancela após X tentativas no dia anterior + intervalo
+                  (e.confirmacao_dia_anterior = 1
+                   AND e.confirmacao_cancelar_automatico = 'sim'
+                   AND a.confirmacao_tentativas >= COALESCE(e.confirmacao_max_tentativas, 3)
+                   AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30))
+                  OR
+                  -- OPÇÃO 2: Sistema antigo por horas antes do agendamento
+                  -- Cancela X horas antes do horário se não confirmou
+                  (e.cancelar_nao_confirmados = 1
+                   AND a.confirmacao_enviada = 1
+                   AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= COALESCE(e.cancelar_nao_confirmados_horas, 2))
+              )
             ORDER BY a.data, a.hora_inicio
         ";
 
