@@ -310,10 +310,16 @@ class Webhook_waha extends CI_Controller {
         $message_id = $payload['id'] ?? '';
         $timestamp = $payload['timestamp'] ?? time();
 
+        // Extrair pushName (nome do contato no WhatsApp)
+        $pushName = $payload['_data']['Info']['PushName'] ?? null;
+        if (!$pushName && isset($payload['pushName'])) {
+            $pushName = $payload['pushName'];
+        }
+
         // Extrair número limpo
         $numero = preg_replace('/[^0-9]/', '', str_replace('@c.us', '', $from));
 
-        log_message('info', "WAHA Mensagem de {$numero}: " . substr($body, 0, 100));
+        log_message('info', "WAHA Mensagem de {$numero}" . ($pushName ? " ({$pushName})" : "") . ": " . substr($body, 0, 100));
 
         // Verificação de Idempotência: Se mensagem já foi processada, ignorar
         if ($message_id && $this->db->table_exists('whatsapp_mensagens')) {
@@ -340,7 +346,7 @@ class Webhook_waha extends CI_Controller {
             $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);
 
             if ($estabelecimento && $estabelecimento->waha_bot_ativo) {
-                $this->processar_bot_agendamento($estabelecimento, $numero, $body, $message_id);
+                $this->processar_bot_agendamento($estabelecimento, $numero, $body, $message_id, $pushName);
             }
         } else {
             // Mensagem para o SaaS Admin - bot de suporte
@@ -376,7 +382,7 @@ class Webhook_waha extends CI_Controller {
      * Bot de agendamento para estabelecimentos
      * Implementa máquina de estados para fluxo de conversa
      */
-    private function processar_bot_agendamento($estabelecimento, $numero, $mensagem, $message_id) {
+    private function processar_bot_agendamento($estabelecimento, $numero, $mensagem, $message_id, $pushName = null) {
         $this->load->library('waha_lib');
         $this->load->model('Cliente_model');
         $this->load->model('Servico_model');
@@ -395,12 +401,31 @@ class Webhook_waha extends CI_Controller {
         // Obter ou criar conversa (máquina de estados)
         $conversa = $this->Bot_conversa_model->get_ou_criar($estabelecimento->id, $numero);
 
+        // Armazenar pushName na conversa se disponível
+        if ($pushName && $conversa) {
+            // Verificar se dados já é array ou precisa decodificar
+            $dados_conversa = is_array($conversa->dados) ? $conversa->dados : ($conversa->dados ? json_decode($conversa->dados, true) : []);
+            if (!isset($dados_conversa['pushName'])) {
+                $dados_conversa['pushName'] = $pushName;
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, $conversa->estado, $dados_conversa);
+                log_message('info', "Bot: pushName armazenado na conversa - numero={$numero}, pushName={$pushName}");
+            }
+        }
+
         // Verificar se é cliente existente
         $cliente = $this->Cliente_model->get_by_whatsapp($numero, $estabelecimento->id);
 
         // Atualizar cliente na conversa se encontrado
         if ($cliente && !$conversa->cliente_id) {
             $this->Bot_conversa_model->set_cliente($conversa->id, $cliente->id);
+        }
+
+        // Se cliente existe mas tem nome genérico e temos pushName, atualizar
+        if ($cliente && $pushName && $cliente->nome === 'Cliente WhatsApp') {
+            $this->Cliente_model->update($cliente->id, ['nome' => $pushName]);
+            log_message('info', "Bot: Nome do cliente atualizado - id={$cliente->id}, novo_nome={$pushName}");
+            // Recarregar cliente com dados atualizados
+            $cliente = $this->Cliente_model->get_by_id($cliente->id);
         }
 
         // Comandos globais (funcionam em qualquer estado)
@@ -1073,10 +1098,19 @@ class Webhook_waha extends CI_Controller {
 
         // Se não tem cliente, criar um novo
         if (!$cliente) {
-            log_message('debug', 'Bot: criando novo cliente para ' . $numero);
+            // Tentar obter pushName da conversa
+            $nome_cliente = 'Cliente WhatsApp';
+            if (isset($dados['pushName']) && !empty($dados['pushName'])) {
+                $nome_cliente = $dados['pushName'];
+                log_message('info', 'Bot: pushName encontrado nos dados - ' . $nome_cliente);
+            } else {
+                log_message('warning', 'Bot: pushName NAO encontrado nos dados - usando fallback. Dados: ' . json_encode($dados));
+            }
+
+            log_message('info', 'Bot: criando novo cliente para ' . $numero . ' - Nome: ' . $nome_cliente);
             $cliente_id = $this->Cliente_model->create([
                 'estabelecimento_id' => $estabelecimento->id,
-                'nome' => 'Cliente WhatsApp',
+                'nome' => $nome_cliente,
                 'whatsapp' => $numero,
                 'origem' => 'whatsapp_bot'
             ]);
