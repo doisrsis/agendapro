@@ -1074,14 +1074,36 @@ class Agendamento_model extends CI_Model {
                    AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30))
                   OR
                   -- OPÇÃO 2: Sistema antigo por horas antes do agendamento
-                  -- Cancela X horas antes do horário se não confirmou
+                  -- Cancela X horas antes do horário se não confirmou E esgotou tentativas
                   (e.cancelar_nao_confirmados = 1
                    AND a.confirmacao_enviada = 1
+                   AND a.confirmacao_tentativas >= COALESCE(e.confirmacao_max_tentativas, 3)
+                   AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30)
                    AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= COALESCE(e.cancelar_nao_confirmados_horas, 2))
               )
             ORDER BY a.data, a.hora_inicio
         ";
 
-        return $this->db->query($sql)->result();
+        log_message('debug', 'CRON: get_nao_confirmados_expirados - Query SQL: ' . $sql);
+        log_message('info', 'CRON: get_nao_confirmados_expirados - Hora atual: ' . date('Y-m-d H:i:s'));
+
+        $result = $this->db->query($sql)->result();
+
+        log_message('info', 'CRON: get_nao_confirmados_expirados - Total encontrado: ' . count($result));
+
+        foreach ($result as $ag) {
+            $minutos_ate = round((strtotime($ag->data . ' ' . $ag->hora_inicio) - time()) / 60);
+            $horas_ate = floor($minutos_ate / 60);
+
+            log_message('info', "CRON Cancelamento: Agendamento #{$ag->id}:");
+            log_message('info', "  - Data/Hora: {$ag->data} {$ag->hora_inicio}");
+            log_message('info', "  - Tempo até: {$horas_ate}h ({$minutos_ate} min)");
+            log_message('info', "  - Tentativas: {$ag->confirmacao_tentativas}/{$ag->confirmacao_max_tentativas}");
+            log_message('info', "  - Última tentativa: {$ag->confirmacao_ultima_tentativa}");
+            log_message('info', "  - Config cancelar_nao_confirmados: {$ag->cancelar_nao_confirmados}");
+            log_message('info', "  - Config confirmacao_cancelar_automatico: {$ag->confirmacao_cancelar_automatico}");
+        }
+
+        return $result;
     }
 }
