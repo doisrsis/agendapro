@@ -154,9 +154,11 @@ class Agendamento_model extends CI_Model {
             // Se requer pagamento, as notificações serão enviadas após confirmação do pagamento
             // Se enviar_notificacao = false (bot), o bot enviará sua própria mensagem
             if (!$requer_pagamento && $enviar_notificacao) {
-                // Enviar notificação WhatsApp de confirmação para cliente APENAS se status for confirmado
+                // Enviar notificação WhatsApp para cliente baseado no status
                 if ($status_final == 'confirmado') {
                     $this->enviar_notificacao_whatsapp($agendamento_id, 'confirmacao');
+                } elseif ($status_final == 'pendente') {
+                    $this->enviar_notificacao_whatsapp($agendamento_id, 'pendente');
                 }
 
                 // Enviar notificação WhatsApp para profissional/estabelecimento
@@ -303,6 +305,10 @@ class Agendamento_model extends CI_Model {
             switch ($tipo) {
                 case 'confirmacao':
                     $resultado = $CI->notificacao_whatsapp_lib->enviar_confirmacao($agendamento);
+                    break;
+
+                case 'pendente':
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_pendente($agendamento);
                     break;
 
                 case 'lembrete':

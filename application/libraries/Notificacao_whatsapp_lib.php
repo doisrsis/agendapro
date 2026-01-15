@@ -146,6 +146,58 @@ class Notificacao_whatsapp_lib {
     }
 
     /**
+     * Enviar notificação de agendamento pendente (aguardando confirmação)
+     *
+     * @param object $agendamento Objeto do agendamento com joins
+     * @return array
+     */
+    public function enviar_pendente($agendamento) {
+        log_message('debug', 'Notificacao WhatsApp: enviar_pendente - Agendamento #' . $agendamento->id);
+        log_message('debug', 'Notificacao WhatsApp: estabelecimento_id=' . ($agendamento->estabelecimento_id ?? 'NULL'));
+
+        if (!$this->configurar_waha($agendamento->estabelecimento_id)) {
+            log_message('error', 'Notificacao WhatsApp: Falha ao configurar WAHA para estabelecimento ' . $agendamento->estabelecimento_id);
+            return ['success' => false, 'error' => 'WhatsApp não configurado'];
+        }
+
+        log_message('debug', 'Notificacao WhatsApp: Numero original do cliente = ' . ($agendamento->cliente_whatsapp ?? 'NULL'));
+
+        $numero = $this->limpar_numero($agendamento->cliente_whatsapp);
+        if (!$numero) {
+            log_message('warning', 'Notificacao WhatsApp: Cliente sem WhatsApp válido - Agendamento #' . $agendamento->id);
+            return ['success' => false, 'error' => 'Número do cliente não informado ou inválido'];
+        }
+
+        $chat_id = $this->CI->waha_lib->obter_chat_id_valido($numero);
+        if (!$chat_id) {
+            log_message('warning', 'Notificacao WhatsApp: Número não encontrado no WhatsApp - ' . $numero);
+            $chat_id = $this->CI->waha_lib->formatar_chat_id($numero);
+        }
+
+        log_message('debug', 'Notificacao WhatsApp: ChatId final = ' . $chat_id);
+
+        $data_formatada = date('d/m/Y', strtotime($agendamento->data));
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+        $valor_formatado = number_format($agendamento->servico_preco, 2, ',', '.');
+
+        $mensagem = "🎉 *Agendamento Criado!*\n\n";
+        $mensagem .= "📋 *Serviço:* {$agendamento->servico_nome}\n";
+        $mensagem .= "👤 *Profissional:* {$agendamento->profissional_nome}\n";
+        $mensagem .= "📅 *Data:* {$data_formatada}\n";
+        $mensagem .= "⏰ *Horário:* {$hora_formatada}\n";
+        $mensagem .= "💰 *Valor:* R$ {$valor_formatado}\n\n";
+        $mensagem .= "📍 {$agendamento->estabelecimento_nome}\n\n";
+        $mensagem .= "✅ Você receberá uma mensagem para confirmar sua presença próximo à data do agendamento.\n\n";
+        $mensagem .= "Até lá! 👋";
+
+        $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);
+
+        $this->registrar_log($agendamento, 'pendente', $resultado);
+
+        return $resultado;
+    }
+
+    /**
      * Enviar lembrete de agendamento
      *
      * @param object $agendamento Objeto do agendamento com joins
