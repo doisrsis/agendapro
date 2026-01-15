@@ -167,11 +167,7 @@ class Agendamentos extends Painel_Controller {
                             $this->session->set_flashdata('erro', 'Erro ao gerar PIX. Verifique as configurações do Mercado Pago.');
                         }
                     } else {
-                        // NÃO requer pagamento - confirmar automaticamente
-                        $this->Agendamento_model->atualizar($agendamento_id, [
-                            'status' => 'confirmado'
-                        ]);
-
+                        // NÃO requer pagamento - manter status escolhido pelo usuário
                         $this->session->set_flashdata('sucesso', 'Agendamento criado com sucesso!');
                         redirect('painel/agendamentos');
                         return;
