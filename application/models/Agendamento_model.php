@@ -912,7 +912,7 @@ class Agendamento_model extends CI_Model {
                 s.duracao as servico_duracao,
                 s.preco as servico_preco,
                 p.nome as profissional_nome,
-                TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) as horas_ate_agendamento
+                TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) as minutos_ate_agendamento
             FROM agendamentos a
             JOIN estabelecimentos e ON a.estabelecimento_id = e.id
             JOIN clientes c ON a.cliente_id = c.id
@@ -942,14 +942,14 @@ class Agendamento_model extends CI_Model {
                    AND (
                        -- Primeira tentativa: faltam X horas ou menos E ainda não enviou
                        (a.confirmacao_tentativas = 0
-                        AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.confirmacao_horas_antes
-                        AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
+                        AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= (e.confirmacao_horas_antes * 60)
+                        AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
                        OR
                        -- Tentativas subsequentes: já passou o intervalo desde a última tentativa
                        (a.confirmacao_tentativas > 0
                         AND a.confirmacao_tentativas < COALESCE(e.confirmacao_max_tentativas, 3)
                         AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30)
-                        AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
+                        AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
                    ))
               )
             ORDER BY a.data, a.hora_inicio
@@ -978,12 +978,16 @@ class Agendamento_model extends CI_Model {
                 ? 'Dia anterior (horário fixo)'
                 : 'Horas antes do agendamento';
 
+            $horas = floor($ag->minutos_ate_agendamento / 60);
+            $minutos = $ag->minutos_ate_agendamento % 60;
+            $tempo_formatado = $horas > 0 ? "{$horas}h{$minutos}min" : "{$minutos}min";
+
             log_message('info', "CRON: Agendamento #{$ag->id}:");
             log_message('info', "  - Data/Hora: {$ag->data} {$ag->hora_inicio}");
-            log_message('info', "  - Horas até agendamento: {$ag->horas_ate_agendamento}h");
+            log_message('info', "  - Tempo até agendamento: {$tempo_formatado} ({$ag->minutos_ate_agendamento} minutos)");
             log_message('info', "  - Tentativas: {$ag->confirmacao_tentativas}/{$ag->confirmacao_max_tentativas}");
             log_message('info', "  - Lógica usada: {$logica_usada}");
-            log_message('info', "  - Horas antes config: {$ag->confirmacao_horas_antes}");
+            log_message('info', "  - Config: {$ag->confirmacao_horas_antes}h antes");
             log_message('info', "  - Cliente: {$ag->cliente_nome} ({$ag->cliente_whatsapp})");
         }
 
