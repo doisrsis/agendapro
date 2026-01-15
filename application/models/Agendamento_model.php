@@ -966,11 +966,11 @@ class Agendamento_model extends CI_Model {
         log_message('info', 'CRON: get_pendentes_confirmacao - Total encontrado: ' . count($result));
 
         if (count($result) == 0) {
-            log_message('warning', 'CRON: get_pendentes_confirmacao - NENHUM agendamento encontrado! Verifique:');
-            log_message('warning', 'CRON: - Se há agendamentos com status=pendente');
-            log_message('warning', 'CRON: - Se agendamento_requer_pagamento=nao');
-            log_message('warning', 'CRON: - Se solicitar_confirmacao=1');
-            log_message('warning', 'CRON: - Se confirmacao_horas_antes está configurado ou confirmacao_dia_anterior=1');
+            log_message('info', 'CRON: get_pendentes_confirmacao - NENHUM agendamento encontrado! Verifique:');
+            log_message('info', 'CRON: - Se há agendamentos com status=pendente');
+            log_message('info', 'CRON: - Se agendamento_requer_pagamento=nao');
+            log_message('info', 'CRON: - Se solicitar_confirmacao=1');
+            log_message('info', 'CRON: - Se confirmacao_horas_antes está configurado ou confirmacao_dia_anterior=1');
         }
 
         foreach ($result as $ag) {
