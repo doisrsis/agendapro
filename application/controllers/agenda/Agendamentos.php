@@ -40,7 +40,7 @@ class Agendamentos extends Agenda_Controller {
                     'servico_id' => $this->input->post('servico_id'),
                     'data' => $this->input->post('data'),
                     'hora_inicio' => $this->input->post('hora_inicio'),
-                    'status' => 'confirmado',
+                    'status' => $this->input->post('status') ?: 'pendente',
                     'observacoes' => $this->input->post('observacoes')
                 ];
 

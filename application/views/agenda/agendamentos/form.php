@@ -101,11 +101,25 @@
 
                     <div class="card mt-3">
                         <div class="card-header">
+                            <h3 class="card-title">Status</h3>
+                        </div>
+                        <div class="card-body">
+                            <select class="form-select" name="status">
+                                <option value="pendente" selected>Pendente</option>
+                                <option value="confirmado">Confirmado</option>
+                                <option value="cancelado">Cancelado</option>
+                                <option value="finalizado">Finalizado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
                             <h3 class="card-title">Informações</h3>
                         </div>
                         <div class="card-body">
                             <div class="text-muted small">
-                                <p><i class="ti ti-info-circle me-2"></i>O agendamento será criado com status <strong>Confirmado</strong>.</p>
+                                <p><i class="ti ti-info-circle me-2"></i>Preencha todos os campos obrigatórios.</p>
                                 <p><i class="ti ti-clock me-2"></i>Certifique-se de que o horário está disponível.</p>
                             </div>
                         </div>

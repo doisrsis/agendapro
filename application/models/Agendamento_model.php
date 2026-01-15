@@ -125,6 +125,8 @@ class Agendamento_model extends CI_Model {
             return false;
         }
 
+        $status_final = $data['status'] ?? 'pendente';
+
         $insert_data = [
             'estabelecimento_id' => $data['estabelecimento_id'],
             'cliente_id' => $data['cliente_id'],
@@ -133,7 +135,7 @@ class Agendamento_model extends CI_Model {
             'data' => $data['data'],
             'hora_inicio' => $hora_inicio->format('H:i:s'),
             'hora_fim' => $hora_fim->format('H:i:s'),
-            'status' => $data['status'] ?? 'pendente',
+            'status' => $status_final,
             'observacoes' => $data['observacoes'] ?? null,
         ];
 
@@ -152,8 +154,10 @@ class Agendamento_model extends CI_Model {
             // Se requer pagamento, as notificações serão enviadas após confirmação do pagamento
             // Se enviar_notificacao = false (bot), o bot enviará sua própria mensagem
             if (!$requer_pagamento && $enviar_notificacao) {
-                // Enviar notificação WhatsApp de confirmação para cliente
-                $this->enviar_notificacao_whatsapp($agendamento_id, 'confirmacao');
+                // Enviar notificação WhatsApp de confirmação para cliente APENAS se status for confirmado
+                if ($status_final == 'confirmado') {
+                    $this->enviar_notificacao_whatsapp($agendamento_id, 'confirmacao');
+                }
 
                 // Enviar notificação WhatsApp para profissional/estabelecimento
                 $this->enviar_notificacao_whatsapp($agendamento_id, 'profissional_novo');

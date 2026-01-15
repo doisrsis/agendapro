@@ -72,12 +72,11 @@ class Agendamentos extends Painel_Controller {
                     'servico_id' => $this->input->post('servico_id'),
                     'data' => $this->input->post('data'),
                     'hora_inicio' => $this->input->post('hora_inicio'),
+                    'status' => $this->input->post('status') ?: 'pendente',
                     'observacoes' => $this->input->post('observacoes')
                 ];
 
-                log_message('error', 'DEBUG: Antes de criar agendamento');
                 $agendamento_id = $this->Agendamento_model->criar($dados);
-                log_message('error', 'DEBUG: ID retornado: ' . ($agendamento_id ?: 'FALSE'));
 
                 if ($agendamento_id) {
                     // Verificar se requer pagamento

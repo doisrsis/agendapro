@@ -155,29 +155,27 @@
                             </div>
                             <?php else: ?>
                             <div class="text-muted small">
-                                <p><i class="ti ti-info-circle me-2"></i>O agendamento será criado com status <strong>Confirmado</strong>.</p>
+                                <p><i class="ti ti-info-circle me-2"></i>Preencha todos os campos obrigatórios.</p>
                                 <p><i class="ti ti-clock me-2"></i>Certifique-se de que o horário está disponível.</p>
                             </div>
                             <?php endif; ?>
                         </div>
                     </div>
 
-                    <!-- Status (apenas na edição) -->
-                    <?php if (isset($agendamento)): ?>
+                    <!-- Status -->
                     <div class="card mt-3">
                         <div class="card-header">
                             <h3 class="card-title">Status</h3>
                         </div>
                         <div class="card-body">
                             <select class="form-select" name="status">
-                                <option value="pendente" <?= ($agendamento->status ?? '') == 'pendente' ? 'selected' : '' ?>>Pendente</option>
-                                <option value="confirmado" <?= ($agendamento->status ?? 'confirmado') == 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
+                                <option value="pendente" <?= ($agendamento->status ?? 'pendente') == 'pendente' ? 'selected' : '' ?>>Pendente</option>
+                                <option value="confirmado" <?= ($agendamento->status ?? '') == 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
                                 <option value="cancelado" <?= ($agendamento->status ?? '') == 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
                                 <option value="finalizado" <?= ($agendamento->status ?? '') == 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
                             </select>
                         </div>
                     </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </form>
