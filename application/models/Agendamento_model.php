@@ -900,6 +900,7 @@ class Agendamento_model extends CI_Model {
                 e.nome as estabelecimento_nome,
                 e.endereco as estabelecimento_endereco,
                 e.solicitar_confirmacao,
+                e.confirmacao_horas_antes,
                 e.confirmacao_dia_anterior,
                 e.confirmacao_horario_dia_anterior,
                 e.confirmacao_max_tentativas,
@@ -910,7 +911,8 @@ class Agendamento_model extends CI_Model {
                 s.nome as servico_nome,
                 s.duracao as servico_duracao,
                 s.preco as servico_preco,
-                p.nome as profissional_nome
+                p.nome as profissional_nome,
+                TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) as horas_ate_agendamento
             FROM agendamentos a
             JOIN estabelecimentos e ON a.estabelecimento_id = e.id
             JOIN clientes c ON a.cliente_id = c.id
@@ -919,28 +921,70 @@ class Agendamento_model extends CI_Model {
             WHERE a.status = 'pendente'
               AND e.agendamento_requer_pagamento = 'nao'
               AND e.solicitar_confirmacao = 1
-              AND e.confirmacao_dia_anterior = 1
-              -- IMPORTANTE: Apenas agendamentos para AMANHÃ (dia anterior)
-              AND a.data = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+              AND CONCAT(a.data, ' ', a.hora_inicio) > NOW()
               AND (
-                  -- Primeira tentativa: horário configurado passou E ainda não enviou
-                  (a.confirmacao_tentativas = 0
-                   AND TIME(NOW()) >= e.confirmacao_horario_dia_anterior)
+                  -- LÓGICA 1: Confirmação no dia anterior em horário fixo
+                  (e.confirmacao_dia_anterior = 1
+                   AND a.data = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                   AND (
+                       -- Primeira tentativa: horário configurado passou E ainda não enviou
+                       (a.confirmacao_tentativas = 0
+                        AND TIME(NOW()) >= e.confirmacao_horario_dia_anterior)
+                       OR
+                       -- Tentativas subsequentes: já passou o intervalo desde a última tentativa
+                       (a.confirmacao_tentativas > 0
+                        AND a.confirmacao_tentativas < COALESCE(e.confirmacao_max_tentativas, 3)
+                        AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30))
+                   ))
                   OR
-                  -- Tentativas subsequentes: já passou o intervalo desde a última tentativa
-                  (a.confirmacao_tentativas > 0
-                   AND a.confirmacao_tentativas < COALESCE(e.confirmacao_max_tentativas, 3)
-                   AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30))
+                  -- LÓGICA 2: Confirmação X horas antes do agendamento
+                  (COALESCE(e.confirmacao_horas_antes, 0) > 0
+                   AND (
+                       -- Primeira tentativa: faltam X horas ou menos E ainda não enviou
+                       (a.confirmacao_tentativas = 0
+                        AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.confirmacao_horas_antes
+                        AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
+                       OR
+                       -- Tentativas subsequentes: já passou o intervalo desde a última tentativa
+                       (a.confirmacao_tentativas > 0
+                        AND a.confirmacao_tentativas < COALESCE(e.confirmacao_max_tentativas, 3)
+                        AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30)
+                        AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
+                   ))
               )
             ORDER BY a.data, a.hora_inicio
         ";
+
+        // Log da query para debug
+        log_message('debug', 'CRON: get_pendentes_confirmacao - Query SQL: ' . $sql);
+        log_message('info', 'CRON: get_pendentes_confirmacao - Hora atual: ' . date('Y-m-d H:i:s'));
+        log_message('info', 'CRON: get_pendentes_confirmacao - Data de amanhã: ' . date('Y-m-d', strtotime('+1 day')));
 
         $result = $this->db->query($sql)->result();
 
         // Log detalhado para debug
         log_message('info', 'CRON: get_pendentes_confirmacao - Total encontrado: ' . count($result));
+
+        if (count($result) == 0) {
+            log_message('warning', 'CRON: get_pendentes_confirmacao - NENHUM agendamento encontrado! Verifique:');
+            log_message('warning', 'CRON: - Se há agendamentos com status=pendente');
+            log_message('warning', 'CRON: - Se agendamento_requer_pagamento=nao');
+            log_message('warning', 'CRON: - Se solicitar_confirmacao=1');
+            log_message('warning', 'CRON: - Se confirmacao_horas_antes está configurado ou confirmacao_dia_anterior=1');
+        }
+
         foreach ($result as $ag) {
-            log_message('info', "CRON: Agendamento #{$ag->id} - Data: {$ag->data}, Tentativas: {$ag->confirmacao_tentativas}/{$ag->confirmacao_max_tentativas}");
+            $logica_usada = ($ag->confirmacao_dia_anterior == 1 && $ag->data == date('Y-m-d', strtotime('+1 day')))
+                ? 'Dia anterior (horário fixo)'
+                : 'Horas antes do agendamento';
+
+            log_message('info', "CRON: Agendamento #{$ag->id}:");
+            log_message('info', "  - Data/Hora: {$ag->data} {$ag->hora_inicio}");
+            log_message('info', "  - Horas até agendamento: {$ag->horas_ate_agendamento}h");
+            log_message('info', "  - Tentativas: {$ag->confirmacao_tentativas}/{$ag->confirmacao_max_tentativas}");
+            log_message('info', "  - Lógica usada: {$logica_usada}");
+            log_message('info', "  - Horas antes config: {$ag->confirmacao_horas_antes}");
+            log_message('info', "  - Cliente: {$ag->cliente_nome} ({$ag->cliente_whatsapp})");
         }
 
         return $result;

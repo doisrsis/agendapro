@@ -146,34 +146,60 @@ try {
         echo "</div>";
     }
 
-    // 4. Query exata do cron
-    echo "<h2>4. Query Exata do Cron (sem debug)</h2>";
+    // 4. Query NOVA do cron (CORRIGIDA)
+    echo "<h2>4. Query NOVA do Cron (CORRIGIDA - 15/01/2026)</h2>";
     $sql_cron = "
         SELECT
             a.*,
             e.nome as estabelecimento_nome,
+            e.confirmacao_horas_antes,
+            e.confirmacao_dia_anterior,
+            e.confirmacao_horario_dia_anterior,
+            e.confirmacao_max_tentativas,
+            e.confirmacao_intervalo_tentativas_minutos,
             c.nome as cliente_nome,
-            c.whatsapp as cliente_whatsapp
+            c.whatsapp as cliente_whatsapp,
+            s.nome as servico_nome,
+            p.nome as profissional_nome,
+            TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) as horas_ate_agendamento
         FROM agendamentos a
         JOIN estabelecimentos e ON a.estabelecimento_id = e.id
         JOIN clientes c ON a.cliente_id = c.id
         JOIN servicos s ON a.servico_id = s.id
         JOIN profissionais p ON a.profissional_id = p.id
         WHERE a.status = 'pendente'
-          AND a.confirmacao_enviada = 0
-          AND a.data >= CURDATE()
           AND e.agendamento_requer_pagamento = 'nao'
           AND e.solicitar_confirmacao = 1
+          AND CONCAT(a.data, ' ', a.hora_inicio) > NOW()
           AND (
-              a.confirmacao_enviada = 0
-              OR (a.confirmacao_enviada_em IS NOT NULL AND TIMESTAMPDIFF(HOUR, a.confirmacao_enviada_em, NOW()) >= 23)
-          )
-          AND (
-              TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.confirmacao_horas_antes
-              OR
+              -- LÓGICA 1: Confirmação no dia anterior em horário fixo
               (e.confirmacao_dia_anterior = 1
                AND a.data = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-               AND TIME(NOW()) >= e.confirmacao_horario_dia_anterior)
+               AND (
+                   -- Primeira tentativa: horário configurado passou E ainda não enviou
+                   (a.confirmacao_tentativas = 0
+                    AND TIME(NOW()) >= e.confirmacao_horario_dia_anterior)
+                   OR
+                   -- Tentativas subsequentes: já passou o intervalo desde a última tentativa
+                   (a.confirmacao_tentativas > 0
+                    AND a.confirmacao_tentativas < COALESCE(e.confirmacao_max_tentativas, 3)
+                    AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30))
+               ))
+              OR
+              -- LÓGICA 2: Confirmação X horas antes do agendamento
+              (COALESCE(e.confirmacao_horas_antes, 0) > 0
+               AND (
+                   -- Primeira tentativa: faltam X horas ou menos E ainda não enviou
+                   (a.confirmacao_tentativas = 0
+                    AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) <= e.confirmacao_horas_antes
+                    AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
+                   OR
+                   -- Tentativas subsequentes: já passou o intervalo desde a última tentativa
+                   (a.confirmacao_tentativas > 0
+                    AND a.confirmacao_tentativas < COALESCE(e.confirmacao_max_tentativas, 3)
+                    AND TIMESTAMPDIFF(MINUTE, a.confirmacao_ultima_tentativa, NOW()) >= COALESCE(e.confirmacao_intervalo_tentativas_minutos, 30)
+                    AND TIMESTAMPDIFF(HOUR, NOW(), CONCAT(a.data, ' ', a.hora_inicio)) > 0)
+               ))
           )
         ORDER BY a.data, a.hora_inicio
     ";
@@ -181,11 +207,38 @@ try {
     $stmt = $pdo->query($sql_cron);
     $resultados_cron = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo "<p><strong>Total retornado pela query do cron:</strong> " . count($resultados_cron) . "</p>";
+    echo "<p><strong>Total retornado pela query NOVA do cron:</strong> " . count($resultados_cron) . "</p>";
     if (count($resultados_cron) > 0) {
-        echo "<pre>";
-        print_r($resultados_cron);
-        echo "</pre>";
+        echo "<table border='1' cellpadding='5' style='border-collapse: collapse;'>";
+        echo "<tr>";
+        echo "<th>ID</th>";
+        echo "<th>Data/Hora</th>";
+        echo "<th>Cliente</th>";
+        echo "<th>Serviço</th>";
+        echo "<th>Horas até</th>";
+        echo "<th>Config Horas</th>";
+        echo "<th>Tentativas</th>";
+        echo "<th>Lógica</th>";
+        echo "</tr>";
+
+        foreach ($resultados_cron as $r) {
+            $logica = ($r['confirmacao_dia_anterior'] == 1 && $r['data'] == date('Y-m-d', strtotime('+1 day')))
+                ? 'Dia anterior'
+                : 'Horas antes';
+
+            echo "<tr>";
+            echo "<td>#{$r['id']}</td>";
+            echo "<td>{$r['data']} {$r['hora_inicio']}</td>";
+            echo "<td>{$r['cliente_nome']}</td>";
+            echo "<td>{$r['servico_nome']}</td>";
+            echo "<td>{$r['horas_ate_agendamento']}h</td>";
+            echo "<td>{$r['confirmacao_horas_antes']}h</td>";
+            echo "<td>{$r['confirmacao_tentativas']}/{$r['confirmacao_max_tentativas']}</td>";
+            echo "<td>{$logica}</td>";
+            echo "</tr>";
+        }
+
+        echo "</table>";
     } else {
         echo "<p style='color: red;'><strong>NENHUM AGENDAMENTO ENCONTRADO!</strong></p>";
         echo "<p>Isso significa que alguma condição do WHERE não está sendo atendida.</p>";
