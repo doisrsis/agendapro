@@ -52,12 +52,19 @@ class Bot_conversa_model extends CI_Model
             $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);
             $timeout_minutos = $estabelecimento->bot_timeout_minutos ?? 30;
 
-            // Verificar timeout de sessão
+            // Estados críticos que NÃO devem expirar (aguardando resposta do usuário)
+            $estados_sem_timeout = [
+                'confirmando_agendamento',
+                'confirmando_cancelamento',
+                'aguardando_acao_agendamento'
+            ];
+
+            // Verificar timeout de sessão (exceto para estados críticos)
             $ultima_interacao = strtotime($conversa->ultima_interacao);
             $agora = time();
             $diferenca_minutos = ($agora - $ultima_interacao) / 60;
 
-            if ($diferenca_minutos > $timeout_minutos) {
+            if ($diferenca_minutos > $timeout_minutos && !in_array($conversa->estado, $estados_sem_timeout)) {
                 // Sessão expirada - resetar para menu
                 log_message('debug', "Bot: Sessão expirada para {$numero} (última interação há " . round($diferenca_minutos, 1) . " minutos, timeout: {$timeout_minutos} min)");
                 $this->resetar($conversa->id);

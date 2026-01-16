@@ -2171,7 +2171,7 @@ class Webhook_waha extends CI_Controller {
 
         if (!$agendamento_id) {
             $this->waha_lib->enviar_texto($numero, "Erro ao processar confirmação. Por favor, entre em contato.");
-            $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+            $this->Bot_conversa_model->resetar($conversa->id);
             return;
         }
 
@@ -2194,7 +2194,7 @@ class Webhook_waha extends CI_Controller {
 
             log_message('info', "Bot: Agendamento #{$agendamento_id} confirmado pelo cliente via bot");
 
-            $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+            $this->Bot_conversa_model->resetar($conversa->id);
             return;
         }
 
@@ -2208,7 +2208,7 @@ class Webhook_waha extends CI_Controller {
             if (!$agendamento) {
                 log_message('error', "Bot Confirmacao: Agendamento #{$agendamento_id} não encontrado");
                 $this->waha_lib->enviar_texto($numero, "Agendamento não encontrado.");
-                $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+                $this->Bot_conversa_model->resetar($conversa->id);
                 return;
             }
 
@@ -2240,7 +2240,7 @@ class Webhook_waha extends CI_Controller {
                     );
                 }
 
-                $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+                $this->Bot_conversa_model->resetar($conversa->id);
                 return;
             }
 
@@ -2320,7 +2320,7 @@ class Webhook_waha extends CI_Controller {
             );
 
             log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação segura");
-            $this->Bot_conversa_model->limpar($numero, $estabelecimento->id);
+            $this->Bot_conversa_model->resetar($conversa->id);
             return;
         }
 

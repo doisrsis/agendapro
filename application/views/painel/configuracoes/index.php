@@ -124,6 +124,14 @@
 
                     <!-- Aba Agendamento -->
                     <?php if ($aba_ativa == 'agendamento'): ?>
+                    <?php
+                    // Incluir a nova versão reorganizada com accordion
+                    include(__DIR__ . '/agendamento_novo.php');
+                    ?>
+                    <?php endif; ?>
+
+                    <!-- Aba Agendamento (VERSÃO ANTIGA - BACKUP) -->
+                    <?php if (false && $aba_ativa == 'agendamento'): ?>
                     <div class="tab-pane active">
                         <form method="post">
                             <input type="hidden" name="aba" value="agendamento">
