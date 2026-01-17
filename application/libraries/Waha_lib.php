@@ -535,12 +535,17 @@ class Waha_lib {
      * Formatar número para chatId do WhatsApp
      *
      * @param string $numero Número (pode ter ou não formatação)
-     * @return string ChatId no formato 5511999999999@c.us
+     * @return string ChatId no formato 5511999999999@c.us ou 108259113467972@lid
      */
     public function formatar_chat_id($numero) {
-        // Se já tem @c.us, retornar como está
-        if (strpos($numero, '@c.us') !== false) {
+        // Se já tem @c.us ou @lid, retornar como está
+        if (strpos($numero, '@c.us') !== false || strpos($numero, '@lid') !== false) {
             return $numero;
+        }
+
+        // Se já tem @s.whatsapp.net, converter para @c.us
+        if (strpos($numero, '@s.whatsapp.net') !== false) {
+            return str_replace('@s.whatsapp.net', '@c.us', $numero);
         }
 
         // Remover tudo que não for número

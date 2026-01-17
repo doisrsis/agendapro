@@ -316,8 +316,10 @@ class Webhook_waha extends CI_Controller {
             $pushName = $payload['pushName'];
         }
 
-        // Extrair número limpo
-        $numero = preg_replace('/[^0-9]/', '', str_replace('@c.us', '', $from));
+        // Extrair número (preservar formato @lid ou @c.us para compatibilidade)
+        // Números novos do WhatsApp usam @lid, números antigos usam @c.us
+        $numero_completo = $from; // Preservar formato original
+        $numero = preg_replace('/[^0-9]/', '', str_replace(['@c.us', '@lid', '@s.whatsapp.net'], '', $from));
 
         log_message('info', "WAHA Mensagem de {$numero}" . ($pushName ? " ({$pushName})" : "") . ": " . substr($body, 0, 100));
 
@@ -346,11 +348,12 @@ class Webhook_waha extends CI_Controller {
             $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);
 
             if ($estabelecimento && $estabelecimento->waha_bot_ativo) {
-                $this->processar_bot_agendamento($estabelecimento, $numero, $body, $message_id, $pushName);
+                // Usar número completo (com @lid ou @c.us) para compatibilidade com novos números WhatsApp
+                $this->processar_bot_agendamento($estabelecimento, $numero_completo, $body, $message_id, $pushName);
             }
         } else {
             // Mensagem para o SaaS Admin - bot de suporte
-            $this->processar_bot_suporte($numero, $body, $message_id);
+            $this->processar_bot_suporte($numero_completo, $body, $message_id);
         }
     }
 

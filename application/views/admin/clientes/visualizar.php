@@ -63,12 +63,6 @@
                             <small class="text-muted">WhatsApp:</small>
                             <div><?= $cliente->whatsapp ?></div>
                         </div>
-                        <?php if ($cliente->telefone): ?>
-                        <div class="mb-2">
-                            <small class="text-muted">Telefone:</small>
-                            <div><?= $cliente->telefone ?></div>
-                        </div>
-                        <?php endif; ?>
                         <?php if ($cliente->email): ?>
                         <div class="mb-2">
                             <small class="text-muted">E-mail:</small>

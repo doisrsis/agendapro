@@ -805,7 +805,13 @@ class Agendamento_model extends CI_Model {
             'data' => $nova_data,
             'hora_inicio' => $nova_hora_inicio,
             'hora_fim' => $nova_hora_fim,
-            'qtd_reagendamentos' => $qtd_atual + 1
+            'qtd_reagendamentos' => $qtd_atual + 1,
+            // Resetar campos de confirmação (novo agendamento precisa nova confirmação)
+            'confirmacao_enviada' => 0,
+            'confirmacao_enviada_em' => null,
+            'confirmacao_tentativas' => 0,
+            'confirmacao_ultima_tentativa' => null,
+            'confirmado_em' => null
         ];
 
         $atualizado = $this->update($agendamento_id, $dados_update);
