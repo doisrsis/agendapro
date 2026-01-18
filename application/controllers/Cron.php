@@ -610,8 +610,8 @@ class Cron extends CI_Controller {
             $mensagem .= "Aguardamos sua resposta! 😊";
         }
 
-        // Limpar número (remover caracteres especiais)
-        $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+        // Usar número completo do WhatsApp (preservar @c.us ou @lid)
+        $numero = $agendamento->cliente_whatsapp;
 
         // Log detalhado antes de enviar
         log_message('debug', "CRON Confirmacao: Tentando enviar para {$numero}");
@@ -701,8 +701,8 @@ class Cron extends CI_Controller {
         $mensagem .= "\n💡 Por favor, chegue com *{$antecedencia} minutos de antecedência*.\n\n";
         $mensagem .= "Até logo! 👋";
 
-        // Limpar número
-        $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+        // Usar número completo do WhatsApp (preservar @c.us ou @lid)
+        $numero = $agendamento->cliente_whatsapp;
 
         // Log detalhado antes de enviar
         log_message('debug', "CRON Lembrete: Tentando enviar para {$numero}");
@@ -757,8 +757,8 @@ class Cron extends CI_Controller {
         $mensagem .= "Se ainda tiver interesse, entre em contato para reagendar.\n\n";
         $mensagem .= "Digite *menu* para fazer um novo agendamento.";
 
-        // Limpar número
-        $numero = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+        // Usar número completo do WhatsApp (preservar @c.us ou @lid)
+        $numero = $agendamento->cliente_whatsapp;
 
         // Log detalhado antes de enviar
         log_message('debug', "CRON Cancelamento: Tentando enviar para {$numero}");

@@ -316,6 +316,20 @@ class Webhook_waha extends CI_Controller {
             $pushName = $payload['pushName'];
         }
 
+        // Extrair número real do telefone
+        // Para números @lid, o número real está em SenderAlt
+        // Para números @c.us, o número real está no próprio from
+        $numero_real = null;
+        if (strpos($from, '@lid') !== false) {
+            // Número @lid: telefone real está em SenderAlt
+            if (isset($payload['_data']['Info']['SenderAlt']) && !empty($payload['_data']['Info']['SenderAlt'])) {
+                $numero_real = preg_replace('/[^0-9]/', '', $payload['_data']['Info']['SenderAlt']);
+            }
+        } else if (strpos($from, '@c.us') !== false) {
+            // Número @c.us: telefone real está no próprio from
+            $numero_real = preg_replace('/[^0-9]/', '', $from);
+        }
+
         // Extrair número (preservar formato @lid ou @c.us para compatibilidade)
         // Números novos do WhatsApp usam @lid, números antigos usam @c.us
         $numero_completo = $from; // Preservar formato original
@@ -349,7 +363,7 @@ class Webhook_waha extends CI_Controller {
 
             if ($estabelecimento && $estabelecimento->waha_bot_ativo) {
                 // Usar número completo (com @lid ou @c.us) para compatibilidade com novos números WhatsApp
-                $this->processar_bot_agendamento($estabelecimento, $numero_completo, $body, $message_id, $pushName);
+                $this->processar_bot_agendamento($estabelecimento, $numero_completo, $body, $message_id, $pushName, $numero_real);
             }
         } else {
             // Mensagem para o SaaS Admin - bot de suporte
@@ -385,7 +399,7 @@ class Webhook_waha extends CI_Controller {
      * Bot de agendamento para estabelecimentos
      * Implementa máquina de estados para fluxo de conversa
      */
-    private function processar_bot_agendamento($estabelecimento, $numero, $mensagem, $message_id, $pushName = null) {
+    private function processar_bot_agendamento($estabelecimento, $numero, $mensagem, $message_id, $pushName = null, $numero_real = null) {
         $this->load->library('waha_lib');
         $this->load->model('Cliente_model');
         $this->load->model('Servico_model');
@@ -404,14 +418,26 @@ class Webhook_waha extends CI_Controller {
         // Obter ou criar conversa (máquina de estados)
         $conversa = $this->Bot_conversa_model->get_ou_criar($estabelecimento->id, $numero);
 
-        // Armazenar pushName na conversa se disponível
-        if ($pushName && $conversa) {
+        // Armazenar pushName e numero_real na conversa se disponível
+        if (($pushName || $numero_real) && $conversa) {
             // Verificar se dados já é array ou precisa decodificar
             $dados_conversa = is_array($conversa->dados) ? $conversa->dados : ($conversa->dados ? json_decode($conversa->dados, true) : []);
-            if (!isset($dados_conversa['pushName'])) {
+            $atualizar = false;
+
+            if ($pushName && !isset($dados_conversa['pushName'])) {
                 $dados_conversa['pushName'] = $pushName;
-                $this->Bot_conversa_model->atualizar_estado($conversa->id, $conversa->estado, $dados_conversa);
+                $atualizar = true;
                 log_message('info', "Bot: pushName armazenado na conversa - numero={$numero}, pushName={$pushName}");
+            }
+
+            if ($numero_real && !isset($dados_conversa['numero_real'])) {
+                $dados_conversa['numero_real'] = $numero_real;
+                $atualizar = true;
+                log_message('info', "Bot: numero_real armazenado na conversa - numero={$numero}, numero_real={$numero_real}");
+            }
+
+            if ($atualizar) {
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, $conversa->estado, $dados_conversa);
             }
         }
 
@@ -1110,14 +1136,31 @@ class Webhook_waha extends CI_Controller {
                 log_message('warning', 'Bot: pushName NAO encontrado nos dados - usando fallback. Dados: ' . json_encode($dados));
             }
 
-            log_message('info', 'Bot: criando novo cliente para ' . $numero . ' - Nome: ' . $nome_cliente);
-            $cliente_id = $this->Cliente_model->create([
+            // Preparar dados do cliente
+            $dados_cliente = [
                 'estabelecimento_id' => $estabelecimento->id,
                 'nome' => $nome_cliente,
                 'whatsapp' => $numero,
                 'origem' => 'whatsapp_bot'
-            ]);
+            ];
+
+            // Se temos numero_real, adicionar ao telefone
+            if (isset($dados['numero_real']) && !empty($dados['numero_real'])) {
+                $dados_cliente['telefone'] = $dados['numero_real'];
+                log_message('info', 'Bot: numero_real encontrado nos dados - ' . $dados['numero_real']);
+            }
+
+            log_message('info', 'Bot: criando novo cliente para ' . $numero . ' - Nome: ' . $nome_cliente);
+            $cliente_id = $this->Cliente_model->create($dados_cliente);
             $cliente = $this->Cliente_model->get_by_id($cliente_id);
+        } else {
+            // Cliente já existe - atualizar telefone se não tiver e temos numero_real
+            if (empty($cliente->telefone) && isset($dados['numero_real']) && !empty($dados['numero_real'])) {
+                $this->Cliente_model->update($cliente->id, ['telefone' => $dados['numero_real']]);
+                log_message('info', 'Bot: telefone atualizado para cliente existente - cliente_id=' . $cliente->id . ', telefone=' . $dados['numero_real']);
+                // Recarregar cliente com dados atualizados
+                $cliente = $this->Cliente_model->get_by_id($cliente->id);
+            }
         }
 
         // Calcular hora de término

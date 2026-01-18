@@ -34,6 +34,7 @@ class Cliente_model extends CI_Model {
             $this->db->like('c.nome', $filtros['busca']);
             $this->db->or_like('c.cpf', $filtros['busca']);
             $this->db->or_like('c.whatsapp', $filtros['busca']);
+            $this->db->or_like('c.telefone', $filtros['busca']);
             $this->db->or_like('c.email', $filtros['busca']);
             $this->db->group_end();
         }
@@ -69,17 +70,41 @@ class Cliente_model extends CI_Model {
     }
 
     /**
+     * Buscar cliente por telefone
+     */
+    public function get_by_telefone($telefone, $estabelecimento_id) {
+        $this->db->where('telefone', $telefone);
+        $this->db->where('estabelecimento_id', $estabelecimento_id);
+
+        $query = $this->db->get($this->table);
+        return $query->row();
+    }
+
+    /**
      * Criar novo cliente
      */
     public function create($data) {
         // CPF vazio deve ser NULL para evitar erro de duplicidade
         $cpf = !empty($data['cpf']) ? $data['cpf'] : null;
 
+        // Telefone pode ser passado explicitamente ou extraído do whatsapp
+        $telefone = $data['telefone'] ?? null;
+
+        // Se não foi passado telefone, tentar extrair do whatsapp (apenas para números sem @lid)
+        if (!$telefone && strpos($data['whatsapp'], '@lid') === false) {
+            $telefone = preg_replace('/[^0-9]/', '', $data['whatsapp']);
+            // Adicionar código do país (55) se não tiver
+            if (strlen($telefone) <= 11) {
+                $telefone = '55' . $telefone;
+            }
+        }
+
         $insert_data = [
             'estabelecimento_id' => $data['estabelecimento_id'],
             'nome' => $data['nome'],
             'cpf' => $cpf,
             'whatsapp' => $data['whatsapp'],
+            'telefone' => $telefone,
             'email' => !empty($data['email']) ? $data['email'] : null,
             'foto' => $data['foto'] ?? null,
             'tipo' => $data['tipo'] ?? 'novo',
@@ -101,7 +126,19 @@ class Cliente_model extends CI_Model {
 
         if (isset($data['nome'])) $update_data['nome'] = $data['nome'];
         if (isset($data['cpf'])) $update_data['cpf'] = $data['cpf'];
-        if (isset($data['whatsapp'])) $update_data['whatsapp'] = $data['whatsapp'];
+        if (isset($data['whatsapp'])) {
+            $update_data['whatsapp'] = $data['whatsapp'];
+            // Atualizar telefone automaticamente se whatsapp mudar (apenas para números sem @lid)
+            if (!isset($data['telefone']) && strpos($data['whatsapp'], '@lid') === false) {
+                $telefone = preg_replace('/[^0-9]/', '', $data['whatsapp']);
+                // Adicionar código do país (55) se não tiver
+                if (strlen($telefone) <= 11) {
+                    $telefone = '55' . $telefone;
+                }
+                $update_data['telefone'] = $telefone;
+            }
+        }
+        if (isset($data['telefone'])) $update_data['telefone'] = $data['telefone'];
         if (isset($data['email'])) $update_data['email'] = $data['email'];
         if (isset($data['foto'])) $update_data['foto'] = $data['foto'];
         if (isset($data['tipo'])) $update_data['tipo'] = $data['tipo'];

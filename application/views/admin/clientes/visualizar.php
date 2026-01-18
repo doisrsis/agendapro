@@ -4,14 +4,16 @@
         <div class="row g-2 align-items-center">
             <div class="col">
                 <div class="page-pretitle">
-                    <a href="<?= base_url('admin/clientes') ?>">Clientes</a>
+                    <a href="<?= base_url('painel/clientes') ?>">Clientes</a>
+                    <!--a href="<//?= base_url('admin/clientes') ?>">Clientes</a-->
                 </div>
                 <h2 class="page-title">
                     <?= $cliente->nome ?>
                 </h2>
             </div>
             <div class="col-auto ms-auto d-print-none">
-                <a href="<?= base_url('admin/clientes/editar/' . $cliente->id) ?>" class="btn btn-primary">
+                <a href="<?= base_url('painel/clientes/editar/' . $cliente->id) ?>" class="btn btn-primary">
+                <!--a href="<//?= base_url('admin/clientes/editar/' . $cliente->id) ?>" class="btn btn-primary">-->
                     <i class="ti ti-edit me-2"></i>
                     Editar
                 </a>
@@ -59,9 +61,54 @@
                         </span>
                     </div>
                     <div class="card-body">
-                        <div class="mb-2">
-                            <small class="text-muted">WhatsApp:</small>
-                            <div><?= $cliente->whatsapp ?></div>
+                        <div class="mb-3">
+                            <small class="text-muted d-block mb-1">WhatsApp:</small>
+                            <div class="mb-2">
+                                <strong><?= $cliente->whatsapp ?></strong>
+                            </div>
+                            <?php if ($cliente->telefone): ?>
+                            <?php
+                            // Formatar telefone brasileiro para exibição
+                            $telefone = $cliente->telefone;
+                            $telefone_formatado = $telefone;
+                            if (strlen($telefone) == 13) { // 55 + DDD + 9 dígitos
+                                $telefone_formatado = '+' . substr($telefone, 0, 2) . ' (' . substr($telefone, 2, 2) . ') ' . substr($telefone, 4, 5) . '-' . substr($telefone, 9);
+                            } elseif (strlen($telefone) == 12) { // 55 + DDD + 8 dígitos
+                                $telefone_formatado = '+' . substr($telefone, 0, 2) . ' (' . substr($telefone, 2, 2) . ') ' . substr($telefone, 4, 4) . '-' . substr($telefone, 8);
+                            } elseif (strlen($telefone) == 11) { // DDD + 9 dígitos
+                                $telefone_formatado = '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 5) . '-' . substr($telefone, 7);
+                            } elseif (strlen($telefone) == 10) { // DDD + 8 dígitos
+                                $telefone_formatado = '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 4) . '-' . substr($telefone, 6);
+                            }
+                            ?>
+                            <div class="text-muted mb-2">
+                                <i class="ti ti-phone me-1"></i>
+                                <?= $telefone_formatado ?>
+                            </div>
+                            <div class="btn-list">
+                                <a href="https://wa.me/<?= $telefone ?>"
+                                   target="_blank"
+                                   class="btn btn-success btn-sm"
+                                   title="Conversar no WhatsApp">
+                                    <i class="ti ti-brand-whatsapp me-1"></i>
+                                    Conversar
+                                </a>
+                                <a href="https://api.whatsapp.com/send?phone=<?= $telefone ?>"
+                                   target="_blank"
+                                   class="btn btn-outline-success btn-sm"
+                                   title="Ligar via WhatsApp">
+                                    <i class="ti ti-phone-call me-1"></i>
+                                    Ligar
+                                </a>
+                            </div>
+                            <?php else: ?>
+                            <div class="alert alert-warning mb-0" role="alert">
+                                <i class="ti ti-alert-triangle me-1"></i>
+                                <strong>Telefone não disponível</strong><br>
+                                Este cliente ainda não possui número de telefone cadastrado.<br>
+                                <small class="text-muted">O bot continua funcionando normalmente via WhatsApp.</small>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         <?php if ($cliente->email): ?>
                         <div class="mb-2">

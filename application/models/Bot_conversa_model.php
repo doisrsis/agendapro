@@ -110,13 +110,19 @@ class Bot_conversa_model extends CI_Model
         ];
 
         if ($dados !== null) {
-            // Preservar pushName se existir nos dados atuais
+            // Preservar pushName e numero_real se existirem nos dados atuais
             $conversa = $this->db->where('id', $conversa_id)->get($this->table)->row();
             if ($conversa && $conversa->dados_temporarios) {
                 $dados_atuais = json_decode($conversa->dados_temporarios, true) ?: [];
+
                 // Se pushName existe nos dados atuais e não está nos novos dados, preservar
                 if (isset($dados_atuais['pushName']) && !isset($dados['pushName'])) {
                     $dados['pushName'] = $dados_atuais['pushName'];
+                }
+
+                // Se numero_real existe nos dados atuais e não está nos novos dados, preservar
+                if (isset($dados_atuais['numero_real']) && !isset($dados['numero_real'])) {
+                    $dados['numero_real'] = $dados_atuais['numero_real'];
                 }
             }
 
