@@ -59,8 +59,14 @@ $this->load->view('painel/layout/header');
                                 <img src="data:image/png;base64,<?= $agendamento->pagamento_pix_qrcode ?>"
                                      alt="QR Code PIX"
                                      class="img-fluid"
-                                     style="max-width: 280px;">
+                                     style="max-width: 280px;"
+                                     onerror="this.onerror=null; this.src=''; this.parentElement.innerHTML='<div class=\'alert alert-danger\'>Erro ao carregar QR Code. Use o PIX Copia e Cola abaixo.</div>';">
                             </div>
+                        </div>
+                        <?php else: ?>
+                        <div class="alert alert-warning mb-4">
+                            <i class="ti ti-alert-triangle me-2"></i>
+                            QR Code não disponível. Use o PIX Copia e Cola abaixo.
                         </div>
                         <?php endif; ?>
 

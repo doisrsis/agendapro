@@ -100,28 +100,46 @@ class Agendamento_model extends CI_Model {
         if (empty($data['estabelecimento_id']) || empty($data['cliente_id']) ||
             empty($data['profissional_id']) || empty($data['servico_id']) ||
             empty($data['data']) || empty($data['hora_inicio'])) {
+            log_message('error', 'Agendamento_model::create - Dados obrigatórios faltando: ' . json_encode($data));
             return false;
         }
 
         // Buscar serviço para calcular hora_fim
         $servico = $this->Servico_model->get_by_id($data['servico_id']);
         if (!$servico) {
+            log_message('error', 'Agendamento_model::create - Serviço não encontrado: ' . $data['servico_id']);
             return false;
         }
 
-        // Calcular hora_fim baseado na duração do serviço
-        $hora_inicio = new DateTime($data['hora_inicio']);
-        $hora_fim = clone $hora_inicio;
-        $hora_fim->add(new DateInterval('PT' . $servico->duracao . 'M'));
+        // Se hora_fim já foi fornecida (reagendamento), usar ela; senão calcular
+        if (!empty($data['hora_fim'])) {
+            $hora_inicio = new DateTime($data['hora_inicio']);
+            $hora_fim = new DateTime($data['hora_fim']);
+            log_message('debug', 'Agendamento_model::create - Usando hora_fim fornecida: ' . $data['hora_fim']);
+        } else {
+            // Calcular hora_fim baseado na duração do serviço
+            $hora_inicio = new DateTime($data['hora_inicio']);
+            $hora_fim = clone $hora_inicio;
+            $hora_fim->add(new DateInterval('PT' . $servico->duracao . 'M'));
+            log_message('debug', 'Agendamento_model::create - Calculando hora_fim: ' . $hora_fim->format('H:i:s'));
+        }
 
-        // Verificar disponibilidade
+        // Verificar disponibilidade (excluir agendamento_id se fornecido)
+        $excluir_id = $data['excluir_agendamento_id'] ?? null;
+
+        log_message('debug', 'Agendamento_model::create - Verificando disponibilidade: prof=' . $data['profissional_id'] .
+                    ', data=' . $data['data'] . ', inicio=' . $hora_inicio->format('H:i:s') .
+                    ', fim=' . $hora_fim->format('H:i:s') . ', excluir_id=' . $excluir_id);
+
         if (!$this->verificar_disponibilidade(
             $data['profissional_id'],
             $data['data'],
             $hora_inicio->format('H:i:s'),
             $hora_fim->format('H:i:s'),
-            $data['servico_id']
+            $data['servico_id'],
+            $excluir_id
         )) {
+            log_message('error', 'Agendamento_model::create - Horário não disponível: ' . ($this->erro_disponibilidade ?? 'Erro desconhecido'));
             return false;
         }
 
@@ -452,7 +470,8 @@ class Agendamento_model extends CI_Model {
         // 3. Verificar conflito com outros agendamentos
         $this->db->where('profissional_id', $profissional_id);
         $this->db->where('data', $data);
-        $this->db->where('status !=', 'cancelado');
+        // Excluir status que liberam o horário: cancelado, reagendado, finalizado
+        $this->db->where_not_in('status', ['cancelado', 'reagendado', 'finalizado']);
 
         if ($excluir_agendamento_id) {
             $this->db->where('id !=', $excluir_agendamento_id);
@@ -837,6 +856,116 @@ class Agendamento_model extends CI_Model {
             'agendamento_id' => $agendamento_id,
             'qtd_reagendamentos' => $qtd_atual + 1,
             'limite_reagendamentos' => $limite
+        ];
+    }
+
+    /**
+     * Reagendar criando novo agendamento e cancelando o original
+     * Mantém histórico completo e evita confirmações duplicadas
+     *
+     * @param int $agendamento_id ID do agendamento original
+     * @param string $nova_data Nova data (Y-m-d)
+     * @param string $nova_hora_inicio Nova hora início (H:i:s)
+     * @param string $nova_hora_fim Nova hora fim (H:i:s)
+     * @return array ['success' => bool, 'message' => string, 'novo_agendamento_id' => int]
+     */
+    public function reagendar_criar_novo($agendamento_id, $nova_data, $nova_hora_inicio, $nova_hora_fim) {
+        // Buscar agendamento original
+        $agendamento = $this->get($agendamento_id);
+
+        if (!$agendamento) {
+            return ['success' => false, 'message' => 'Agendamento não encontrado'];
+        }
+
+        // Verificar se pode reagendar
+        $pode_reagendar = $this->pode_reagendar($agendamento_id);
+        if (!$pode_reagendar['pode_reagendar']) {
+            return ['success' => false, 'message' => $pode_reagendar['motivo']];
+        }
+
+        // Verificar disponibilidade do novo horário
+        $disponivel = $this->verificar_disponibilidade(
+            $agendamento->profissional_id,
+            $nova_data,
+            $nova_hora_inicio,
+            $nova_hora_fim,
+            $agendamento->servico_id,
+            $agendamento_id // Excluir o próprio agendamento da verificação
+        );
+
+        if (!$disponivel) {
+            return ['success' => false, 'message' => $this->erro_disponibilidade ?? 'Horário não disponível'];
+        }
+
+        // Guardar dados para notificação
+        $data_anterior = $agendamento->data;
+        $hora_anterior = $agendamento->hora_inicio;
+
+        // 1. Criar novo agendamento
+        $novo_agendamento_data = [
+            'estabelecimento_id' => $agendamento->estabelecimento_id,
+            'cliente_id' => $agendamento->cliente_id,
+            'profissional_id' => $agendamento->profissional_id,
+            'servico_id' => $agendamento->servico_id,
+            'data' => $nova_data,
+            'hora_inicio' => $nova_hora_inicio,
+            'hora_fim' => $nova_hora_fim,
+            'status' => 'pendente',
+            'observacoes' => ($agendamento->observacoes ? $agendamento->observacoes . ' | ' : '') .
+                           'Reagendado de ' . date('d/m/Y', strtotime($data_anterior)) . ' às ' .
+                           date('H:i', strtotime($hora_anterior)),
+            'pagamento_status' => $agendamento->pagamento_status,
+            'qtd_reagendamentos' => $agendamento->qtd_reagendamentos + 1,
+            'confirmacao_enviada' => 0,
+            'confirmacao_enviada_em' => null,
+            'confirmacao_tentativas' => 0,
+            'confirmacao_ultima_tentativa' => null,
+            'confirmado_em' => null,
+            'lembrete_enviado' => 0,
+            'lembrete_enviado_em' => null,
+            'excluir_agendamento_id' => $agendamento_id // Excluir o agendamento original da verificação
+        ];
+
+        log_message('debug', 'Agendamento_model::reagendar_criar_novo - Criando novo agendamento com dados: ' . json_encode($novo_agendamento_data));
+
+        $novo_id = $this->create($novo_agendamento_data, false); // false = não enviar notificação ainda
+
+        if (!$novo_id) {
+            return ['success' => false, 'message' => 'Erro ao criar novo agendamento'];
+        }
+
+        // 2. Cancelar agendamento original
+        $cancelado = $this->update($agendamento_id, [
+            'status' => 'reagendado',
+            'cancelado_por' => 'cliente',
+            'motivo_cancelamento' => 'Reagendado para ' . date('d/m/Y', strtotime($nova_data)) .
+                                   ' às ' . date('H:i', strtotime($nova_hora_inicio))
+        ]);
+
+        if (!$cancelado) {
+            // Reverter criação do novo agendamento
+            $this->delete($novo_id);
+            return ['success' => false, 'message' => 'Erro ao cancelar agendamento original'];
+        }
+
+        // 3. Enviar notificações
+        $this->enviar_notificacao_whatsapp($novo_id, 'reagendamento', [
+            'data_anterior' => $data_anterior,
+            'hora_anterior' => $hora_anterior
+        ]);
+
+        $this->enviar_notificacao_whatsapp($novo_id, 'profissional_reagendamento', [
+            'data_anterior' => $data_anterior,
+            'hora_anterior' => $hora_anterior
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'Agendamento reagendado com sucesso',
+            'novo_agendamento_id' => $novo_id,
+            'agendamento_original_id' => $agendamento_id,
+            'qtd_reagendamentos' => $agendamento->qtd_reagendamentos + 1,
+            'limite_reagendamentos' => $pode_reagendar['limite']
         ];
     }
 

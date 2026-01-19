@@ -112,6 +112,8 @@ class Agendamentos extends Painel_Controller {
                         log_message('error', 'DEBUG: Cliente = ' . ($cliente ? $cliente->nome : 'NULL'));
 
                         log_message('error', 'DEBUG: Chamando criar_pix_agendamento...');
+                        log_message('error', 'DEBUG: Valor = ' . $valor . ', Cliente = ' . $cliente->nome);
+                        log_message('error', 'DEBUG: Access Token configurado: ' . (empty($access_token) ? 'NÃO' : 'SIM (length=' . strlen($access_token) . ')'));
 
                         $pix_result = $this->mercadopago_lib->criar_pix_agendamento(
                             $agendamento_id,
@@ -127,12 +129,27 @@ class Agendamentos extends Painel_Controller {
                         log_message('error', 'DEBUG: PIX retornou - Status: ' . ($pix_result['status'] ?? 'NULL'));
                         log_message('error', 'DEBUG: PIX retornou - Response existe: ' . (isset($pix_result['response']) ? 'SIM' : 'NÃO'));
 
+                        if (isset($pix_result['error'])) {
+                            log_message('error', 'DEBUG: PIX ERRO: ' . $pix_result['error']);
+                        }
+
+                        if (isset($pix_result['response'])) {
+                            log_message('error', 'DEBUG: PIX Response completa: ' . json_encode($pix_result['response']));
+                        }
+
                         if ($pix_result && isset($pix_result['response']) && in_array($pix_result['status'], [200, 201])) {
                             log_message('error', 'DEBUG: Entrou no IF de sucesso!');
 
                             $pix_data = $pix_result['response'];
 
                             log_message('error', 'DEBUG: PIX ID = ' . $pix_data['id']);
+
+                            // Validar se QR Code foi gerado
+                            $qr_code_base64 = $pix_data['point_of_interaction']['transaction_data']['qr_code_base64'] ?? null;
+                            $qr_code = $pix_data['point_of_interaction']['transaction_data']['qr_code'] ?? null;
+
+                            log_message('error', 'DEBUG: QR Code Base64 existe: ' . ($qr_code_base64 ? 'SIM (length=' . strlen($qr_code_base64) . ')' : 'NÃO'));
+                            log_message('error', 'DEBUG: QR Code Copia e Cola existe: ' . ($qr_code ? 'SIM (length=' . strlen($qr_code) . ')' : 'NÃO'));
 
                             // Gerar token único para acesso público
                             $token_pagamento = $this->Agendamento_model->gerar_token_pagamento();
@@ -235,20 +252,40 @@ class Agendamentos extends Painel_Controller {
 
                 // Verificar se houve mudança de data/hora (reagendamento)
                 if ($nova_data != $data_anterior || $nova_hora != $hora_anterior) {
-                    // Usar método reagendar que valida limite
-                    $resultado = $this->Agendamento_model->reagendar($id, $nova_data, $nova_hora);
+                    // Usar método reagendar_criar_novo para manter histórico completo
+                    // Calcular hora_fim baseado na duração do serviço
+                    $servico = $this->Servico_model->get_by_id($agendamento->servico_id);
+                    $duracao = $servico ? $servico->duracao : 30;
+                    $nova_hora_fim = date('H:i:s', strtotime($nova_hora) + ($duracao * 60));
+
+                    $resultado = $this->Agendamento_model->reagendar_criar_novo(
+                        $id,
+                        $nova_data,
+                        $nova_hora,
+                        $nova_hora_fim
+                    );
 
                     if ($resultado['success']) {
-                        // Atualizar status e observações separadamente
-                        $this->Agendamento_model->update($id, [
-                            'status' => $status,
-                            'observacoes' => $observacoes
-                        ]);
+                        // Atualizar status e observações no novo agendamento
+                        $novo_id = $resultado['novo_agendamento_id'];
+                        $dados_extras = [];
 
-                        $this->session->set_flashdata('sucesso', $resultado['message']);
+                        if ($observacoes && $observacoes != $agendamento->observacoes) {
+                            $dados_extras['observacoes'] = $observacoes;
+                        }
+
+                        if ($status && $status != 'pendente') {
+                            $dados_extras['status'] = $status;
+                        }
+
+                        if (!empty($dados_extras)) {
+                            $this->Agendamento_model->update($novo_id, $dados_extras);
+                        }
+
+                        $this->session->set_flashdata('sucesso', 'Agendamento reagendado com sucesso! Novo ID: ' . $novo_id);
                         redirect('painel/agendamentos');
                     } else {
-                        $this->session->set_flashdata('erro', $resultado['message']);
+                        $this->session->set_flashdata('erro', 'Erro ao reagendar: ' . $resultado['message']);
                     }
                 } else {
                     // Apenas atualizar status e observações
@@ -286,6 +323,29 @@ class Agendamentos extends Painel_Controller {
         $this->load->view('painel/layout/header', $data);
         $this->load->view('painel/agendamentos/form', $data);
         $this->load->view('painel/layout/footer');
+    }
+
+    /**
+     * Confirmar agendamento
+     */
+    public function confirmar($id) {
+        $agendamento = $this->Agendamento_model->get($id);
+
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Agendamento não encontrado.');
+            redirect('painel/agendamentos');
+        }
+
+        if ($this->Agendamento_model->update($id, [
+            'status' => 'confirmado',
+            'confirmado_em' => date('Y-m-d H:i:s')
+        ])) {
+            $this->session->set_flashdata('sucesso', 'Agendamento confirmado com sucesso!');
+        } else {
+            $this->session->set_flashdata('erro', 'Erro ao confirmar agendamento.');
+        }
+
+        redirect('painel/agendamentos');
     }
 
     /**
