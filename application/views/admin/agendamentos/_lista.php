@@ -63,7 +63,7 @@
                     <th>Cliente</th>
                     <th>Profissional</th>
                     <th>Serviço</th>
-                    <th>Valor</th>
+                    <th>Pagamento</th>
                     <th>Status</th>
                     <th class="w-1">Ações</th>
                 </tr>
@@ -97,7 +97,39 @@
                     </td>
                     <td><?= $ag->profissional_nome ?></td>
                     <td><?= $ag->servico_nome ?></td>
-                    <td>R$ <?= number_format($ag->servico_preco, 2, ',', '.') ?></td>
+                    <td>
+                        <?php if (!empty($ag->forma_pagamento) && $ag->forma_pagamento != 'nao_definido'): ?>
+                            <?php if ($ag->forma_pagamento == 'pix'): ?>
+                                <?php if ($ag->pagamento_status == 'pago'): ?>
+                                    <span class="badge bg-success">
+                                        <i class="ti ti-check me-1"></i>PIX Pago
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge bg-warning">
+                                        <i class="ti ti-clock me-1"></i>PIX Pendente
+                                    </span>
+                                <?php endif; ?>
+                            <?php elseif ($ag->forma_pagamento == 'presencial'): ?>
+                                <span class="badge bg-info">
+                                    <i class="ti ti-building-store me-1"></i>Presencial
+                                </span>
+                            <?php elseif ($ag->forma_pagamento == 'cartao'): ?>
+                                <?php if ($ag->pagamento_status == 'pago'): ?>
+                                    <span class="badge bg-success">
+                                        <i class="ti ti-credit-card me-1"></i>Cartão Pago
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge bg-primary">
+                                        <i class="ti ti-credit-card me-1"></i>Cartão Pendente
+                                    </span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span class="badge bg-secondary">
+                                <i class="ti ti-minus me-1"></i>Não Definido
+                            </span>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <?php
                         $badge_class = 'bg-secondary';

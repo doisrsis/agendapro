@@ -93,26 +93,34 @@
                                 </div>
                             </div>
 
-                            <?php if (!empty($agendamento->pagamento_status)): ?>
+                            <?php if (!empty($agendamento->forma_pagamento) && $agendamento->forma_pagamento != 'nao_definido'): ?>
                             <div class="datagrid-item">
                                 <div class="datagrid-title">Forma de Pagamento</div>
                                 <div class="datagrid-content">
-                                    <?php if ($agendamento->pagamento_status == 'pago'): ?>
-                                        <span class="badge bg-success">
-                                            <i class="ti ti-check me-1"></i>Pago via PIX
-                                        </span>
-                                    <?php elseif ($agendamento->pagamento_status == 'pendente'): ?>
-                                        <span class="badge bg-warning">
-                                            <i class="ti ti-clock me-1"></i>PIX Pendente
-                                        </span>
-                                    <?php elseif ($agendamento->pagamento_status == 'presencial'): ?>
+                                    <?php if ($agendamento->forma_pagamento == 'pix'): ?>
+                                        <?php if ($agendamento->pagamento_status == 'pago'): ?>
+                                            <span class="badge bg-success">
+                                                <i class="ti ti-check me-1"></i>Pago via PIX
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning">
+                                                <i class="ti ti-clock me-1"></i>PIX Pendente
+                                            </span>
+                                        <?php endif; ?>
+                                    <?php elseif ($agendamento->forma_pagamento == 'presencial'): ?>
                                         <span class="badge bg-info">
-                                            <i class="ti ti-building-store me-1"></i>Pagar no Estabelecimento
+                                            <i class="ti ti-building-store me-1"></i>Pagamento Presencial
                                         </span>
-                                    <?php elseif ($agendamento->pagamento_status == 'nao_requerido'): ?>
-                                        <span class="badge bg-secondary">
-                                            <i class="ti ti-info-circle me-1"></i>Não Requerido
-                                        </span>
+                                    <?php elseif ($agendamento->forma_pagamento == 'cartao'): ?>
+                                        <?php if ($agendamento->pagamento_status == 'pago'): ?>
+                                            <span class="badge bg-success">
+                                                <i class="ti ti-credit-card me-1"></i>Pago via Cartão
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-primary">
+                                                <i class="ti ti-credit-card me-1"></i>Cartão Pendente
+                                            </span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </div>

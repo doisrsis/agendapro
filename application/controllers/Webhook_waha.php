@@ -1231,32 +1231,26 @@ class Webhook_waha extends CI_Controller {
         $requer_pagamento = $estabelecimento->agendamento_requer_pagamento &&
                            $estabelecimento->agendamento_requer_pagamento != 'nao';
 
-        // Determinar status e observações baseado na forma de pagamento
+        // Determinar status, pagamento_status e forma_pagamento baseado na escolha do cliente
         $status_inicial = 'pendente';
-        $observacao_base = 'Agendado via WhatsApp Bot';
-        $observacao_pagamento = '';
         $pagamento_status = 'nao_requerido';
+        $forma_pagamento_valor = 'nao_definido';
 
         if ($forma_pagamento == 'pix') {
             // Cliente escolheu pagar via PIX
             $status_inicial = 'pendente';
             $pagamento_status = 'pendente';
-            $observacao_pagamento = 'Pagamento via PIX';
+            $forma_pagamento_valor = 'pix';
         } elseif ($forma_pagamento == 'presencial') {
             // Cliente escolheu pagar no estabelecimento
             $status_inicial = 'confirmado';
             $pagamento_status = 'presencial';
-            $observacao_pagamento = 'Pagamento presencial pendente';
+            $forma_pagamento_valor = 'presencial';
         } elseif ($requer_pagamento) {
             // Fluxo antigo: exige pagamento mas sem escolha (retrocompatibilidade)
             $status_inicial = 'pendente';
             $pagamento_status = 'pendente';
-        }
-
-        // Montar observações
-        $observacoes_final = $observacao_base;
-        if ($observacao_pagamento) {
-            $observacoes_final .= ' | ' . $observacao_pagamento;
+            $forma_pagamento_valor = 'pix'; // Assume PIX para compatibilidade
         }
 
         // Criar agendamento
@@ -1269,8 +1263,9 @@ class Webhook_waha extends CI_Controller {
             'hora_inicio' => $hora_inicio,
             'hora_fim' => $hora_fim,
             'status' => $status_inicial,
-            'observacoes' => $observacoes_final,
-            'pagamento_status' => $pagamento_status
+            'observacoes' => 'Agendado via WhatsApp Bot',
+            'pagamento_status' => $pagamento_status,
+            'forma_pagamento' => $forma_pagamento_valor
         ];
 
         log_message('debug', 'Bot: dados do agendamento: ' . json_encode($agendamento_data));
