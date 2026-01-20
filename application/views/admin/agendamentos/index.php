@@ -18,6 +18,9 @@
                         <button type="button" class="btn btn-outline-primary <?= $view == 'lista' ? 'active' : '' ?>" id="btn-lista">
                             <i class="ti ti-list"></i> Lista
                         </button>
+                        <button type="button" class="btn btn-outline-primary <?= $view == 'rapida' ? 'active' : '' ?>" id="btn-rapida">
+                            <i class="ti ti-bolt"></i> Rápida
+                        </button>
                     </div>
 
                     <a href="<?= base_url('painel/agendamentos/criar') ?>" class="btn btn-primary">
@@ -112,32 +115,25 @@
             <?php $this->load->view('admin/agendamentos/_lista'); ?>
         </div>
 
+        <!-- Visualização Rápida -->
+        <div id="view-rapida" style="display: <?= $view == 'rapida' ? 'block' : 'none' ?>;">
+            <?php $this->load->view('admin/agendamentos/_rapida'); ?>
+        </div>
+
     </div>
 </div>
 
 <script>
 // Toggle entre visualizações
 document.getElementById('btn-calendario').addEventListener('click', function() {
-    document.getElementById('view-calendario').style.display = 'block';
-    document.getElementById('view-lista').style.display = 'none';
-    this.classList.add('active');
-    document.getElementById('btn-lista').classList.remove('active');
-    localStorage.setItem('agendamentos_view', 'calendario');
+    window.location.href = '<?= base_url('painel/agendamentos?view=calendario') ?>';
 });
 
 document.getElementById('btn-lista').addEventListener('click', function() {
-    document.getElementById('view-calendario').style.display = 'none';
-    document.getElementById('view-lista').style.display = 'block';
-    this.classList.add('active');
-    document.getElementById('btn-calendario').classList.remove('active');
-    localStorage.setItem('agendamentos_view', 'lista');
+    window.location.href = '<?= base_url('painel/agendamentos?view=lista') ?>';
 });
 
-// Restaurar visualização salva
-window.addEventListener('DOMContentLoaded', function() {
-    const savedView = localStorage.getItem('agendamentos_view');
-    if (savedView === 'calendario') {
-        document.getElementById('btn-calendario').click();
-    }
+document.getElementById('btn-rapida').addEventListener('click', function() {
+    window.location.href = '<?= base_url('painel/agendamentos?view=rapida') ?>';
 });
 </script>

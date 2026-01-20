@@ -29,16 +29,30 @@ class Agendamentos extends Painel_Controller {
 
         $filtros = ['estabelecimento_id' => $this->estabelecimento_id];
 
+        // Filtro de data
         if ($this->input->get('data')) {
             $filtros['data'] = $this->input->get('data');
+        } elseif ($data['view'] == 'rapida') {
+            // View rápida: data de hoje por padrão
+            $filtros['data'] = date('Y-m-d');
         }
 
+        // Filtro de status
         if ($this->input->get('status')) {
             $filtros['status'] = $this->input->get('status');
+        } elseif ($data['view'] == 'rapida' && !$this->input->get('status')) {
+            // View rápida: status confirmado por padrão
+            $filtros['status'] = 'confirmado';
         }
 
+        // Filtro de profissional
         if ($this->input->get('profissional_id')) {
             $filtros['profissional_id'] = $this->input->get('profissional_id');
+        }
+
+        // Filtro de busca (nome ou telefone) - para view rápida
+        if ($this->input->get('busca')) {
+            $filtros['busca'] = $this->input->get('busca');
         }
 
         $data['agendamentos'] = $this->Agendamento_model->get_all($filtros);
@@ -346,6 +360,55 @@ class Agendamentos extends Painel_Controller {
         }
 
         redirect('painel/agendamentos');
+    }
+
+    /**
+     * Finalizar atendimento rapidamente (view rápida)
+     * Muda status direto para 'finalizado' sem passar por 'em_atendimento'
+     * Retorna JSON para AJAX
+     */
+    public function finalizar_rapido($id) {
+        header('Content-Type: application/json');
+
+        $agendamento = $this->Agendamento_model->get($id);
+
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Agendamento não encontrado.'
+            ]);
+            return;
+        }
+
+        // Verificar se está confirmado
+        if ($agendamento->status != 'confirmado') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Apenas agendamentos confirmados podem ser finalizados.'
+            ]);
+            return;
+        }
+
+        // Finalizar agendamento
+        $resultado = $this->Agendamento_model->update($id, [
+            'status' => 'finalizado',
+            'hora_fim_real' => date('H:i:s')
+        ]);
+
+        if ($resultado) {
+            // Enviar notificação WhatsApp de agradecimento
+            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'finalizacao');
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Atendimento finalizado com sucesso!'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erro ao finalizar atendimento.'
+            ]);
+        }
     }
 
     /**
@@ -938,5 +1001,74 @@ class Agendamentos extends Painel_Controller {
         $servicos = $this->Profissional_model->get_servicos($profissional_id);
 
         echo json_encode($servicos);
+    }
+
+    /**
+     * PREVIEW: Layout Opção 1 - Tabela
+     * Método temporário para visualizar layout
+     */
+    public function preview_opcao1() {
+        $data['titulo'] = 'Preview - Opção 1: Tabela';
+        $data['menu_ativo'] = 'agendamentos';
+
+        $filtros = [
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'data' => date('Y-m-d'),
+            'status' => 'confirmado'
+        ];
+
+        $data['agendamentos'] = $this->Agendamento_model->get_all($filtros);
+        $data['total'] = count($data['agendamentos']);
+        $data['filtros'] = $filtros;
+
+        $this->load->view('painel/layout/header', $data);
+        $this->load->view('admin/agendamentos/_rapida_opcao1_tabela', $data);
+        $this->load->view('painel/layout/footer');
+    }
+
+    /**
+     * PREVIEW: Layout Opção 2 - Cards
+     * Método temporário para visualizar layout
+     */
+    public function preview_opcao2() {
+        $data['titulo'] = 'Preview - Opção 2: Cards';
+        $data['menu_ativo'] = 'agendamentos';
+
+        $filtros = [
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'data' => date('Y-m-d'),
+            'status' => 'confirmado'
+        ];
+
+        $data['agendamentos'] = $this->Agendamento_model->get_all($filtros);
+        $data['total'] = count($data['agendamentos']);
+        $data['filtros'] = $filtros;
+
+        $this->load->view('painel/layout/header', $data);
+        $this->load->view('admin/agendamentos/_rapida_opcao2_cards', $data);
+        $this->load->view('painel/layout/footer');
+    }
+
+    /**
+     * PREVIEW: Layout Opção 3 - Lista Compacta
+     * Método temporário para visualizar layout
+     */
+    public function preview_opcao3() {
+        $data['titulo'] = 'Preview - Opção 3: Lista Compacta';
+        $data['menu_ativo'] = 'agendamentos';
+
+        $filtros = [
+            'estabelecimento_id' => $this->estabelecimento_id,
+            'data' => date('Y-m-d'),
+            'status' => 'confirmado'
+        ];
+
+        $data['agendamentos'] = $this->Agendamento_model->get_all($filtros);
+        $data['total'] = count($data['agendamentos']);
+        $data['filtros'] = $filtros;
+
+        $this->load->view('painel/layout/header', $data);
+        $this->load->view('admin/agendamentos/_rapida_opcao3_lista', $data);
+        $this->load->view('painel/layout/footer');
     }
 }

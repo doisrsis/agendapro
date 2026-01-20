@@ -61,8 +61,21 @@ class Agendamento_model extends CI_Model {
             $this->db->where('a.data <=', $filtros['data_fim']);
         }
 
-        $this->db->order_by('a.data', 'DESC');
-        $this->db->order_by('a.hora_inicio', 'DESC');
+        // Filtro de busca por nome ou telefone
+        if (!empty($filtros['busca'])) {
+            $this->db->group_start();
+            $this->db->like('c.nome', $filtros['busca']);
+            $this->db->or_like('c.whatsapp', $filtros['busca']);
+            $this->db->or_like('c.telefone', $filtros['busca']);
+            $this->db->group_end();
+        }
+
+        // Ordenação padrão: data e hora crescente (8:00, 8:30, 9:00...)
+        $ordem_data = $filtros['ordem_data'] ?? 'ASC';
+        $ordem_hora = $filtros['ordem_hora'] ?? 'ASC';
+
+        $this->db->order_by('a.data', $ordem_data);
+        $this->db->order_by('a.hora_inicio', $ordem_hora);
 
         if ($limit) {
             $this->db->limit($limit, $offset);
