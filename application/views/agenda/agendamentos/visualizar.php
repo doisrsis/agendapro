@@ -92,6 +92,31 @@
                                     <strong>R$ <?= number_format($agendamento->servico_preco ?? 0, 2, ',', '.') ?></strong>
                                 </div>
                             </div>
+
+                            <?php if (!empty($agendamento->pagamento_status)): ?>
+                            <div class="datagrid-item">
+                                <div class="datagrid-title">Forma de Pagamento</div>
+                                <div class="datagrid-content">
+                                    <?php if ($agendamento->pagamento_status == 'pago'): ?>
+                                        <span class="badge bg-success">
+                                            <i class="ti ti-check me-1"></i>Pago via PIX
+                                        </span>
+                                    <?php elseif ($agendamento->pagamento_status == 'pendente'): ?>
+                                        <span class="badge bg-warning">
+                                            <i class="ti ti-clock me-1"></i>PIX Pendente
+                                        </span>
+                                    <?php elseif ($agendamento->pagamento_status == 'presencial'): ?>
+                                        <span class="badge bg-info">
+                                            <i class="ti ti-building-store me-1"></i>Pagar no Estabelecimento
+                                        </span>
+                                    <?php elseif ($agendamento->pagamento_status == 'nao_requerido'): ?>
+                                        <span class="badge bg-secondary">
+                                            <i class="ti ti-info-circle me-1"></i>Não Requerido
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
 
                         <?php if (!empty($agendamento->observacoes)): ?>

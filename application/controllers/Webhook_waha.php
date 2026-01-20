@@ -566,7 +566,14 @@ class Webhook_waha extends CI_Controller {
                 $this->processar_estado_confirmando_saida($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
 
+            case 'encerrada':
+                // Qualquer mensagem após encerramento mostra o menu
+                $this->Bot_conversa_model->resetar($conversa->id);
+                $this->enviar_menu_principal($estabelecimento, $numero, $cliente);
+                break;
+
             default:
+                // Estado null ou desconhecido também mostra menu
                 $this->Bot_conversa_model->resetar($conversa->id);
                 $this->enviar_menu_principal($estabelecimento, $numero, $cliente);
         }
@@ -784,34 +791,68 @@ class Webhook_waha extends CI_Controller {
         $dados = $conversa->dados;
 
         // Comando voltar - retorna para seleção de horário
-        if (in_array($msg, ['voltar', 'anterior'])) {
-            // Remove a hora e volta para seleção de horário
-            unset($dados['hora']);
-            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_hora', $dados);
+        if ($msg == 'voltar') {
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'selecionando_hora', $dados);
             $this->enviar_opcoes_hora($estabelecimento, $numero, $dados);
             return;
         }
 
-        if (in_array($msg, ['sim', 's', '1', 'confirmar', 'confirmo'])) {
-            $this->finalizar_agendamento($estabelecimento, $numero, $dados, $conversa, $cliente);
-            return;
-        }
+        // Verificar se estabelecimento exige pagamento
+        $requer_pagamento = $estabelecimento->agendamento_requer_pagamento &&
+                           $estabelecimento->agendamento_requer_pagamento != 'nao';
 
-        if (in_array($msg, ['não', 'nao', 'n', '2', 'cancelar'])) {
-            $this->Bot_conversa_model->resetar($conversa->id);
+        if ($requer_pagamento) {
+            // Fluxo com escolha de forma de pagamento
+
+            // Opção 1: Pagar via PIX
+            if (in_array($msg, ['1', 'pix'])) {
+                $dados['forma_pagamento'] = 'pix';
+                $dados['gerar_pix'] = true;
+                $this->finalizar_agendamento($estabelecimento, $numero, $dados, $conversa, $cliente);
+                return;
+            }
+
+            // Opção 2: Pagar no estabelecimento
+            if (in_array($msg, ['2', 'presencial', 'estabelecimento'])) {
+                $dados['forma_pagamento'] = 'presencial';
+                $dados['gerar_pix'] = false;
+                $this->finalizar_agendamento($estabelecimento, $numero, $dados, $conversa, $cliente);
+                return;
+            }
+
+            // Opção inválida
             $this->waha_lib->enviar_texto($numero,
-                "Agendamento cancelado. ❌\n\n" .
-                "_Digite *menu* para voltar ao menu._"
+                "⚠️ Opção inválida.\n\n" .
+                "Por favor, escolha:\n\n" .
+                "*1* - Pagar agora via PIX 💰\n" .
+                "*2* - Pagar no estabelecimento 🏪\n\n" .
+                "_Digite *voltar* para escolher outro horário ou *menu* para o menu principal._"
             );
-            return;
-        }
 
-        $this->waha_lib->enviar_texto($numero,
-            "Por favor, responda:\n\n" .
-            "*1* ou *Sim* - Para confirmar\n" .
-            "*2* ou *Não* - Para cancelar\n\n" .
-            "_Digite *voltar* para escolher outro horário ou *menu* para o menu principal._"
-        );
+        } else {
+            // Fluxo antigo (sem pagamento)
+
+            if (in_array($msg, ['sim', 's', '1', 'confirmar', 'confirmo'])) {
+                $this->finalizar_agendamento($estabelecimento, $numero, $dados, $conversa, $cliente);
+                return;
+            }
+
+            if (in_array($msg, ['não', 'nao', 'n', '2', 'cancelar'])) {
+                $this->Bot_conversa_model->resetar($conversa->id);
+                $this->waha_lib->enviar_texto($numero,
+                    "Agendamento cancelado. ❌\n\n" .
+                    "_Digite *menu* para voltar ao menu._"
+                );
+                return;
+            }
+
+            $this->waha_lib->enviar_texto($numero,
+                "Por favor, responda:\n\n" .
+                "*1* ou *Sim* - Para confirmar\n" .
+                "*2* ou *Não* - Para cancelar\n\n" .
+                "_Digite *voltar* para escolher outro horário ou *menu* para o menu principal._"
+            );
+        }
     }
 
     /**
@@ -1110,9 +1151,21 @@ class Webhook_waha extends CI_Controller {
         $mensagem .= "📅 Data: *{$data_formatada}*\n";
         $mensagem .= "⏰ Horário: *{$dados['hora']}*\n";
         $mensagem .= "💰 Valor: *R$ {$preco_formatado}*\n\n";
-        $mensagem .= "Deseja confirmar?\n\n";
-        $mensagem .= "*1* ou *Sim* - Confirmar ✅\n";
-        $mensagem .= "*2* ou *Não* - Cancelar ❌\n\n";
+
+        // Verificar se estabelecimento exige pagamento
+        $requer_pagamento = $estabelecimento->agendamento_requer_pagamento &&
+                           $estabelecimento->agendamento_requer_pagamento != 'nao';
+
+        if ($requer_pagamento) {
+            $mensagem .= "Escolha a forma de pagamento:\n\n";
+            $mensagem .= "*1* - Pagar agora via PIX 💰\n";
+            $mensagem .= "*2* - Pagar no estabelecimento 🏪\n\n";
+        } else {
+            $mensagem .= "Deseja confirmar?\n\n";
+            $mensagem .= "*1* ou *Sim* - Confirmar ✅\n";
+            $mensagem .= "*2* ou *Não* - Cancelar ❌\n\n";
+        }
+
         $mensagem .= "_Ou digite *voltar* para escolher outro horário._";
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
@@ -1170,6 +1223,42 @@ class Webhook_waha extends CI_Controller {
 
         log_message('debug', 'Bot: criando agendamento - data=' . $dados['data'] . ', hora=' . $hora_inicio);
 
+        // Verificar forma de pagamento escolhida pelo cliente
+        $forma_pagamento = $dados['forma_pagamento'] ?? null;
+        $gerar_pix = $dados['gerar_pix'] ?? null;
+
+        // Verificar se estabelecimento exige pagamento
+        $requer_pagamento = $estabelecimento->agendamento_requer_pagamento &&
+                           $estabelecimento->agendamento_requer_pagamento != 'nao';
+
+        // Determinar status e observações baseado na forma de pagamento
+        $status_inicial = 'pendente';
+        $observacao_base = 'Agendado via WhatsApp Bot';
+        $observacao_pagamento = '';
+        $pagamento_status = 'nao_requerido';
+
+        if ($forma_pagamento == 'pix') {
+            // Cliente escolheu pagar via PIX
+            $status_inicial = 'pendente';
+            $pagamento_status = 'pendente';
+            $observacao_pagamento = 'Pagamento via PIX';
+        } elseif ($forma_pagamento == 'presencial') {
+            // Cliente escolheu pagar no estabelecimento
+            $status_inicial = 'confirmado';
+            $pagamento_status = 'presencial';
+            $observacao_pagamento = 'Pagamento presencial pendente';
+        } elseif ($requer_pagamento) {
+            // Fluxo antigo: exige pagamento mas sem escolha (retrocompatibilidade)
+            $status_inicial = 'pendente';
+            $pagamento_status = 'pendente';
+        }
+
+        // Montar observações
+        $observacoes_final = $observacao_base;
+        if ($observacao_pagamento) {
+            $observacoes_final .= ' | ' . $observacao_pagamento;
+        }
+
         // Criar agendamento
         $agendamento_data = [
             'estabelecimento_id' => $estabelecimento->id,
@@ -1179,19 +1268,10 @@ class Webhook_waha extends CI_Controller {
             'data' => $dados['data'],
             'hora_inicio' => $hora_inicio,
             'hora_fim' => $hora_fim,
-            'status' => 'pendente',
-            'observacoes' => 'Agendado via WhatsApp Bot'
+            'status' => $status_inicial,
+            'observacoes' => $observacoes_final,
+            'pagamento_status' => $pagamento_status
         ];
-
-        // Verificar se estabelecimento exige pagamento antecipado
-        $requer_pagamento = $estabelecimento->agendamento_requer_pagamento &&
-                           $estabelecimento->agendamento_requer_pagamento != 'nao';
-
-        if ($requer_pagamento) {
-            $agendamento_data['pagamento_status'] = 'pendente';
-        } else {
-            $agendamento_data['pagamento_status'] = 'nao_requerido';
-        }
 
         log_message('debug', 'Bot: dados do agendamento: ' . json_encode($agendamento_data));
 
@@ -1203,17 +1283,21 @@ class Webhook_waha extends CI_Controller {
             $this->waha_lib->enviar_texto($numero,
                 "Desculpe, ocorreu um erro ao criar o agendamento. 😔\n\n" .
                 "Por favor, tente novamente ou entre em contato diretamente.\n\n" .
-                "_Digite *menu* para voltar ao menu._"
+                "_Digite qualquer mensagem para voltar ao menu._"
             );
-            $this->Bot_conversa_model->resetar($conversa->id);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
             return;
         }
 
         $data_formatada = date('d/m/Y', strtotime($dados['data']));
         $preco_formatado = number_format($dados['servico_preco'], 2, ',', '.');
 
-        // Se exige pagamento antecipado, gerar PIX via Mercado Pago
-        if ($requer_pagamento) {
+        // Determinar se deve gerar PIX
+        $deve_gerar_pix = ($forma_pagamento == 'pix') || ($gerar_pix === true) ||
+                         ($requer_pagamento && $forma_pagamento !== 'presencial');
+
+        // Se deve gerar PIX, processar via Mercado Pago
+        if ($deve_gerar_pix) {
             $this->load->library('mercadopago_lib');
             $this->load->model('Pagamento_model');
 
@@ -1293,7 +1377,7 @@ class Webhook_waha extends CI_Controller {
                 $mensagem .= "⏰ Expira em *{$tempo_expiracao} minutos*\n\n";
                 $mensagem .= "🔗 *Acesse o link para pagar:*\n{$link_pagamento}\n\n";
                 $mensagem .= "⚠️ _Seu agendamento só será confirmado após o pagamento._\n\n";
-                $mensagem .= "_Digite *menu* para voltar ao menu._";
+                $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
 
             } else {
                 // Erro ao gerar PIX - cancelar agendamento
@@ -1302,31 +1386,50 @@ class Webhook_waha extends CI_Controller {
 
                 $mensagem = "Desculpe, ocorreu um erro ao gerar o pagamento PIX. 😔\n\n";
                 $mensagem .= "Por favor, tente novamente ou entre em contato diretamente.\n\n";
-                $mensagem .= "_Digite *menu* para voltar ao menu._";
+                $mensagem .= "_Digite qualquer mensagem para voltar ao menu._";
             }
         } else {
-            // Não requer pagamento - manter como pendente para confirmação posterior
-            // Status permanece 'pendente' - será confirmado via cron job
+            // Não gerou PIX - pode ser pagamento presencial ou sem pagamento
 
-            $mensagem = "🎉 *Agendamento Criado!*\n\n";
-            $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
-            $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n";
-            $mensagem .= "📅 Data: *{$data_formatada}*\n";
-            $mensagem .= "⏰ Horário: *{$dados['hora']}*\n";
-            $mensagem .= "💰 Valor: *R$ {$preco_formatado}*\n\n";
-            $mensagem .= "📍 *{$estabelecimento->nome}*\n";
-            if ($estabelecimento->endereco) {
-                $mensagem .= "📌 {$estabelecimento->endereco}\n";
+            if ($forma_pagamento == 'presencial') {
+                // Cliente escolheu pagar no estabelecimento
+                $mensagem = "✅ *Agendamento Confirmado!*\n\n";
+                $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
+                $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n";
+                $mensagem .= "📅 Data: *{$data_formatada}*\n";
+                $mensagem .= "⏰ Horário: *{$dados['hora']}*\n";
+                $mensagem .= "💰 Valor: *R$ {$preco_formatado}*\n\n";
+                $mensagem .= "💵 *Pagamento:* No estabelecimento\n";
+                $mensagem .= "O pagamento será realizado após o serviço.\n\n";
+                $mensagem .= "📍 *{$estabelecimento->nome}*\n";
+                if ($estabelecimento->endereco) {
+                    $mensagem .= "📌 {$estabelecimento->endereco}\n";
+                }
+                $mensagem .= "\nVocê receberá um lembrete próximo ao horário.\n\n";
+                $mensagem .= "Até breve! 👋\n\n";
+                $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
+            } else {
+                // Não requer pagamento - manter como pendente para confirmação posterior
+                $mensagem = "🎉 *Agendamento Criado!*\n\n";
+                $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
+                $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n";
+                $mensagem .= "📅 Data: *{$data_formatada}*\n";
+                $mensagem .= "⏰ Horário: *{$dados['hora']}*\n";
+                $mensagem .= "💰 Valor: *R$ {$preco_formatado}*\n\n";
+                $mensagem .= "📍 *{$estabelecimento->nome}*\n";
+                if ($estabelecimento->endereco) {
+                    $mensagem .= "📌 {$estabelecimento->endereco}\n";
+                }
+                $mensagem .= "\n✅ Você receberá uma mensagem para confirmar sua presença próximo à data do agendamento.\n\n";
+                $mensagem .= "Até lá! 👋\n\n";
+                $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
             }
-            $mensagem .= "\n✅ Você receberá uma mensagem para confirmar sua presença próximo à data do agendamento.\n\n";
-            $mensagem .= "Até lá! 👋\n\n";
-            $mensagem .= "_Digite *menu* para voltar ao menu ou *0* para sair._";
         }
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
 
-        // Resetar conversa
-        $this->Bot_conversa_model->resetar($conversa->id);
+        // Encerrar conversa (próxima mensagem mostra menu)
+        $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
     }
 
     /**
@@ -2086,26 +2189,25 @@ class Webhook_waha extends CI_Controller {
             $duracao = $dados['servico_duracao'];
             $hora_fim = date('H:i:s', strtotime($hora_inicio) + ($duracao * 60));
 
-            // Buscar agendamento atual para incrementar contador
-            $agendamento_atual = $this->Agendamento_model->get_by_id($agendamento_id);
+            // Usar novo método que cria novo agendamento e cancela o original
+            $resultado = $this->Agendamento_model->reagendar_criar_novo(
+                $agendamento_id,
+                $dados['nova_data'],
+                $hora_inicio,
+                $hora_fim
+            );
 
-            // Calcular novo contador de reagendamentos
-            $qtd_atual = 0;
-            if (isset($agendamento_atual->qtd_reagendamentos)) {
-                $qtd_atual = (int)$agendamento_atual->qtd_reagendamentos;
+            if (!$resultado['success']) {
+                $this->waha_lib->enviar_texto($numero,
+                    "❌ *Erro ao Reagendar*\n\n" .
+                    $resultado['message'] . "\n\n" .
+                    "_Digite *menu* para voltar ao menu._"
+                );
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
+                return;
             }
 
-            // Atualizar agendamento
-            $update_data = [
-                'data' => $dados['nova_data'],
-                'hora_inicio' => $hora_inicio,
-                'hora_fim' => $hora_fim,
-                'qtd_reagendamentos' => $qtd_atual + 1
-            ];
-
-            $this->Agendamento_model->update($agendamento_id, $update_data);
-
-            log_message('info', "Bot: Reagendamento confirmado - ID: {$agendamento_id}, qtd_reagendamentos: " . ($qtd_atual + 1));
+            log_message('info', "Bot: Reagendamento confirmado - Original ID: {$agendamento_id}, Novo ID: {$resultado['novo_agendamento_id']}, qtd_reagendamentos: {$resultado['qtd_reagendamentos']}");
 
             $data_original = date('d/m/Y', strtotime($dados['agendamento_data_original']));
             $hora_original = date('H:i', strtotime($dados['agendamento_hora_original']));
@@ -2121,12 +2223,12 @@ class Webhook_waha extends CI_Controller {
                 $mensagem .= "📌 {$estabelecimento->endereco}\n";
             }
             $mensagem .= "\nAté lá! 👋\n\n";
-            $mensagem .= "_Digite *menu* para voltar ao menu ou *0* para sair._";
+            $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
 
             $this->waha_lib->enviar_texto($numero, $mensagem);
 
-            // Resetar conversa
-            $this->Bot_conversa_model->resetar($conversa->id);
+            // Encerrar conversa (próxima mensagem mostra menu)
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
             return;
         }
 
@@ -2235,12 +2337,12 @@ class Webhook_waha extends CI_Controller {
                 "Obrigado por confirmar sua presença!\n\n" .
                 "Você receberá um lembrete próximo ao horário do seu atendimento.\n\n" .
                 "Até breve! 👋\n\n" .
-                "_Digite *menu* para voltar ao menu principal._"
+                "_Precisa de mais alguma coisa? Digite qualquer mensagem!_"
             );
 
             log_message('info', "Bot: Agendamento #{$agendamento_id} confirmado pelo cliente via bot");
 
-            $this->Bot_conversa_model->resetar($conversa->id);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
             return;
         }
 
@@ -2362,11 +2464,11 @@ class Webhook_waha extends CI_Controller {
                 "❌ *Agendamento Cancelado*\n\n" .
                 "Seu agendamento foi cancelado com sucesso.\n\n" .
                 "Quando precisar, é só entrar em contato novamente! 👋\n\n" .
-                "_Digite *menu* para voltar ao menu principal._"
+                "_Precisa de mais alguma coisa? Digite qualquer mensagem!_"
             );
 
             log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação segura");
-            $this->Bot_conversa_model->resetar($conversa->id);
+            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
             return;
         }
 
