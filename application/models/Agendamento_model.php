@@ -86,7 +86,7 @@ class Agendamento_model extends CI_Model {
     }
 
     /**
-     * Buscar agendamento por ID
+     ** Buscar agendamento por ID
      */
     public function get_by_id($id) {
         $this->db->select('a.*,
@@ -168,6 +168,9 @@ class Agendamento_model extends CI_Model {
             'hora_fim' => $hora_fim->format('H:i:s'),
             'status' => $status_final,
             'observacoes' => $data['observacoes'] ?? null,
+            'pagamento_status' => $data['pagamento_status'] ?? 'nao_requerido',
+            'forma_pagamento' => $data['forma_pagamento'] ?? 'nao_definido',
+            'qtd_reagendamentos' => $data['qtd_reagendamentos'] ?? 0,
         ];
 
         if ($this->db->insert($this->table, $insert_data)) {
@@ -366,6 +369,10 @@ class Agendamento_model extends CI_Model {
                     $resultado = $CI->notificacao_whatsapp_lib->enviar_finalizacao($agendamento);
                     break;
 
+                case 'nao_compareceu':
+                    $resultado = $CI->notificacao_whatsapp_lib->enviar_nao_compareceu($agendamento);
+                    break;
+
                 // Notificações para profissional/estabelecimento
                 case 'profissional_novo':
                     $resultado = $CI->notificacao_whatsapp_lib->notificar_profissional_novo_agendamento($agendamento);
@@ -430,11 +437,12 @@ class Agendamento_model extends CI_Model {
             return false;
         }
 
-        // 1.5. Verificar intervalo de almoço
+        // 1.5. Verificar intervalo de almoço (verifica sobreposição completa)
         if ($this->Horario_estabelecimento_model->verificar_horario_almoco(
             $profissional->estabelecimento_id,
             $dia_semana,
-            $hora_inicio
+            $hora_inicio,
+            $hora_fim
         )) {
             $this->erro_disponibilidade = 'Horário de almoço. Estabelecimento fechado.';
             return false;
@@ -735,20 +743,23 @@ class Agendamento_model extends CI_Model {
      * @param int $limite
      * @return array
      */
-    public function get_proximos_by_cliente($cliente_id, $limite = 5) {
-        return $this->db
+    public function get_proximos_by_cliente($cliente_id, $limite = null) {
+        $query = $this->db
             ->select('a.*, s.nome as servico_nome, s.duracao as duracao_minutos, s.preco, p.nome as profissional_nome')
             ->from($this->table . ' a')
             ->join('servicos s', 'a.servico_id = s.id')
             ->join('profissionais p', 'a.profissional_id = p.id')
             ->where('a.cliente_id', $cliente_id)
-            ->where('a.data >=', date('Y-m-d'))
-            ->where_in('a.status', ['pendente', 'confirmado'])
+            ->where_not_in('a.status', ['finalizado', 'cancelado', 'reagendado'])
+            ->order_by('CASE WHEN a.data >= CURDATE() THEN 0 ELSE 1 END', '', FALSE)
             ->order_by('a.data', 'ASC')
-            ->order_by('a.hora_inicio', 'ASC')
-            ->limit($limite)
-            ->get()
-            ->result();
+            ->order_by('a.hora_inicio', 'ASC');
+
+        if ($limite !== null) {
+            $query->limit($limite);
+        }
+
+        return $query->get()->result();
     }
 
     /**
@@ -852,16 +863,17 @@ class Agendamento_model extends CI_Model {
             return ['success' => false, 'message' => 'Erro ao atualizar agendamento'];
         }
 
-        // Enviar notificações
-        $this->enviar_notificacao_whatsapp($agendamento_id, 'reagendamento', [
-            'data_anterior' => $data_anterior,
-            'hora_anterior' => $hora_anterior
-        ]);
+        // Notificações são enviadas pelo bot ou painel conforme contexto
+        // Comentado para evitar duplicação quando reagendamento é feito pelo bot
+        // $this->enviar_notificacao_whatsapp($agendamento_id, 'reagendamento', [
+        //     'data_anterior' => $data_anterior,
+        //     'hora_anterior' => $hora_anterior
+        // ]);
 
-        $this->enviar_notificacao_whatsapp($agendamento_id, 'profissional_reagendamento', [
-            'data_anterior' => $data_anterior,
-            'hora_anterior' => $hora_anterior
-        ]);
+        // $this->enviar_notificacao_whatsapp($agendamento_id, 'profissional_reagendamento', [
+        //     'data_anterior' => $data_anterior,
+        //     'hora_anterior' => $hora_anterior
+        // ]);
 
         return [
             'success' => true,
@@ -870,6 +882,47 @@ class Agendamento_model extends CI_Model {
             'qtd_reagendamentos' => $qtd_atual + 1,
             'limite_reagendamentos' => $limite
         ];
+    }
+
+    /**
+     * Buscar contador de reagendamentos rastreando toda a cadeia
+     * Percorre agendamentos reagendados para encontrar o contador mais recente
+     *
+     * @param int $agendamento_id ID do agendamento
+     * @param int $cliente_id ID do cliente
+     * @param string $data_original Data do primeiro agendamento da cadeia
+     * @return int Contador de reagendamentos
+     */
+    private function get_contador_reagendamentos_cadeia($agendamento_id, $cliente_id, $data_original) {
+        // Buscar o agendamento atual
+        $agendamento = $this->get($agendamento_id);
+
+        if (!$agendamento) {
+            return 0;
+        }
+
+        // Se este agendamento já tem contador, usar ele
+        $contador_atual = (int)$agendamento->qtd_reagendamentos;
+
+        // Buscar se existe algum agendamento mais recente desta cadeia
+        // (casos onde reagendaram a partir deste mesmo agendamento original)
+        $mais_recente = $this->db
+            ->select('qtd_reagendamentos')
+            ->from($this->table)
+            ->where('cliente_id', $cliente_id)
+            ->where('data >=', $data_original)
+            ->where('id !=', $agendamento_id)
+            ->where('observacoes LIKE', '%Reagendado de ' . date('d/m/Y', strtotime($data_original)) . '%')
+            ->order_by('qtd_reagendamentos', 'DESC')
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if ($mais_recente && $mais_recente->qtd_reagendamentos > $contador_atual) {
+            $contador_atual = (int)$mais_recente->qtd_reagendamentos;
+        }
+
+        return $contador_atual;
     }
 
     /**
@@ -914,6 +967,22 @@ class Agendamento_model extends CI_Model {
         $data_anterior = $agendamento->data;
         $hora_anterior = $agendamento->hora_inicio;
 
+        // Buscar data original da cadeia de reagendamentos (primeira data)
+        $data_original = $data_anterior;
+        if ($agendamento->observacoes && preg_match('/Reagendado de (\d{2}\/\d{2}\/\d{4})/', $agendamento->observacoes, $matches)) {
+            // Pegar a primeira data mencionada nas observações
+            $data_original = date('Y-m-d', strtotime(str_replace('/', '-', $matches[1])));
+        }
+
+        // Buscar contador correto rastreando toda a cadeia
+        $contador_atual = $this->get_contador_reagendamentos_cadeia(
+            $agendamento_id,
+            $agendamento->cliente_id,
+            $data_original
+        );
+
+        log_message('debug', "Agendamento_model::reagendar_criar_novo - Contador atual: {$contador_atual}, Novo contador: " . ($contador_atual + 1));
+
         // 1. Criar novo agendamento
         $novo_agendamento_data = [
             'estabelecimento_id' => $agendamento->estabelecimento_id,
@@ -928,7 +997,7 @@ class Agendamento_model extends CI_Model {
                            'Reagendado de ' . date('d/m/Y', strtotime($data_anterior)) . ' às ' .
                            date('H:i', strtotime($hora_anterior)),
             'pagamento_status' => $agendamento->pagamento_status,
-            'qtd_reagendamentos' => $agendamento->qtd_reagendamentos + 1,
+            'qtd_reagendamentos' => $contador_atual + 1,
             'confirmacao_enviada' => 0,
             'confirmacao_enviada_em' => null,
             'confirmacao_tentativas' => 0,
@@ -961,23 +1030,24 @@ class Agendamento_model extends CI_Model {
             return ['success' => false, 'message' => 'Erro ao cancelar agendamento original'];
         }
 
-        // 3. Enviar notificações
-        $this->enviar_notificacao_whatsapp($novo_id, 'reagendamento', [
-            'data_anterior' => $data_anterior,
-            'hora_anterior' => $hora_anterior
-        ]);
+        // 3. Notificações são enviadas pelo bot ou painel conforme contexto
+        // Comentado para evitar duplicação quando reagendamento é feito pelo bot
+        // $this->enviar_notificacao_whatsapp($novo_id, 'reagendamento', [
+        //     'data_anterior' => $data_anterior,
+        //     'hora_anterior' => $hora_anterior
+        // ]);
 
-        $this->enviar_notificacao_whatsapp($novo_id, 'profissional_reagendamento', [
-            'data_anterior' => $data_anterior,
-            'hora_anterior' => $hora_anterior
-        ]);
+        // $this->enviar_notificacao_whatsapp($novo_id, 'profissional_reagendamento', [
+        //     'data_anterior' => $data_anterior,
+        //     'hora_anterior' => $hora_anterior
+        // ]);
 
         return [
             'success' => true,
             'message' => 'Agendamento reagendado com sucesso',
             'novo_agendamento_id' => $novo_id,
             'agendamento_original_id' => $agendamento_id,
-            'qtd_reagendamentos' => $agendamento->qtd_reagendamentos + 1,
+            'qtd_reagendamentos' => $contador_atual + 1,
             'limite_reagendamentos' => $pode_reagendar['limite']
         ];
     }
@@ -996,7 +1066,7 @@ class Agendamento_model extends CI_Model {
         }
 
         // Verificar status
-        if (!in_array($agendamento->status, ['pendente', 'confirmado'])) {
+        if (!in_array($agendamento->status, ['pendente', 'confirmado', 'nao_compareceu'])) {
             return ['pode_reagendar' => false, 'motivo' => 'Status não permite reagendamento'];
         }
 

@@ -566,6 +566,10 @@ class Webhook_waha extends CI_Controller {
                 $this->processar_estado_confirmando_saida($estabelecimento, $numero, $msg, $conversa, $cliente);
                 break;
 
+            case 'pos_nao_compareceu':
+                $this->processar_estado_pos_nao_compareceu($estabelecimento, $numero, $msg, $conversa, $cliente);
+                break;
+
             case 'encerrada':
                 // Qualquer mensagem após encerramento mostra o menu
                 $this->Bot_conversa_model->resetar($conversa->id);
@@ -930,6 +934,38 @@ class Webhook_waha extends CI_Controller {
             "Opção inválida. Por favor, escolha:\n\n" .
             "*1* ou *Sim* - Confirmar saída\n" .
             "*2* ou *Não* - Continuar conversa"
+        );
+    }
+
+    /**
+     * Processa estado: Pós não compareceu (resposta à notificação)
+     */
+    private function processar_estado_pos_nao_compareceu($estabelecimento, $numero, $msg, $conversa, $cliente) {
+        $opcao = strtolower(trim($msg));
+
+        // Opção 1: Reagendar - mostra lista de agendamentos
+        if (in_array($opcao, ['1', 'reagendar'])) {
+            // Redirecionar para gerenciamento de agendamentos (opção 2 do menu)
+            $this->iniciar_gerenciar_agendamentos($estabelecimento, $numero, $conversa, $cliente);
+            return;
+        }
+
+        // Opção 2: Deixar para depois - encerrar conversa
+        if (in_array($opcao, ['2', 'depois', 'deixar'])) {
+            $this->Bot_conversa_model->encerrar($conversa->id);
+            $this->waha_lib->enviar_texto($numero,
+                "Tudo bem! 😊\n\n" .
+                "Quando quiser reagendar, é só digitar *menu* e escolher a opção *2 - Meus Agendamentos*.\n\n" .
+                "Até logo! 👋"
+            );
+            return;
+        }
+
+        // Opção inválida
+        $this->waha_lib->enviar_texto($numero,
+            "Opção inválida. Por favor, escolha:\n\n" .
+            "*1* - 🔄 Reagendar\n" .
+            "*2* - 📅 Deixar para depois"
         );
     }
 
@@ -1693,7 +1729,7 @@ class Webhook_waha extends CI_Controller {
     }
 
     /**
-     * Processa estado: Gerenciando agendamento (seleção do agendamento)
+     ** Processa estado: Gerenciando agendamento (seleção do agendamento)
      */
     private function processar_estado_gerenciando($estabelecimento, $numero, $msg, $conversa, $cliente) {
         if (!$cliente) {
@@ -2180,7 +2216,9 @@ class Webhook_waha extends CI_Controller {
             $agendamento_id = $dados['agendamento_id'];
 
             // Calcular hora_fim baseado na duração
-            $hora_inicio = $dados['nova_hora'];
+            // CORREÇÃO: Normalizar hora_inicio para formato H:i:s (com segundos)
+            // Isso garante comparação correta de strings na validação de almoço
+            $hora_inicio = date('H:i:s', strtotime($dados['nova_hora']));
             $duracao = $dados['servico_duracao'];
             $hora_fim = date('H:i:s', strtotime($hora_inicio) + ($duracao * 60));
 
