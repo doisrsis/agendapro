@@ -17,6 +17,7 @@ class Agendamentos extends Painel_Controller {
         $this->load->model('Cliente_model');
         $this->load->model('Profissional_model');
         $this->load->model('Servico_model');
+        $this->load->library('Notificacao_whatsapp_lib');
     }
 
     /**
@@ -25,7 +26,7 @@ class Agendamentos extends Painel_Controller {
     public function index() {
         $data['titulo'] = 'Agendamentos';
         $data['menu_ativo'] = 'agendamentos';
-        $data['view'] = $this->input->get('view') ?? 'lista';
+        $data['view'] = $this->input->get('view') ?? 'rapida';
 
         $filtros = ['estabelecimento_id' => $this->estabelecimento_id];
 
@@ -38,11 +39,8 @@ class Agendamentos extends Painel_Controller {
         }
 
         // Filtro de status
-        if ($this->input->get('status')) {
+        if ($this->input->get('status') && $this->input->get('status') !== 'todos') {
             $filtros['status'] = $this->input->get('status');
-        } elseif ($data['view'] == 'rapida' && !$this->input->get('status')) {
-            // View rápida: status confirmado por padrão
-            $filtros['status'] = 'confirmado';
         }
 
         // Filtro de profissional
@@ -171,6 +169,7 @@ class Agendamentos extends Painel_Controller {
                             // Salvar dados do PIX no agendamento
                             $this->Agendamento_model->atualizar($agendamento_id, [
                                 'pagamento_status' => 'pendente',
+                                'forma_pagamento' => 'pix',
                                 'pagamento_valor' => $valor,
                                 'pagamento_pix_qrcode' => $pix_data['point_of_interaction']['transaction_data']['qr_code_base64'] ?? null,
                                 'pagamento_pix_copia_cola' => $pix_data['point_of_interaction']['transaction_data']['qr_code'] ?? null,
@@ -188,9 +187,19 @@ class Agendamentos extends Painel_Controller {
                                 'payment_data' => $pix_data
                             ]);
 
-                            // Redirecionar para página de pagamento
-                            $this->session->set_flashdata('sucesso', 'Agendamento criado! Complete o pagamento para confirmar.');
-                            redirect('painel/agendamentos/pagamento/' . $agendamento_id);
+                            // Enviar link de pagamento via WhatsApp
+                            $agendamento_completo = $this->Agendamento_model->get_by_id($agendamento_id);
+                            $link_pagamento = base_url('pagamento/' . $token_pagamento);
+
+                            $resultado_whatsapp = $this->notificacao_whatsapp_lib->enviar_link_pagamento($agendamento_completo, $link_pagamento);
+
+                            if ($resultado_whatsapp['success']) {
+                                $this->session->set_flashdata('sucesso', 'Agendamento criado! Link de pagamento enviado via WhatsApp para o cliente.');
+                            } else {
+                                $this->session->set_flashdata('aviso', 'Agendamento criado! Não foi possível enviar WhatsApp: ' . ($resultado_whatsapp['error'] ?? 'Erro desconhecido'));
+                            }
+
+                            redirect('painel/agendamentos');
                             return;
                         } else {
                             // Erro ao gerar PIX
@@ -407,6 +416,54 @@ class Agendamentos extends Painel_Controller {
             echo json_encode([
                 'success' => false,
                 'message' => 'Erro ao finalizar atendimento.'
+            ]);
+        }
+    }
+
+    /**
+     * Marcar agendamento como não compareceu (view rápida)
+     * Muda status para 'nao_compareceu' e envia notificação WhatsApp
+     * Retorna JSON para AJAX
+     */
+    public function marcar_nao_compareceu($id) {
+        header('Content-Type: application/json');
+
+        $agendamento = $this->Agendamento_model->get($id);
+
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Agendamento não encontrado.'
+            ]);
+            return;
+        }
+
+        // Verificar se pode marcar como não compareceu (não pode ser finalizado ou cancelado)
+        if (in_array($agendamento->status, ['finalizado', 'cancelado', 'nao_compareceu'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Este agendamento não pode ser marcado como não compareceu.'
+            ]);
+            return;
+        }
+
+        // Marcar como não compareceu
+        $resultado = $this->Agendamento_model->update($id, [
+            'status' => 'nao_compareceu'
+        ]);
+
+        if ($resultado) {
+            // Enviar notificação WhatsApp oferecendo reagendamento
+            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'nao_compareceu');
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Marcado como não compareceu. Notificação enviada ao cliente.'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erro ao marcar como não compareceu.'
             ]);
         }
     }
@@ -1024,6 +1081,158 @@ class Agendamentos extends Painel_Controller {
         $this->load->view('painel/layout/header', $data);
         $this->load->view('admin/agendamentos/_rapida_opcao1_tabela', $data);
         $this->load->view('painel/layout/footer');
+    }
+
+    /**
+     * Reenviar link de pagamento via WhatsApp
+     */
+    /**
+     * Enviar/Reenviar link de pagamento via WhatsApp
+     * Método inteligente: gera PIX se não existe ou reenvia se já existe
+     * Suporta: pagamento presencial → PIX, reenvio, cancelado/expirado
+     */
+    public function reenviar_link_pagamento($id) {
+        $agendamento = $this->Agendamento_model->get_by_id($id);
+
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            echo json_encode(['success' => false, 'message' => 'Agendamento não encontrado.']);
+            return;
+        }
+
+        // Verificar se cliente tem WhatsApp
+        if (empty($agendamento->cliente_whatsapp)) {
+            echo json_encode(['success' => false, 'message' => 'Cliente não possui WhatsApp cadastrado.']);
+            return;
+        }
+
+        // CASO 1: Já tem token de pagamento (reenvio)
+        if (!empty($agendamento->pagamento_token)) {
+            // Permitir reenvio para: pendente, cancelado ou expirado
+            if (!in_array($agendamento->pagamento_status, ['pendente', 'cancelado', 'expirado'])) {
+                echo json_encode(['success' => false, 'message' => 'O pagamento deste agendamento já foi concluído.']);
+                return;
+            }
+
+            // Se estava cancelado/expirado, reativar como pendente
+            if (in_array($agendamento->pagamento_status, ['cancelado', 'expirado'])) {
+                $this->Agendamento_model->update($id, [
+                    'pagamento_status' => 'pendente',
+                    'pagamento_expira_em' => date('Y-m-d H:i:s', strtotime('+' . ($this->estabelecimento->agendamento_tempo_expiracao_pix ?? 30) . ' minutes'))
+                ]);
+            }
+
+            $link_pagamento = base_url('pagamento/' . $agendamento->pagamento_token);
+            $resultado = $this->notificacao_whatsapp_lib->enviar_link_pagamento($agendamento, $link_pagamento);
+
+            if ($resultado['success']) {
+                echo json_encode(['success' => true, 'message' => 'Link de pagamento reenviado com sucesso!']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Erro ao enviar WhatsApp: ' . ($resultado['error'] ?? 'Erro desconhecido')]);
+            }
+            return;
+        }
+
+        // CASO 2: Não tem token (gerar PIX para pagamento presencial)
+        // Verificar se é pagamento presencial ou se pode gerar PIX
+        if ($agendamento->forma_pagamento !== 'presencial' && $agendamento->pagamento_status !== 'nao_requerido') {
+            echo json_encode(['success' => false, 'message' => 'Este agendamento não está configurado para pagamento presencial.']);
+            return;
+        }
+
+        // Buscar serviço para obter valor
+        $this->load->model('Servico_model');
+        $servico = $this->Servico_model->get_by_id($agendamento->servico_id);
+
+        if (!$servico || $servico->preco <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Serviço não possui valor configurado para pagamento.']);
+            return;
+        }
+
+        // Buscar cliente
+        $this->load->model('Cliente_model');
+        $cliente = $this->Cliente_model->get_by_id($agendamento->cliente_id);
+
+        // Gerar PIX via Mercado Pago
+        $this->load->library('mercadopago_lib');
+        $this->load->model('Pagamento_model');
+
+        // Usar credenciais do estabelecimento
+        $access_token = $this->estabelecimento->mp_sandbox
+            ? $this->estabelecimento->mp_access_token_test
+            : $this->estabelecimento->mp_access_token_prod;
+        $public_key = $this->estabelecimento->mp_sandbox
+            ? $this->estabelecimento->mp_public_key_test
+            : $this->estabelecimento->mp_public_key_prod;
+
+        if (empty($access_token)) {
+            echo json_encode(['success' => false, 'message' => 'Mercado Pago não configurado para este estabelecimento.']);
+            return;
+        }
+
+        $this->mercadopago_lib->set_credentials($access_token, $public_key);
+
+        // Gerar PIX
+        $pix_result = $this->mercadopago_lib->criar_pix_agendamento(
+            $id,
+            $servico->preco,
+            [
+                'nome' => $cliente->nome ?? 'Cliente',
+                'email' => $cliente->email ?: 'cliente@agendapro.com',
+                'cpf' => $cliente->cpf ?: ''
+            ],
+            $this->estabelecimento->id
+        );
+
+        if (!$pix_result || !isset($pix_result['response']) || !in_array($pix_result['status'], [200, 201])) {
+            echo json_encode(['success' => false, 'message' => 'Erro ao gerar PIX no Mercado Pago: ' . ($pix_result['error'] ?? 'Erro desconhecido')]);
+            return;
+        }
+
+        $pix_data = $pix_result['response'];
+
+        // Gerar token único para pagamento
+        $token = bin2hex(random_bytes(16));
+
+        // Calcular tempo de expiração
+        $tempo_expiracao = $this->estabelecimento->agendamento_tempo_expiracao_pix ?? 30;
+        $expira_em = date('Y-m-d H:i:s', strtotime("+{$tempo_expiracao} minutes"));
+
+        // Atualizar agendamento com dados de pagamento PIX (incluindo QR Code e Copia e Cola)
+        $update_data = [
+            'forma_pagamento' => 'pix',
+            'pagamento_status' => 'pendente',
+            'pagamento_valor' => $servico->preco,
+            'pagamento_token' => $token,
+            'pagamento_pix_qrcode' => $pix_data['point_of_interaction']['transaction_data']['qr_code_base64'] ?? null,
+            'pagamento_pix_copia_cola' => $pix_data['point_of_interaction']['transaction_data']['qr_code'] ?? null,
+            'pagamento_expira_em' => $expira_em,
+            'pagamento_lembrete_enviado' => 0
+        ];
+
+        if ($this->Agendamento_model->update($id, $update_data)) {
+            // Criar registro de pagamento
+            $this->Pagamento_model->criar_agendamento([
+                'estabelecimento_id' => $this->estabelecimento->id,
+                'agendamento_id' => $id,
+                'valor' => $servico->preco,
+                'mercadopago_id' => $pix_data['id'],
+                'payment_data' => $pix_data
+            ]);
+
+            // Recarregar agendamento com novos dados
+            $agendamento = $this->Agendamento_model->get_by_id($id);
+            $link_pagamento = base_url('pagamento/' . $token);
+
+            $resultado = $this->notificacao_whatsapp_lib->enviar_link_pagamento($agendamento, $link_pagamento);
+
+            if ($resultado['success']) {
+                echo json_encode(['success' => true, 'message' => 'Link de pagamento PIX gerado e enviado com sucesso!']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Link gerado, mas erro ao enviar WhatsApp: ' . ($resultado['error'] ?? 'Erro desconhecido')]);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erro ao salvar dados do pagamento.']);
+        }
     }
 
     /**

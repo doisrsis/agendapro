@@ -26,8 +26,8 @@
                 <div class="col-md-3">
                     <label class="form-label">Status</label>
                     <select class="form-select" name="status" id="filtro-status">
-                        <option value="">Todos</option>
-                        <option value="confirmado" <?= ($filtros['status'] ?? 'confirmado') == 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
+                        <option value="todos" <?= !isset($filtros['status']) || $filtros['status'] == '' ? 'selected' : '' ?>>Todos</option>
+                        <option value="confirmado" <?= ($filtros['status'] ?? '') == 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
                         <option value="pendente" <?= ($filtros['status'] ?? '') == 'pendente' ? 'selected' : '' ?>>Pendente</option>
                         <option value="finalizado" <?= ($filtros['status'] ?? '') == 'finalizado' ? 'selected' : '' ?>>Finalizado</option>
                         <option value="cancelado" <?= ($filtros['status'] ?? '') == 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
@@ -197,14 +197,43 @@
 
                     <!-- Botões de Ação Secundários -->
                     <div class="btn-group">
-                        <!-- Botão Não Compareceu - PLACEHOLDER -->
+                        <!-- Botão Não Compareceu -->
                         <?php if (!in_array($ag->status, ['finalizado', 'cancelado', 'nao_compareceu'])): ?>
                         <button type="button"
-                                class="btn btn-outline-dark"
-                                title="Marcar como Não Compareceu"
-                                onclick="alert('Funcionalidade será implementada em breve!')">
+                                class="btn btn-outline-dark btn-nao-compareceu"
+                                data-agendamento-id="<?= $ag->id ?>"
+                                data-cliente-nome="<?= $ag->cliente_nome ?>"
+                                title="Marcar como Não Compareceu">
                             <i class="ti ti-user-x me-1"></i>
                             Não Compareceu
+                        </button>
+                        <?php endif; ?>
+
+                        <!-- Botão Enviar/Reenviar Link de Pagamento PIX -->
+                        <?php
+                        // Condições para aparecer o botão:
+                        // 1. Cliente tem WhatsApp
+                        // 2. Status: pendente, confirmado ou nao_compareceu (não aparece para reagendado, cancelado ou finalizado)
+                        // 3. Pagamento: pendente, cancelado, expirado OU presencial (para gerar PIX)
+                        $mostrar_botao_pix = !empty($ag->cliente_whatsapp)
+                            && in_array($ag->status, ['pendente', 'confirmado', 'nao_compareceu'])
+                            && (in_array($ag->pagamento_status, ['pendente', 'cancelado', 'expirado'])
+                                || $ag->forma_pagamento === 'presencial');
+
+                        if ($mostrar_botao_pix):
+                            // Texto dinâmico: se já tem token, é reenvio; se não, é geração
+                            $tem_link = !empty($ag->pagamento_token);
+                            $texto_botao = $tem_link ? 'Reenviar Link PIX' : 'Gerar Link PIX';
+                            $icone = $tem_link ? 'ti-send' : 'ti-qrcode';
+                        ?>
+                        <button type="button"
+                                class="btn btn-outline-info btn-reenviar-link"
+                                data-agendamento-id="<?= $ag->id ?>"
+                                data-cliente-nome="<?= $ag->cliente_nome ?>"
+                                data-tem-link="<?= $tem_link ? '1' : '0' ?>"
+                                title="<?= $texto_botao ?>">
+                            <i class="ti <?= $icone ?> me-1"></i>
+                            <?= $tem_link ? 'Reenviar Link' : 'Gerar PIX' ?>
                         </button>
                         <?php endif; ?>
 
@@ -331,6 +360,153 @@ document.querySelectorAll('.btn-finalizar').forEach(function(btn) {
                         timerProgressBar: true
                     });
                 }, 300);
+            }
+        });
+    });
+});
+
+// Marcar como Não Compareceu
+document.querySelectorAll('.btn-nao-compareceu').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const agendamentoId = this.getAttribute('data-agendamento-id');
+        const clienteNome = this.getAttribute('data-cliente-nome');
+
+        Swal.fire({
+            title: 'Cliente Não Compareceu',
+            html: `<strong>${clienteNome}</strong> não compareceu ao atendimento?<br><br>` +
+                  `<small class="text-muted">Uma notificação será enviada ao cliente oferecendo reagendamento.</small>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="ti ti-user-x me-1"></i> Sim, não compareceu',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#d63939',
+            cancelButtonColor: '#6c757d',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch('<?= base_url('painel/agendamentos/marcar_nao_compareceu/') ?>' + agendamentoId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Erro ao marcar como não compareceu');
+                    }
+                    return data;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Erro: ${error.message}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Sucesso: Remover card da lista com animação
+                const card = document.querySelector(`[data-agendamento-id="${agendamentoId}"]`).closest('.col-md-6');
+
+                // Animação de fade out
+                card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+
+                setTimeout(() => {
+                    card.remove();
+
+                    // Verificar se ainda há cards na lista
+                    const listaAgendamentos = document.getElementById('lista-agendamentos');
+                    const cardsRestantes = listaAgendamentos.querySelectorAll('.col-md-6').length;
+
+                    if (cardsRestantes === 0) {
+                        // Mostrar mensagem de lista vazia
+                        listaAgendamentos.innerHTML = `
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body text-center text-muted py-5">
+                                        <i class="ti ti-calendar-check fs-1 mb-3 d-block text-success"></i>
+                                        <h3>Todos os agendamentos foram processados!</h3>
+                                        <p class="text-muted">Use os filtros acima para ver outros agendamentos</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Mostrar toast de sucesso
+                    Swal.fire({
+                        title: 'Registrado!',
+                        text: result.value.message,
+                        icon: 'success',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                }, 300);
+            }
+        });
+    });
+});
+
+// Enviar/Reenviar Link de Pagamento PIX (botão inteligente)
+document.querySelectorAll('.btn-reenviar-link').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const agendamentoId = this.getAttribute('data-agendamento-id');
+        const clienteNome = this.getAttribute('data-cliente-nome');
+        const temLink = this.getAttribute('data-tem-link') === '1';
+
+        // Textos dinâmicos baseados se já existe link ou não
+        const titulo = temLink ? 'Reenviar Link de Pagamento' : 'Gerar Link de Pagamento PIX';
+        const mensagem = temLink
+            ? `Deseja reenviar o link de pagamento via WhatsApp para <strong>${clienteNome}</strong>?`
+            : `Deseja gerar e enviar link de pagamento PIX via WhatsApp para <strong>${clienteNome}</strong>?<br><br><small class="text-muted">O link será gerado com o prazo de expiração configurado no sistema.</small>`;
+        const icone = temLink ? 'ti-send' : 'ti-qrcode';
+        const textoBotao = temLink ? 'Sim, reenviar' : 'Sim, gerar e enviar';
+
+        Swal.fire({
+            title: titulo,
+            html: mensagem,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: `<i class="ti ${icone} me-1"></i> ${textoBotao}`,
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0dcaf0',
+            cancelButtonColor: '#6c757d',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch('<?= base_url('painel/agendamentos/reenviar_link_pagamento/') ?>' + agendamentoId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Erro ao processar link de pagamento');
+                    }
+                    return data;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Erro: ${error.message}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Mostrar toast de sucesso
+                Swal.fire({
+                    title: 'Enviado!',
+                    text: result.value.message,
+                    icon: 'success',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
             }
         });
     });
