@@ -169,6 +169,14 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['cancelar_nao_confirmados'])) $update_data['cancelar_nao_confirmados'] = $data['cancelar_nao_confirmados'];
         if (isset($data['cancelar_nao_confirmados_horas'])) $update_data['cancelar_nao_confirmados_horas'] = $data['cancelar_nao_confirmados_horas'];
 
+        // Campos de notificações para profissionais
+        if (isset($data['notif_prof_novo_agendamento'])) $update_data['notif_prof_novo_agendamento'] = $data['notif_prof_novo_agendamento'];
+        if (isset($data['notif_prof_cancelamento'])) $update_data['notif_prof_cancelamento'] = $data['notif_prof_cancelamento'];
+        if (isset($data['notif_prof_reagendamento'])) $update_data['notif_prof_reagendamento'] = $data['notif_prof_reagendamento'];
+        if (isset($data['notif_prof_resumo_diario'])) $update_data['notif_prof_resumo_diario'] = $data['notif_prof_resumo_diario'];
+        if (array_key_exists('notif_prof_resumo_manha', $data)) $update_data['notif_prof_resumo_manha'] = $data['notif_prof_resumo_manha'];
+        if (array_key_exists('notif_prof_resumo_tarde', $data)) $update_data['notif_prof_resumo_tarde'] = $data['notif_prof_resumo_tarde'];
+
         if (empty($update_data)) {
             return false;
         }

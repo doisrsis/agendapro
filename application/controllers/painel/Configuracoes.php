@@ -733,4 +733,60 @@ class Configuracoes extends CI_Controller {
 
         redirect('painel/configuracoes?aba=whatsapp');
     }
+
+    /**
+     * Salvar configurações de notificações para profissionais
+     */
+    public function salvar_notificacoes_profissional() {
+        try {
+            // Coletar dados do formulário
+            $dados = [
+                'notif_prof_novo_agendamento' => $this->input->post('notif_prof_novo_agendamento') ? 1 : 0,
+                'notif_prof_cancelamento' => $this->input->post('notif_prof_cancelamento') ? 1 : 0,
+                'notif_prof_reagendamento' => $this->input->post('notif_prof_reagendamento') ? 1 : 0,
+                'notif_prof_resumo_diario' => $this->input->post('notif_prof_resumo_diario') ? 1 : 0,
+            ];
+
+            // Se resumo diário estiver ativo, salvar horários
+            if ($dados['notif_prof_resumo_diario']) {
+                $horario_manha = $this->input->post('notif_prof_resumo_manha');
+                $horario_tarde = $this->input->post('notif_prof_resumo_tarde');
+
+                if (!empty($horario_manha)) {
+                    $dados['notif_prof_resumo_manha'] = $horario_manha . ':00';
+                }
+                if (!empty($horario_tarde)) {
+                    $dados['notif_prof_resumo_tarde'] = $horario_tarde . ':00';
+                }
+            } else {
+                // Se desativado, limpar horários
+                $dados['notif_prof_resumo_manha'] = null;
+                $dados['notif_prof_resumo_tarde'] = null;
+            }
+
+            // Atualizar no banco
+            $resultado = $this->Estabelecimento_model->update($this->estabelecimento_id, $dados);
+
+            if ($resultado) {
+                log_message('info', "Configurações de notificações profissional salvas - Estabelecimento #{$this->estabelecimento_id}");
+
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Configurações salvas com sucesso!'
+                ]);
+            } else {
+                throw new Exception('Erro ao salvar no banco de dados');
+            }
+
+        } catch (Exception $e) {
+            log_message('error', "Erro ao salvar notificações profissional: " . $e->getMessage());
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erro ao salvar configurações: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

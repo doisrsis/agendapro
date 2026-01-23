@@ -357,6 +357,13 @@ class Webhook_waha extends CI_Controller {
             'status' => 'recebido'
         ]);
 
+        // Verificar se integração WAHA está ativa globalmente (configuração do SaaS Admin)
+        $waha_ativo = $this->Configuracao_model->get_by_chave('waha_ativo');
+        if (!$waha_ativo || $waha_ativo->valor != '1') {
+            log_message('debug', 'WAHA Webhook: Integração WAHA desativada globalmente - mensagem ignorada');
+            return;
+        }
+
         // Se for estabelecimento com bot ativo, processar bot
         if ($estabelecimento_id) {
             $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);
@@ -876,12 +883,8 @@ class Webhook_waha extends CI_Controller {
             if (isset($agendamentos[$indice])) {
                 $ag = $agendamentos[$indice];
 
-                // Cancelar o agendamento
-                $this->Agendamento_model->update($ag->id, [
-                    'status' => 'cancelado',
-                    'cancelado_por' => 'cliente',
-                    'motivo_cancelamento' => 'Cancelado via WhatsApp Bot'
-                ]);
+                // Cancelar o agendamento (notificar_cliente=false pois o Bot já envia mensagem própria)
+                $this->Agendamento_model->cancelar($ag->id, 'cliente', 'Cancelado via WhatsApp Bot', false);
 
                 $data = date('d/m/Y', strtotime($ag->data));
                 $hora = date('H:i', strtotime($ag->hora_inicio));
@@ -1799,12 +1802,8 @@ class Webhook_waha extends CI_Controller {
         // Se está confirmando cancelamento, processar resposta
         if (isset($dados['confirmando_cancelamento']) && $dados['confirmando_cancelamento']) {
             if (in_array($msg, ['1', 'sim', 's'])) {
-                // Confirmar cancelamento
-                $this->Agendamento_model->update($dados['agendamento_id'], [
-                    'status' => 'cancelado',
-                    'cancelado_por' => 'cliente',
-                    'motivo_cancelamento' => 'Cancelado via WhatsApp Bot'
-                ]);
+                // Confirmar cancelamento (notificar_cliente=false pois o Bot já envia mensagem própria)
+                $this->Agendamento_model->cancelar($dados['agendamento_id'], 'cliente', 'Cancelado via WhatsApp Bot', false);
 
                 $data = date('d/m/Y', strtotime($dados['agendamento_data_original']));
                 $hora = date('H:i', strtotime($dados['agendamento_hora_original']));
@@ -2260,6 +2259,12 @@ class Webhook_waha extends CI_Controller {
 
             $this->waha_lib->enviar_texto($numero, $mensagem);
 
+            // Notificar profissional sobre reagendamento
+            $this->Agendamento_model->enviar_notificacao_whatsapp($resultado['novo_agendamento_id'], 'profissional_reagendamento', [
+                'data_anterior' => $dados['agendamento_data_original'],
+                'hora_anterior' => $dados['agendamento_hora_original']
+            ]);
+
             // Encerrar conversa (próxima mensagem mostra menu)
             $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
             return;
@@ -2485,13 +2490,9 @@ class Webhook_waha extends CI_Controller {
             return;
         }
 
-        // 1 ou Sim - Confirmar Cancelamento
+        // 1 ou Sim - Confirmar Cancelamento (notificar_cliente=false pois o Bot já envia mensagem própria)
         if ($opcao == '1' || $opcao == 'sim' || $opcao == 's' || $opcao == 'confirmar') {
-            $this->Agendamento_model->update($agendamento_id, [
-                'status' => 'cancelado',
-                'cancelado_por' => 'cliente',
-                'motivo_cancelamento' => 'Cancelado via confirmação WhatsApp'
-            ]);
+            $this->Agendamento_model->cancelar($agendamento_id, 'cliente', 'Cancelado via confirmação WhatsApp', false);
 
             $this->waha_lib->enviar_texto($numero,
                 "❌ *Agendamento Cancelado*\n\n" .

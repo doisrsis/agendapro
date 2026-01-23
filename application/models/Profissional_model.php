@@ -65,8 +65,7 @@ class Profissional_model extends CI_Model {
             'estabelecimento_id' => $data['estabelecimento_id'],
             'nome' => $data['nome'],
             'foto' => $data['foto'] ?? null,
-            'whatsapp' => $data['whatsapp'] ?? null,
-            'telefone' => $data['telefone'] ?? null,
+            'whatsapp' => $this->normalizar_telefone($data['whatsapp'] ?? null),
             'email' => $data['email'] ?? null,
             'status' => $data['status'] ?? 'ativo',
         ];
@@ -86,9 +85,16 @@ class Profissional_model extends CI_Model {
 
         if (isset($data['nome'])) $update_data['nome'] = $data['nome'];
         if (isset($data['foto'])) $update_data['foto'] = $data['foto'];
-        if (isset($data['whatsapp'])) $update_data['whatsapp'] = $data['whatsapp'];
-        if (isset($data['telefone'])) $update_data['telefone'] = $data['telefone'];
-        if (isset($data['email'])) $update_data['email'] = $data['email'];
+
+        // Normalizar e validar WhatsApp (adicionar nono dígito se necessário)
+        if (array_key_exists('whatsapp', $data)) {
+            $update_data['whatsapp'] = $this->normalizar_telefone($data['whatsapp']);
+        }
+
+        if (array_key_exists('email', $data)) {
+            $update_data['email'] = $data['email'];
+        }
+
         if (isset($data['status'])) $update_data['status'] = $data['status'];
 
         if (empty($update_data)) {
@@ -97,6 +103,53 @@ class Profissional_model extends CI_Model {
 
         $this->db->where('id', $id);
         return $this->db->update($this->table, $update_data);
+    }
+
+    /**
+     * Normalizar telefone - adicionar nono dígito se necessário
+     *
+     * @param string $telefone
+     * @return string|null
+     */
+    private function normalizar_telefone($telefone) {
+        if (empty($telefone)) {
+            return null;
+        }
+
+        // Remover caracteres não numéricos
+        $numero_limpo = preg_replace('/[^0-9]/', '', $telefone);
+
+        // Se estiver vazio após limpeza, retornar null
+        if (empty($numero_limpo)) {
+            return null;
+        }
+
+        // Se tiver 10 dígitos (sem nono dígito) e for celular (DDD + 8 ou 9)
+        // Adicionar o 9 no início do número
+        if (strlen($numero_limpo) == 10) {
+            $ddd = substr($numero_limpo, 0, 2);
+            $numero = substr($numero_limpo, 2);
+
+            // Se o número começa com 6, 7, 8 ou 9 (celular antigo sem nono dígito)
+            if (in_array($numero[0], ['6', '7', '8', '9'])) {
+                $numero_limpo = $ddd . '9' . $numero;
+            }
+        }
+
+        // Se tiver 13 dígitos (com código do país 55), remover o 55
+        if (strlen($numero_limpo) == 13 && substr($numero_limpo, 0, 2) == '55') {
+            $numero_limpo = substr($numero_limpo, 2);
+        }
+
+        // Formatar: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+        if (strlen($numero_limpo) == 11) {
+            return '(' . substr($numero_limpo, 0, 2) . ') ' . substr($numero_limpo, 2, 5) . '-' . substr($numero_limpo, 7);
+        } elseif (strlen($numero_limpo) == 10) {
+            return '(' . substr($numero_limpo, 0, 2) . ') ' . substr($numero_limpo, 2, 4) . '-' . substr($numero_limpo, 6);
+        }
+
+        // Retornar como está se não conseguir formatar
+        return $telefone;
     }
 
     /**

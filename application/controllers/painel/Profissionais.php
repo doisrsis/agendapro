@@ -134,7 +134,7 @@ class Profissionais extends Painel_Controller {
             if ($this->form_validation->run()) {
                 $dados = [
                     'nome' => $this->input->post('nome'),
-                    'telefone' => $this->input->post('telefone'),
+                    'whatsapp' => $this->input->post('whatsapp'),
                     'email' => $this->input->post('email'),
                 ];
 

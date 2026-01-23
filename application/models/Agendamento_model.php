@@ -184,7 +184,8 @@ class Agendamento_model extends CI_Model {
             $estabelecimento = $this->Estabelecimento_model->get_by_id($data['estabelecimento_id']);
             $requer_pagamento = ($estabelecimento->agendamento_requer_pagamento ?? 'nao') != 'nao';
 
-            // Só enviar notificações se NÃO requer pagamento E se enviar_notificacao = true
+            // Notificações para CLIENTE
+            // Só enviar se NÃO requer pagamento E se enviar_notificacao = true
             // Se requer pagamento, as notificações serão enviadas após confirmação do pagamento
             // Se enviar_notificacao = false (bot), o bot enviará sua própria mensagem
             if (!$requer_pagamento && $enviar_notificacao) {
@@ -194,8 +195,15 @@ class Agendamento_model extends CI_Model {
                 } elseif ($status_final == 'pendente') {
                     $this->enviar_notificacao_whatsapp($agendamento_id, 'pendente');
                 }
+            }
 
-                // Enviar notificação WhatsApp para profissional/estabelecimento
+            // Notificação para PROFISSIONAL
+            // Enviar quando:
+            // 1. Agendamento confirmado E
+            // 2. Pagamento não está pendente (presencial, pago, ou não requerido)
+            // Se pagamento_status = 'pendente', a notificação será enviada após confirmação do pagamento
+            $pagamento_pendente = ($insert_data['pagamento_status'] == 'pendente');
+            if (!$pagamento_pendente && $status_final == 'confirmado') {
                 $this->enviar_notificacao_whatsapp($agendamento_id, 'profissional_novo');
             }
 
@@ -284,8 +292,13 @@ class Agendamento_model extends CI_Model {
 
     /**
      * Cancelar agendamento
+     *
+     * @param int $id ID do agendamento
+     * @param string $cancelado_por Quem cancelou (cliente, estabelecimento, sistema)
+     * @param string $motivo Motivo do cancelamento
+     * @param bool $notificar_cliente Se deve enviar notificação ao cliente (false quando via Bot, pois o Bot já envia)
      */
-    public function cancelar($id, $cancelado_por, $motivo = null) {
+    public function cancelar($id, $cancelado_por, $motivo = null, $notificar_cliente = true) {
         $resultado = $this->update($id, [
             'status' => 'cancelado',
             'cancelado_por' => $cancelado_por,
@@ -293,8 +306,10 @@ class Agendamento_model extends CI_Model {
         ]);
 
         if ($resultado) {
-            // Enviar notificação WhatsApp de cancelamento para cliente
-            $this->enviar_notificacao_whatsapp($id, 'cancelamento', ['motivo' => $motivo]);
+            // Enviar notificação WhatsApp de cancelamento para cliente (se habilitado)
+            if ($notificar_cliente) {
+                $this->enviar_notificacao_whatsapp($id, 'cancelamento', ['motivo' => $motivo]);
+            }
 
             // Enviar notificação WhatsApp para profissional/estabelecimento
             $this->enviar_notificacao_whatsapp($id, 'profissional_cancelamento', ['motivo' => $motivo]);

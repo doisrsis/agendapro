@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Library de Notificações WhatsApp para Agendamentos
- *
+ **
  * Envia notificações automáticas via WhatsApp usando WAHA API
  * - Confirmação de agendamento
  * - Lembrete antes do horário
@@ -26,7 +26,7 @@ class Notificacao_whatsapp_lib {
     }
 
     /**
-     * Configurar WAHA para um estabelecimento específico
+     ** Configurar WAHA para um estabelecimento específico
      * Usa credenciais do Super Admin com sessão do estabelecimento
      *
      * @param int $estabelecimento_id
@@ -134,8 +134,7 @@ class Notificacao_whatsapp_lib {
         $mensagem .= "👤 *Profissional:* {$agendamento->profissional_nome}\n";
         $mensagem .= "💰 *Valor:* R$ {$valor_formatado}\n\n";
         $mensagem .= "📍 *Local:* {$agendamento->estabelecimento_nome}\n\n";
-        $mensagem .= "Caso precise cancelar ou reagendar, entre em contato conosco.\n\n";
-        $mensagem .= "_Mensagem automática - não responda._";
+        $mensagem .= "Caso precise *cancelar* ou *reagendar*, digite *menu*.\n";
 
         $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);
 
@@ -229,7 +228,7 @@ class Notificacao_whatsapp_lib {
         $mensagem .= "👤 *Profissional:* {$agendamento->profissional_nome}\n\n";
         $mensagem .= "📍 *Local:* {$agendamento->estabelecimento_nome}\n\n";
         $mensagem .= "Te esperamos! 😊\n\n";
-        $mensagem .= "_Mensagem automática - não responda._";
+        $mensagem .= "_Caso queira *cancelar* ou *reagendar*, digite *menu*._";
 
         $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);
 
@@ -393,6 +392,64 @@ class Notificacao_whatsapp_lib {
     }
 
     /**
+     * Enviar notificação de não comparecimento
+     * Oferece reagendamento ao cliente
+     *
+     * @param object $agendamento Objeto do agendamento com joins
+     * @return array
+     */
+    public function enviar_nao_compareceu($agendamento) {
+        if (!$this->configurar_waha($agendamento->estabelecimento_id)) {
+            return ['success' => false, 'error' => 'WhatsApp não configurado'];
+        }
+
+        $chat_id = $this->obter_chat_id_cliente($agendamento->cliente_whatsapp);
+        if (!$chat_id) {
+            return ['success' => false, 'error' => 'Número do cliente não informado ou inválido'];
+        }
+
+        $data_formatada = date('d/m/Y', strtotime($agendamento->data));
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+
+        $mensagem = "⚠️ *Você não compareceu ao seu agendamento*\n\n";
+        $mensagem .= "Olá {$agendamento->cliente_nome},\n\n";
+        $mensagem .= "Notamos que você não compareceu ao seu horário agendado:\n\n";
+        $mensagem .= "📅 *Data:* {$data_formatada}\n";
+        $mensagem .= "🕐 *Horário:* {$hora_formatada}\n";
+        $mensagem .= "💇 *Serviço:* {$agendamento->servico_nome}\n";
+        $mensagem .= "👤 *Profissional:* {$agendamento->profissional_nome}\n\n";
+        $mensagem .= "📍 {$agendamento->estabelecimento_nome}\n\n";
+        $mensagem .= "💬 *O que deseja fazer?*\n\n";
+        $mensagem .= "*1* - 🔄 Reagendar\n";
+        $mensagem .= "*2* - 📅 Deixar para depois\n\n";
+        $mensagem .= "Digite o número da opção desejada.";
+
+        $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);
+
+        // Log da notificação
+        $this->registrar_log($agendamento, 'nao_compareceu', $resultado);
+
+        // Colocar conversa do bot no estado pos_nao_compareceu para aguardar resposta
+        if ($resultado['success']) {
+            $this->CI->load->model('Bot_conversa_model');
+            $conversa = $this->CI->Bot_conversa_model->get_ou_criar(
+                $agendamento->estabelecimento_id,
+                $agendamento->cliente_whatsapp
+            );
+
+            if ($conversa) {
+                $this->CI->Bot_conversa_model->atualizar_estado(
+                    $conversa->id,
+                    'pos_nao_compareceu',
+                    ['agendamento_id' => $agendamento->id]
+                );
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
      * Enviar lembrete de pagamento pendente
      * Enviado quando o tempo inicial do PIX expira
      *
@@ -454,6 +511,14 @@ class Notificacao_whatsapp_lib {
             return ['success' => false, 'error' => 'WhatsApp não configurado'];
         }
 
+        // Verificar se notificação está ativa
+        $this->CI->load->model('Estabelecimento_model');
+        $estabelecimento = $this->CI->Estabelecimento_model->get_by_id($agendamento->estabelecimento_id);
+        if (empty($estabelecimento->notif_prof_novo_agendamento)) {
+            log_message('info', "Notificacao profissional novo agendamento desativada - Estabelecimento #{$agendamento->estabelecimento_id}");
+            return ['success' => false, 'error' => 'Notificação desativada'];
+        }
+
         // Verificar quantidade de profissionais do estabelecimento
         $this->CI->load->model('Profissional_model');
         $profissionais = $this->CI->Profissional_model->get_by_estabelecimento($agendamento->estabelecimento_id);
@@ -461,8 +526,6 @@ class Notificacao_whatsapp_lib {
 
         // Determinar destinatário: se só 1 profissional, notifica estabelecimento
         if ($total_profissionais <= 1) {
-            $this->CI->load->model('Estabelecimento_model');
-            $estabelecimento = $this->CI->Estabelecimento_model->get_by_id($agendamento->estabelecimento_id);
             $numero_destino = $estabelecimento->whatsapp ?? null;
             $nome_destino = $estabelecimento->nome;
             $tipo_destino = 'estabelecimento';
@@ -484,17 +547,32 @@ class Notificacao_whatsapp_lib {
 
         $data_formatada = date('d/m/Y', strtotime($agendamento->data));
         $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
-        $valor_formatado = number_format($agendamento->servico_preco ?? 0, 2, ',', '.');
+
+        // Mapear forma de pagamento
+        $forma_pagamento_map = [
+            'pix' => 'PIX',
+            'presencial' => 'Presencial',
+            'cartao' => 'Cartão',
+            'dinheiro' => 'Dinheiro'
+        ];
+        $forma_pagamento = $forma_pagamento_map[$agendamento->forma_pagamento] ?? 'Não informado';
+
+        // Criar link do WhatsApp do cliente
+        $whatsapp_link = '';
+        if (!empty($agendamento->cliente_whatsapp)) {
+            $numero_limpo = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+            $whatsapp_link = "https://wa.me/{$numero_limpo}";
+        }
 
         $mensagem = "📅 *Novo Agendamento!*\n\n";
         $mensagem .= "👤 *Cliente:* {$agendamento->cliente_nome}\n";
-        if (!empty($agendamento->cliente_whatsapp)) {
-            $mensagem .= "📱 *WhatsApp:* {$agendamento->cliente_whatsapp}\n";
+        if ($whatsapp_link) {
+            $mensagem .= "📱 *WhatsApp:* {$whatsapp_link}\n";
         }
         $mensagem .= "\n📅 *Data:* {$data_formatada}\n";
         $mensagem .= "⏰ *Horário:* {$hora_formatada}\n";
         $mensagem .= "💇 *Serviço:* {$agendamento->servico_nome}\n";
-        $mensagem .= "💰 *Valor:* R$ {$valor_formatado}\n";
+        $mensagem .= "💰 *Pagamento:* {$forma_pagamento}\n";
         if ($total_profissionais > 1) {
             $mensagem .= "👤 *Profissional:* {$agendamento->profissional_nome}\n";
         }
@@ -544,8 +622,18 @@ class Notificacao_whatsapp_lib {
         $data_formatada = date('d/m/Y', strtotime($agendamento->data));
         $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
 
+        // Criar link do WhatsApp do cliente
+        $whatsapp_link = '';
+        if (!empty($agendamento->cliente_whatsapp)) {
+            $numero_limpo = preg_replace('/[^0-9]/', '', $agendamento->cliente_whatsapp);
+            $whatsapp_link = "https://wa.me/{$numero_limpo}";
+        }
+
         $mensagem = "❌ *Agendamento Cancelado*\n\n";
         $mensagem .= "👤 *Cliente:* {$agendamento->cliente_nome}\n";
+        if ($whatsapp_link) {
+            $mensagem .= "📱 *WhatsApp:* {$whatsapp_link}\n";
+        }
         $mensagem .= "📅 *Data:* {$data_formatada}\n";
         $mensagem .= "⏰ *Horário:* {$hora_formatada}\n";
         $mensagem .= "💇 *Serviço:* {$agendamento->servico_nome}\n";
@@ -701,5 +789,181 @@ class Notificacao_whatsapp_lib {
                 'erro_mensagem' => $erro
             ]);
         }
+    }
+
+    /**
+     * Enviar link de pagamento PIX via WhatsApp
+     * Usado quando agendamento é criado no painel administrativo
+     *
+     * @param object $agendamento Objeto do agendamento com joins
+     * @param string $link_pagamento URL da página pública de pagamento
+     * @return array
+     */
+    public function enviar_link_pagamento($agendamento, $link_pagamento) {
+        if (!$this->configurar_waha($agendamento->estabelecimento_id)) {
+            return ['success' => false, 'error' => 'WhatsApp não configurado'];
+        }
+
+        $numero = $this->limpar_numero($agendamento->cliente_whatsapp);
+        if (!$numero) {
+            log_message('warning', 'Notificacao WhatsApp: Cliente sem WhatsApp - Link pagamento #' . $agendamento->id);
+            return ['success' => false, 'error' => 'Número do cliente não informado'];
+        }
+
+        $chat_id = $this->CI->waha_lib->obter_chat_id_valido($numero);
+        if (!$chat_id) {
+            return ['success' => false, 'error' => 'Número não encontrado no WhatsApp'];
+        }
+
+        $data_formatada = date('d/m/Y', strtotime($agendamento->data));
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+        $valor_formatado = number_format($agendamento->pagamento_valor, 2, ',', '.');
+
+        // Buscar tempo de expiração configurado no estabelecimento
+        $tempo_expiracao = $agendamento->agendamento_tempo_expiracao_pix ?? 30;
+
+        $mensagem = "✅ *Agendamento Confirmado!*\n\n";
+        $mensagem .= "Olá {$agendamento->cliente_nome},\n\n";
+        $mensagem .= "Seu agendamento foi realizado com sucesso!\n\n";
+        $mensagem .= "📅 *Data:* {$data_formatada}\n";
+        $mensagem .= "⏰ *Horário:* {$hora_formatada}\n";
+        $mensagem .= "💇 *Serviço:* {$agendamento->servico_nome}\n";
+        $mensagem .= "👤 *Profissional:* {$agendamento->profissional_nome}\n";
+        $mensagem .= "💰 *Valor:* R$ {$valor_formatado}\n\n";
+        $mensagem .= "💳 *Pagamento via PIX*\n\n";
+        $mensagem .= "🔗 *Clique no link abaixo para pagar:*\n";
+        $mensagem .= "{$link_pagamento}\n\n";
+        $mensagem .= "⏰ Você tem {$tempo_expiracao} minutos para realizar o pagamento.\n\n";
+        $mensagem .= "📍 {$agendamento->estabelecimento_nome}\n\n";
+        $mensagem .= "_Mensagem automática - não responda._";
+
+        $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);
+
+        $this->registrar_log($agendamento, 'link_pagamento', $resultado);
+
+        return $resultado;
+    }
+
+    /**
+     * Enviar resumo diário da agenda para profissional/estabelecimento
+     *
+     * @param int $estabelecimento_id ID do estabelecimento
+     * @param string $periodo 'manha' ou 'tarde'
+     * @return array
+     */
+    public function enviar_resumo_diario($estabelecimento_id, $periodo = 'manha') {
+        if (!$this->configurar_waha($estabelecimento_id)) {
+            return ['success' => false, 'error' => 'WhatsApp não configurado'];
+        }
+
+        // Buscar estabelecimento
+        $this->CI->load->model('Estabelecimento_model');
+        $estabelecimento = $this->CI->Estabelecimento_model->get_by_id($estabelecimento_id);
+
+        if (!$estabelecimento) {
+            return ['success' => false, 'error' => 'Estabelecimento não encontrado'];
+        }
+
+        // Verificar se notificação está ativa
+        if (!$estabelecimento->notif_prof_resumo_diario) {
+            return ['success' => false, 'error' => 'Notificação de resumo diário desativada'];
+        }
+
+        // Determinar destinatário
+        $this->CI->load->model('Profissional_model');
+        $profissionais = $this->CI->Profissional_model->get_by_estabelecimento($estabelecimento_id);
+        $total_profissionais = count($profissionais);
+
+        if ($total_profissionais <= 1) {
+            $numero_destino = $estabelecimento->whatsapp ?? null;
+            $tipo_destino = 'estabelecimento';
+        } else {
+            // Se múltiplos profissionais, enviar para cada um
+            // Por enquanto, enviar para estabelecimento
+            $numero_destino = $estabelecimento->whatsapp ?? null;
+            $tipo_destino = 'estabelecimento';
+        }
+
+        if (empty($numero_destino)) {
+            return ['success' => false, 'error' => "{$tipo_destino} sem WhatsApp cadastrado"];
+        }
+
+        $chat_id = $this->obter_chat_id_cliente($numero_destino);
+        if (!$chat_id) {
+            return ['success' => false, 'error' => 'Número inválido'];
+        }
+
+        // Buscar agendamentos do dia
+        $this->CI->load->model('Agendamento_model');
+        $hoje = date('Y-m-d');
+
+        // Determinar horário de corte baseado no período
+        $horario_corte = date('H:i:s');
+
+        $this->CI->db->select('a.*, c.nome as cliente_nome, s.nome as servico_nome, p.nome as profissional_nome');
+        $this->CI->db->from('agendamentos a');
+        $this->CI->db->join('clientes c', 'a.cliente_id = c.id', 'left');
+        $this->CI->db->join('servicos s', 'a.servico_id = s.id', 'left');
+        $this->CI->db->join('profissionais p', 'a.profissional_id = p.id', 'left');
+        $this->CI->db->where('a.estabelecimento_id', $estabelecimento_id);
+        $this->CI->db->where('a.data', $hoje);
+        $this->CI->db->where('a.hora_inicio >=', $horario_corte);
+        $this->CI->db->where_in('a.status', ['pendente', 'confirmado']);
+        $this->CI->db->order_by('a.hora_inicio', 'ASC');
+        $agendamentos = $this->CI->db->get()->result();
+
+        if (empty($agendamentos)) {
+            // Não enviar se não houver agendamentos
+            return ['success' => false, 'error' => 'Nenhum agendamento para o período'];
+        }
+
+        // Montar mensagem
+        $saudacao = $periodo === 'manha' ? '☀️ Bom dia!' : '🌞 Boa tarde!';
+        $data_formatada = date('d/m/Y');
+
+        $mensagem = "{$saudacao} Sua agenda de hoje:\n\n";
+        $mensagem .= "📅 {$data_formatada}\n\n";
+
+        // Listar agendamentos
+        foreach ($agendamentos as $ag) {
+            $hora = date('H:i', strtotime($ag->hora_inicio));
+            $mensagem .= "⏰ {$hora} - {$ag->cliente_nome} - {$ag->servico_nome}\n";
+        }
+
+        // Estatísticas
+        $total = count($agendamentos);
+        $pagos = 0;
+        $pendentes = 0;
+        $valor_pago = 0;
+
+        foreach ($agendamentos as $ag) {
+            if ($ag->pagamento_status === 'pago') {
+                $pagos++;
+                $valor_pago += floatval($ag->pagamento_valor ?? 0);
+            } else {
+                $pendentes++;
+            }
+        }
+
+        $mensagem .= "\n📊 *Total:* {$total} agendamentos\n";
+        $mensagem .= "💳 *Pagos:* {$pagos} | ⏳ *Pendentes:* {$pendentes}\n";
+
+        if ($valor_pago > 0) {
+            $valor_formatado = number_format($valor_pago, 2, ',', '.');
+            $mensagem .= "💰 *Pagos via PIX:* R$ {$valor_formatado}\n";
+        }
+
+        $mensagem .= "\n";
+        if ($pendentes === 0) {
+            $mensagem .= "✅ Todos confirmados\n";
+        }
+
+        $mensagem .= "\n_Mensagem automática do sistema._";
+
+        $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);
+
+        log_message('info', "Notificacao WhatsApp [resumo_diario_{$periodo}] - Estabelecimento #{$estabelecimento_id} - Destino: {$numero_destino} - Total agendamentos: {$total}");
+
+        return $resultado;
     }
 }
