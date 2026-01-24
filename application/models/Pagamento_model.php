@@ -257,7 +257,8 @@ class Pagamento_model extends CI_Model {
             ->where('id', $agendamento_id)
             ->update('agendamentos', [
                 'pagamento_status' => 'pago',
-                'status' => 'confirmado'
+                'status' => 'confirmado',
+                'forma_pagamento' => 'pix'
             ]);
 
         return true;

@@ -177,33 +177,71 @@ class Agendamentos extends Admin_Controller {
                 $data_anterior = $agendamento->data;
                 $hora_anterior = $agendamento->hora_inicio;
 
-                $dados = [
-                    'data' => $this->input->post('data'),
-                    'hora_inicio' => $this->input->post('hora_inicio'),
-                    'status' => $this->input->post('status'),
-                    'observacoes' => $this->input->post('observacoes'),
-                ];
+                $nova_data = $this->input->post('data');
+                $nova_hora_inicio = $this->input->post('hora_inicio');
+                $novo_status = $this->input->post('status');
+                $novas_observacoes = $this->input->post('observacoes');
 
-                if ($this->Agendamento_model->update($id, $dados)) {
-                    // Verificar se houve mudança de data/hora (reagendamento)
-                    if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
-                        // Notificar cliente
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
-                            'data_anterior' => $data_anterior,
-                            'hora_anterior' => $hora_anterior
+                // Verificar se houve mudança de data/hora (reagendamento)
+                $houve_reagendamento = ($nova_data != $data_anterior || $nova_hora_inicio != $hora_anterior);
+
+                if ($houve_reagendamento) {
+                    // Usar método reagendar_criar_novo para manter histórico completo
+                    // Calcular hora_fim baseado na duração do serviço
+                    $servico = $this->Servico_model->get_by_id($agendamento->servico_id);
+                    $duracao = $servico ? $servico->duracao : 30;
+                    $nova_hora_fim = date('H:i:s', strtotime($nova_hora_inicio) + ($duracao * 60));
+
+                    $resultado = $this->Agendamento_model->reagendar_criar_novo(
+                        $id,
+                        $nova_data,
+                        $nova_hora_inicio,
+                        $nova_hora_fim
+                    );
+
+                    if ($resultado['success']) {
+                        // Atualizar observações e status no novo agendamento se necessário
+                        $novo_id = $resultado['novo_agendamento_id'];
+                        $dados_extras = [];
+
+                        if ($novas_observacoes && $novas_observacoes != $agendamento->observacoes) {
+                            $dados_extras['observacoes'] = $novas_observacoes;
+                        }
+
+                        // Só atualizar status se for diferente de 'pendente'
+                        if ($novo_status && $novo_status != 'pendente') {
+                            $dados_extras['status'] = $novo_status;
+                        }
+
+                        if (!empty($dados_extras)) {
+                            $this->Agendamento_model->update($novo_id, $dados_extras);
+                        }
+
+                        $this->registrar_log('reagendar', 'agendamentos', $id, $dados_antigos, [
+                            'novo_agendamento_id' => $novo_id,
+                            'data' => $nova_data,
+                            'hora_inicio' => $nova_hora_inicio
                         ]);
-                        // Notificar profissional/estabelecimento
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_reagendamento', [
-                            'data_anterior' => $data_anterior,
-                            'hora_anterior' => $hora_anterior
-                        ]);
+
+                        $this->session->set_flashdata('sucesso', 'Agendamento reagendado com sucesso! Novo ID: ' . $novo_id);
+                        redirect('admin/agendamentos');
+                    } else {
+                        $this->session->set_flashdata('erro', 'Erro ao reagendar: ' . $resultado['message']);
                     }
-
-                    $this->registrar_log('atualizar', 'agendamentos', $id, $dados_antigos, $dados);
-                    $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
-                    redirect('admin/agendamentos');
                 } else {
-                    $this->session->set_flashdata('erro', 'Erro ao atualizar agendamento. Verifique a disponibilidade.');
+                    // Apenas atualização de outros campos (status, observações)
+                    $dados = [
+                        'status' => $novo_status,
+                        'observacoes' => $novas_observacoes,
+                    ];
+
+                    if ($this->Agendamento_model->update($id, $dados)) {
+                        $this->registrar_log('atualizar', 'agendamentos', $id, $dados_antigos, $dados);
+                        $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
+                        redirect('admin/agendamentos');
+                    } else {
+                        $this->session->set_flashdata('erro', 'Erro ao atualizar agendamento.');
+                    }
                 }
             }
         }

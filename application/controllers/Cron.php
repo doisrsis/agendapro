@@ -180,10 +180,12 @@ class Cron extends CI_Controller {
             'motivo_cancelamento' => 'Pagamento não realizado dentro do prazo'
         ]);
 
-        // Enviar notificação de cancelamento
+        // Enviar notificação de cancelamento apenas para cliente (não para profissional)
         $this->Agendamento_model->enviar_notificacao_whatsapp($agendamento->id, 'cancelamento', [
             'motivo' => 'Pagamento não realizado dentro do prazo'
         ]);
+
+        // Não notificar profissional em cancelamentos automáticos por falta de pagamento
     }
 
     /**
@@ -248,9 +250,9 @@ class Cron extends CI_Controller {
                         // Confirmar pagamento
                         $this->Pagamento_model->confirmar_agendamento($pagamento->agendamento_id);
 
-                        // Enviar notificações
+                        // Enviar notificação apenas para cliente
                         $this->Agendamento_model->enviar_notificacao_whatsapp($pagamento->agendamento_id, 'confirmacao');
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($pagamento->agendamento_id, 'profissional_novo');
+                        // Não notificar profissional aqui - já foi notificado na criação do agendamento
 
                         $resultado['confirmados']++;
 
@@ -824,5 +826,123 @@ class Cron extends CI_Controller {
             'total' => count($agendamentos),
             'agendamentos' => $agendamentos
         ]);
+    }
+
+    /**
+     * Enviar resumos diários da agenda para profissionais
+     *
+     * Este cron deve ser executado a cada 15 minutos
+     * URL: /cron/enviar_resumos_diarios?token=SEU_TOKEN
+     *
+     * Verifica horários configurados e envia resumo da agenda
+     */
+    public function enviar_resumos_diarios() {
+        // Verificar token de segurança
+        if (!$this->verificar_token()) {
+            log_message('error', 'CRON: Tentativa de acesso sem token válido');
+            show_404();
+            return;
+        }
+
+        log_message('info', 'CRON: Iniciando envio de resumos diários');
+
+        $resultado = [
+            'resumos_enviados' => 0,
+            'erros' => []
+        ];
+
+        // Buscar todos os estabelecimentos com notificação ativa
+        $this->load->model('Estabelecimento_model');
+        $this->load->model('Horario_estabelecimento_model');
+
+        $this->db->select('id, nome, notif_prof_resumo_diario, notif_prof_resumo_manha, notif_prof_resumo_tarde');
+        $this->db->where('notif_prof_resumo_diario', 1);
+        $estabelecimentos = $this->db->get('estabelecimentos')->result();
+
+        $hora_atual = date('H:i');
+        $dia_semana = date('w'); // 0 = domingo, 6 = sábado
+
+        foreach ($estabelecimentos as $estabelecimento) {
+            try {
+                // Buscar horário de funcionamento do dia
+                $horario = $this->Horario_estabelecimento_model->get_by_dia($estabelecimento->id, $dia_semana);
+
+                if (!$horario || !$horario->ativo) {
+                    continue; // Estabelecimento fechado hoje
+                }
+
+                // Verificar se deve enviar resumo da manhã
+                if (!empty($estabelecimento->notif_prof_resumo_manha)) {
+                    $horario_manha = substr($estabelecimento->notif_prof_resumo_manha, 0, 5);
+
+                    // Enviar se estiver dentro de 5 minutos do horário configurado
+                    if ($this->horario_proximo($hora_atual, $horario_manha, 5)) {
+                        $resultado_envio = $this->notificacao_whatsapp_lib->enviar_resumo_diario($estabelecimento->id, 'manha');
+
+                        if ($resultado_envio['success']) {
+                            $resultado['resumos_enviados']++;
+                            log_message('info', "CRON: Resumo manhã enviado para estabelecimento #{$estabelecimento->id}");
+                        } else {
+                            log_message('warning', "CRON: Falha ao enviar resumo manhã para #{$estabelecimento->id}: {$resultado_envio['error']}");
+                        }
+                    }
+                }
+
+                // Verificar se deve enviar resumo da tarde
+                if (!empty($estabelecimento->notif_prof_resumo_tarde)) {
+                    $horario_tarde = substr($estabelecimento->notif_prof_resumo_tarde, 0, 5);
+
+                    // Enviar se estiver dentro de 5 minutos do horário configurado
+                    if ($this->horario_proximo($hora_atual, $horario_tarde, 5)) {
+                        $resultado_envio = $this->notificacao_whatsapp_lib->enviar_resumo_diario($estabelecimento->id, 'tarde');
+
+                        if ($resultado_envio['success']) {
+                            $resultado['resumos_enviados']++;
+                            log_message('info', "CRON: Resumo tarde enviado para estabelecimento #{$estabelecimento->id}");
+                        } else {
+                            log_message('warning', "CRON: Falha ao enviar resumo tarde para #{$estabelecimento->id}: {$resultado_envio['error']}");
+                        }
+                    }
+                }
+
+            } catch (Exception $e) {
+                $resultado['erros'][] = "Estabelecimento #{$estabelecimento->id}: " . $e->getMessage();
+                log_message('error', "CRON: Erro no estabelecimento #{$estabelecimento->id}: " . $e->getMessage());
+            }
+        }
+
+        // Registrar log do cron
+        $this->registrar_log(
+            'enviar_resumos_diarios',
+            $resultado['resumos_enviados'],
+            json_encode($resultado)
+        );
+
+        log_message('info', 'CRON: Envio de resumos concluído - ' . json_encode($resultado));
+
+        // Retornar resultado
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'resultado' => $resultado
+        ]);
+    }
+
+    /**
+     * Verificar se horário atual está próximo do horário alvo
+     *
+     * @param string $hora_atual Hora atual (H:i)
+     * @param string $hora_alvo Hora alvo (H:i)
+     * @param int $tolerancia_minutos Tolerância em minutos
+     * @return bool
+     */
+    private function horario_proximo($hora_atual, $hora_alvo, $tolerancia_minutos = 5) {
+        $timestamp_atual = strtotime($hora_atual);
+        $timestamp_alvo = strtotime($hora_alvo);
+
+        $diferenca_minutos = abs($timestamp_atual - $timestamp_alvo) / 60;
+
+        return $diferenca_minutos <= $tolerancia_minutos;
     }
 }

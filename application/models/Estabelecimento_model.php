@@ -128,6 +128,13 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['mp_public_key_prod'])) $update_data['mp_public_key_prod'] = $data['mp_public_key_prod'];
         if (isset($data['mp_sandbox'])) $update_data['mp_sandbox'] = $data['mp_sandbox'];
 
+        // Campos de PIX Manual
+        if (isset($data['pagamento_tipo'])) $update_data['pagamento_tipo'] = $data['pagamento_tipo'];
+        if (isset($data['pix_chave'])) $update_data['pix_chave'] = $data['pix_chave'];
+        if (isset($data['pix_tipo_chave'])) $update_data['pix_tipo_chave'] = $data['pix_tipo_chave'];
+        if (isset($data['pix_nome_recebedor'])) $update_data['pix_nome_recebedor'] = $data['pix_nome_recebedor'];
+        if (isset($data['pix_cidade'])) $update_data['pix_cidade'] = $data['pix_cidade'];
+
         // Campos de WhatsApp - Tipo de API
         if (isset($data['whatsapp_api_tipo'])) $update_data['whatsapp_api_tipo'] = $data['whatsapp_api_tipo'];
 

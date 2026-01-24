@@ -98,11 +98,21 @@
                                     <?php if ($agendamento->forma_pagamento == 'pix'): ?>
                                         <?php if ($agendamento->pagamento_status == 'pago'): ?>
                                             <span class="badge bg-success">
-                                                <i class="ti ti-check me-1"></i>Pago via PIX
+                                                <i class="ti ti-check me-1"></i>Pago via PIX (Mercado Pago)
                                             </span>
                                         <?php else: ?>
                                             <span class="badge bg-warning">
-                                                <i class="ti ti-clock me-1"></i>PIX Pendente
+                                                <i class="ti ti-clock me-1"></i>PIX Pendente (Mercado Pago)
+                                            </span>
+                                        <?php endif; ?>
+                                    <?php elseif ($agendamento->forma_pagamento == 'pix_manual'): ?>
+                                        <?php if ($agendamento->pagamento_status == 'pago'): ?>
+                                            <span class="badge bg-success">
+                                                <i class="ti ti-check me-1"></i>Pago via PIX Manual
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning">
+                                                <i class="ti ti-clock me-1"></i>PIX Manual Pendente
                                             </span>
                                         <?php endif; ?>
                                     <?php elseif ($agendamento->forma_pagamento == 'presencial'): ?>
@@ -143,7 +153,24 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <?php if ($agendamento->status == 'pendente'): ?>
+                            <?php if ($agendamento->forma_pagamento == 'pix_manual' && $agendamento->pagamento_status == 'pendente'): ?>
+                            <!-- Botão Confirmar Pagamento PIX Manual -->
+                            <a href="<?= base_url('painel/agendamentos/confirmar_pagamento_pix_manual/' . $agendamento->id) ?>"
+                               class="btn btn-success"
+                               onclick="return confirm('Confirmar que o pagamento PIX foi recebido?\n\nO cliente será notificado via WhatsApp.')">
+                                <i class="ti ti-check-circle me-1"></i>
+                                Confirmar Pagamento PIX
+                            </a>
+                            <div class="alert alert-warning mb-0">
+                                <i class="ti ti-alert-triangle me-2"></i>
+                                <strong>Aguardando Pagamento PIX</strong>
+                                <div class="text-muted small mt-1">
+                                    Confirme após receber o pagamento e verificar o comprovante.
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <?php if ($agendamento->status == 'pendente' && $agendamento->forma_pagamento != 'pix_manual'): ?>
                             <a href="<?= base_url('painel/agendamentos/confirmar/' . $agendamento->id) ?>" class="btn btn-success">
                                 <i class="ti ti-check me-1"></i>
                                 Confirmar

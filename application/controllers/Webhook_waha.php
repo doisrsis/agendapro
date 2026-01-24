@@ -346,21 +346,56 @@ class Webhook_waha extends CI_Controller {
             }
         }
 
+        // Detectar tipo de mensagem
+        $tipo_mensagem = $this->detectar_tipo_mensagem($payload);
+
         // Salvar mensagem no log
         $this->salvar_log_mensagem([
             'estabelecimento_id' => $estabelecimento_id,
             'direcao' => 'entrada',
             'numero_destino' => $numero,
-            'tipo_mensagem' => $this->detectar_tipo_mensagem($payload),
+            'tipo_mensagem' => $tipo_mensagem,
             'conteudo' => $body,
             'message_id' => $message_id,
             'status' => 'recebido'
         ]);
 
-        // Verificar se integração WAHA está ativa globalmente (configuração do SaaS Admin)
-        $waha_ativo = $this->Configuracao_model->get_by_chave('waha_ativo');
-        if (!$waha_ativo || $waha_ativo->valor != '1') {
-            log_message('debug', 'WAHA Webhook: Integração WAHA desativada globalmente - mensagem ignorada');
+        // NOTA: Controle de ativação do bot é feito por estabelecimento via waha_bot_ativo
+        // Cada estabelecimento tem controle independente do seu bot
+        // Verificação global removida para permitir controle granular por estabelecimento
+
+        // TRATAMENTO DE MÍDIA (Comprovantes PIX Manual)
+        if (in_array($tipo_mensagem, ['image', 'document', 'video', 'audio'])) {
+            log_message('debug', 'WAHA: Mídia recebida - tipo=' . $tipo_mensagem);
+
+            // Se for estabelecimento, verificar se cliente está aguardando confirmação de pagamento PIX Manual
+            if ($estabelecimento_id) {
+                $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);
+
+                if ($estabelecimento && $estabelecimento->waha_bot_ativo) {
+                    $this->load->model('Cliente_model');
+                    $cliente = $this->Cliente_model->get_by_whatsapp($numero, $estabelecimento_id);
+
+                    if ($cliente) {
+                        $conversa = $this->Bot_conversa_model->get_ou_criar($estabelecimento_id, $numero_completo);
+
+                        // Se está aguardando comprovante, confirmar recebimento
+                        if ($conversa->estado == 'aguardando_comprovante') {
+                            $this->waha_lib->set_estabelecimento($estabelecimento);
+                            $this->waha_lib->enviar_texto($numero_completo,
+                                "✅ *Comprovante recebido!*\n\n" .
+                                "Obrigado! Estamos verificando seu pagamento.\n\n" .
+                                "Você receberá a confirmação do seu agendamento em breve. 🙏\n\n" .
+                                "_Digite *menu* para voltar ao menu._"
+                            );
+
+                            log_message('info', 'WAHA: Comprovante PIX Manual recebido - cliente_id=' . $cliente->id);
+                        }
+                    }
+                }
+            }
+
+            // NÃO processar mídia como mensagem de texto - retornar aqui
             return;
         }
 
@@ -369,8 +404,11 @@ class Webhook_waha extends CI_Controller {
             $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);
 
             if ($estabelecimento && $estabelecimento->waha_bot_ativo) {
+                log_message('debug', 'WAHA Webhook: Bot ativo para estabelecimento ' . $estabelecimento_id . ' - processando mensagem');
                 // Usar número completo (com @lid ou @c.us) para compatibilidade com novos números WhatsApp
                 $this->processar_bot_agendamento($estabelecimento, $numero_completo, $body, $message_id, $pushName, $numero_real);
+            } else {
+                log_message('debug', 'WAHA Webhook: Bot desativado para estabelecimento ' . $estabelecimento_id . ' - mensagem ignorada');
             }
         } else {
             // Mensagem para o SaaS Admin - bot de suporte
@@ -1270,6 +1308,8 @@ class Webhook_waha extends CI_Controller {
         $requer_pagamento = $estabelecimento->agendamento_requer_pagamento &&
                            $estabelecimento->agendamento_requer_pagamento != 'nao';
 
+        log_message('debug', 'Bot: forma_pagamento=' . ($forma_pagamento ?? 'null') . ', requer_pagamento=' . ($requer_pagamento ? 'sim' : 'nao'));
+
         // Determinar status, pagamento_status e forma_pagamento baseado na escolha do cliente
         $status_inicial = 'pendente';
         $pagamento_status = 'nao_requerido';
@@ -1280,16 +1320,21 @@ class Webhook_waha extends CI_Controller {
             $status_inicial = 'pendente';
             $pagamento_status = 'pendente';
             $forma_pagamento_valor = 'pix';
+            log_message('debug', 'Bot: Cliente escolheu PIX - forma_pagamento_valor=pix');
         } elseif ($forma_pagamento == 'presencial') {
             // Cliente escolheu pagar no estabelecimento
             $status_inicial = 'confirmado';
             $pagamento_status = 'presencial';
             $forma_pagamento_valor = 'presencial';
+            log_message('debug', 'Bot: Cliente escolheu presencial - forma_pagamento_valor=presencial');
         } elseif ($requer_pagamento) {
             // Fluxo antigo: exige pagamento mas sem escolha (retrocompatibilidade)
             $status_inicial = 'pendente';
             $pagamento_status = 'pendente';
             $forma_pagamento_valor = 'pix'; // Assume PIX para compatibilidade
+            log_message('debug', 'Bot: Requer pagamento (fluxo antigo) - forma_pagamento_valor=pix');
+        } else {
+            log_message('debug', 'Bot: Não requer pagamento - forma_pagamento_valor=nao_definido');
         }
 
         // Criar agendamento
@@ -1330,16 +1375,102 @@ class Webhook_waha extends CI_Controller {
         $deve_gerar_pix = ($forma_pagamento == 'pix') || ($gerar_pix === true) ||
                          ($requer_pagamento && $forma_pagamento !== 'presencial');
 
-        // Se deve gerar PIX, processar via Mercado Pago
-        if ($deve_gerar_pix) {
-            $this->load->library('mercadopago_lib');
-            $this->load->model('Pagamento_model');
+        // Recarregar estabelecimento para garantir dados atualizados (incluindo PIX Manual)
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento->id);
 
+        // Verificar tipo de pagamento do estabelecimento
+        $pagamento_tipo = $estabelecimento->pagamento_tipo ?? 'mercadopago';
+
+        log_message('debug', 'Bot: Estabelecimento recarregado - ID=' . $estabelecimento->id . ', pagamento_tipo=' . $pagamento_tipo);
+
+        // Se deve gerar PIX
+        if ($deve_gerar_pix) {
             // Calcular valor do pagamento
             $valor_pagamento = $dados['servico_preco'];
             if ($estabelecimento->agendamento_requer_pagamento == 'taxa_fixa') {
                 $valor_pagamento = floatval($estabelecimento->agendamento_taxa_fixa);
             }
+
+            log_message('debug', 'Bot: Gerando PIX - tipo=' . $pagamento_tipo . ', valor=' . $valor_pagamento);
+
+            // PIX MANUAL - Gerar BR Code local
+            if ($pagamento_tipo == 'pix_manual') {
+                $this->load->library('pix_lib');
+
+                // Gerar BR Code
+                $br_code = $this->pix_lib->gerar_br_code([
+                    'chave_pix' => $estabelecimento->pix_chave,
+                    'nome_recebedor' => $estabelecimento->pix_nome_recebedor,
+                    'cidade' => $estabelecimento->pix_cidade,
+                    'valor' => $valor_pagamento,
+                    'txid' => 'AG' . str_pad($agendamento_id, 10, '0', STR_PAD_LEFT),
+                    'descricao' => substr($dados['servico_nome'], 0, 72)
+                ]);
+
+                if (!$br_code) {
+                    log_message('error', 'Bot: Erro ao gerar BR Code PIX Manual');
+                    $this->waha_lib->enviar_texto($numero,
+                        "Desculpe, ocorreu um erro ao gerar o PIX. 😔\n\n" .
+                        "Por favor, entre em contato diretamente.\n\n" .
+                        "_Digite qualquer mensagem para voltar ao menu._"
+                    );
+                    $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
+                    return;
+                }
+
+                // Gerar URL do QR Code
+                $qrcode_url = $this->pix_lib->gerar_qrcode_url($br_code, 400);
+
+                // Salvar dados do PIX no agendamento
+                $this->Agendamento_model->update($agendamento_id, [
+                    'pagamento_status' => 'pendente',
+                    'pagamento_valor' => $valor_pagamento,
+                    'pagamento_pix_qrcode' => $qrcode_url,
+                    'pagamento_pix_copia_cola' => $br_code,
+                    'forma_pagamento' => 'pix_manual'
+                ]);
+
+                $valor_pag_formatado = number_format($valor_pagamento, 2, ',', '.');
+
+                $mensagem = "🎉 *Agendamento Criado!*\n\n";
+                $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
+                $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n";
+                $mensagem .= "📅 Data: *{$data_formatada}*\n";
+                $mensagem .= "⏰ Horário: *{$dados['hora']}*\n";
+                $mensagem .= "💰 Valor: *R$ {$valor_pag_formatado}*\n\n";
+                $mensagem .= "💳 *PAGAMENTO VIA PIX*\n\n";
+                $mensagem .= "Escaneie o QR Code abaixo ou use o código Pix Copia e Cola:\n\n";
+
+                // Enviar mensagem com informações
+                $this->waha_lib->enviar_texto($numero, $mensagem);
+
+                // Enviar QR Code como imagem
+                $this->waha_lib->enviar_imagem($numero, $qrcode_url, "QR Code PIX - R$ {$valor_pag_formatado}");
+
+                // Enviar código copia e cola
+                $this->waha_lib->enviar_texto($numero,
+                    "📋 *Pix Copia e Cola:*\n\n" .
+                    "`{$br_code}`\n\n" .
+                    "📎 *Após realizar o pagamento, envie o comprovante aqui no WhatsApp.*\n\n" .
+                    "Confirmaremos seu agendamento assim que recebermos o pagamento. ✅\n\n" .
+                    "_Digite *menu* para voltar ao menu._"
+                );
+
+                // Notificar profissional sobre novo agendamento pendente
+                $this->Agendamento_model->enviar_notificacao_whatsapp($agendamento_id, 'profissional_novo');
+
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'aguardando_comprovante', [
+                    'agendamento_id' => $agendamento_id
+                ]);
+
+                log_message('info', 'Bot: Agendamento #' . $agendamento_id . ' criado com PIX Manual - aguardando comprovante');
+                return;
+            }
+
+            // PIX MERCADO PAGO - Fluxo original
+            $this->load->library('mercadopago_lib');
+            $this->load->model('Pagamento_model');
 
             // Usar credenciais do estabelecimento
             $access_token = $estabelecimento->mp_sandbox
@@ -1350,8 +1481,6 @@ class Webhook_waha extends CI_Controller {
                 : $estabelecimento->mp_public_key_prod;
 
             $this->mercadopago_lib->set_credentials($access_token, $public_key);
-
-            log_message('debug', 'Bot: Gerando PIX - valor=' . $valor_pagamento);
 
             // Gerar PIX
             $pix_result = $this->mercadopago_lib->criar_pix_agendamento(

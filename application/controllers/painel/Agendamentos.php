@@ -311,11 +311,19 @@ class Agendamentos extends Painel_Controller {
                         $this->session->set_flashdata('erro', 'Erro ao reagendar: ' . $resultado['message']);
                     }
                 } else {
-                    // Apenas atualizar status e observações
+                    // Apenas atualizar status, observações e dados de pagamento
                     $dados = [
                         'status' => $status,
                         'observacoes' => $observacoes
                     ];
+
+                    // Adicionar campos de pagamento se fornecidos
+                    if ($this->input->post('forma_pagamento')) {
+                        $dados['forma_pagamento'] = $this->input->post('forma_pagamento');
+                    }
+                    if ($this->input->post('pagamento_status')) {
+                        $dados['pagamento_status'] = $this->input->post('pagamento_status');
+                    }
 
                     if ($this->Agendamento_model->update($id, $dados)) {
                         $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
@@ -369,6 +377,60 @@ class Agendamentos extends Painel_Controller {
         }
 
         redirect('painel/agendamentos');
+    }
+
+    /**
+     * Confirmar pagamento PIX Manual
+     * Atualiza status do agendamento e pagamento, envia notificações
+     */
+    public function confirmar_pagamento_pix_manual($id) {
+        $agendamento = $this->Agendamento_model->get($id);
+
+        if (!$agendamento || $agendamento->estabelecimento_id != $this->estabelecimento_id) {
+            $this->session->set_flashdata('erro', 'Agendamento não encontrado.');
+            redirect('painel/agendamentos');
+            return;
+        }
+
+        // Verificar se é PIX Manual pendente
+        if ($agendamento->forma_pagamento != 'pix_manual' || $agendamento->pagamento_status != 'pendente') {
+            $this->session->set_flashdata('erro', 'Este agendamento não está aguardando confirmação de pagamento PIX Manual.');
+            redirect('painel/agendamentos/visualizar/' . $id);
+            return;
+        }
+
+        // Atualizar agendamento
+        $dados_atualizacao = [
+            'status' => 'confirmado',
+            'pagamento_status' => 'pago',
+            'confirmado_em' => date('Y-m-d H:i:s')
+        ];
+
+        if ($this->Agendamento_model->update($id, $dados_atualizacao)) {
+            log_message('info', 'Pagamento PIX Manual confirmado - agendamento_id=' . $id);
+
+            // Enviar notificação de confirmação ao cliente
+            if ($agendamento->cliente_whatsapp) {
+                $data_formatada = date('d/m/Y', strtotime($agendamento->data));
+                $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+
+                $this->Notificacao_whatsapp_lib->enviar_confirmacao(
+                    $this->Agendamento_model->get($id)
+                );
+
+                log_message('info', 'Notificação de confirmação enviada ao cliente - agendamento_id=' . $id);
+            }
+
+            // Enviar notificação ao profissional (se configurado)
+            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_novo');
+
+            $this->session->set_flashdata('sucesso', 'Pagamento confirmado! O cliente foi notificado via WhatsApp.');
+        } else {
+            log_message('error', 'Erro ao confirmar pagamento PIX Manual - agendamento_id=' . $id);
+            $this->session->set_flashdata('erro', 'Erro ao confirmar pagamento.');
+        }
+
+        redirect('painel/agendamentos/visualizar/' . $id);
     }
 
     /**
@@ -1012,9 +1074,9 @@ class Agendamentos extends Painel_Controller {
 
                         $this->Pagamento_model->confirmar_agendamento($id);
 
-                        // Enviar notificações WhatsApp
+                        // Enviar notificação apenas para cliente
                         $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'confirmacao');
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_novo');
+                        // Não notificar profissional aqui - já foi notificado na criação do agendamento
 
                         echo json_encode([
                             'status' => 'pago',

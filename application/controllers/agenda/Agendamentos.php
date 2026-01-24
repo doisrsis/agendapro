@@ -197,42 +197,74 @@ class Agendamentos extends Agenda_Controller {
                 $data_anterior = $agendamento->data;
                 $hora_anterior = $agendamento->hora_inicio;
 
-                $dados = [
-                    'data' => $this->input->post('data'),
-                    'hora_inicio' => $this->input->post('hora_inicio'),
-                    'status' => $this->input->post('status'),
-                    'observacoes' => $this->input->post('observacoes')
-                ];
+                $nova_data = $this->input->post('data');
+                $nova_hora_inicio = $this->input->post('hora_inicio');
+                $novo_status = $this->input->post('status');
+                $novas_observacoes = $this->input->post('observacoes');
 
-                log_message('debug', 'Agenda/Agendamentos/editar - Dados: ' . json_encode($dados));
+                // Verificar se houve mudança de data/hora (reagendamento)
+                $houve_reagendamento = ($nova_data != $data_anterior || $nova_hora_inicio != $hora_anterior);
 
-                $result = $this->Agendamento_model->update($id, $dados);
-                log_message('debug', 'Agenda/Agendamentos/editar - Resultado update: ' . ($result ? 'true' : 'false'));
+                log_message('debug', 'Agenda/Agendamentos/editar - Houve reagendamento: ' . ($houve_reagendamento ? 'SIM' : 'NAO'));
 
-                if ($result) {
-                    // Verificar se houve mudança de data/hora (reagendamento)
-                    if ($dados['data'] != $data_anterior || $dados['hora_inicio'] != $hora_anterior) {
-                        // Notificar cliente
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'reagendamento', [
-                            'data_anterior' => $data_anterior,
-                            'hora_anterior' => $hora_anterior
-                        ]);
-                        // Notificar profissional/estabelecimento
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_reagendamento', [
-                            'data_anterior' => $data_anterior,
-                            'hora_anterior' => $hora_anterior
-                        ]);
+                if ($houve_reagendamento) {
+                    // Usar método reagendar_criar_novo para manter histórico completo
+                    $servico = $this->Servico_model->get_by_id($agendamento->servico_id);
+                    $duracao = $servico ? $servico->duracao : 30;
+                    $nova_hora_fim = date('H:i:s', strtotime($nova_hora_inicio) + ($duracao * 60));
+
+                    log_message('debug', 'Agenda/Agendamentos/editar - Chamando reagendar_criar_novo');
+
+                    $resultado = $this->Agendamento_model->reagendar_criar_novo(
+                        $id,
+                        $nova_data,
+                        $nova_hora_inicio,
+                        $nova_hora_fim
+                    );
+
+                    log_message('debug', 'Agenda/Agendamentos/editar - Resultado: ' . json_encode($resultado));
+
+                    if ($resultado['success']) {
+                        // Atualizar status e observações no novo agendamento
+                        $novo_id = $resultado['novo_agendamento_id'];
+                        $dados_extras = [];
+
+                        if ($novas_observacoes && $novas_observacoes != $agendamento->observacoes) {
+                            $dados_extras['observacoes'] = $novas_observacoes;
+                        }
+
+                        if ($novo_status && $novo_status != 'pendente') {
+                            $dados_extras['status'] = $novo_status;
+                        }
+
+                        if (!empty($dados_extras)) {
+                            $this->Agendamento_model->update($novo_id, $dados_extras);
+                        }
+
+                        log_message('debug', 'Agenda/Agendamentos/editar - Reagendamento concluído com sucesso');
+                        $this->session->set_flashdata('sucesso', 'Agendamento reagendado com sucesso! Novo ID: ' . $novo_id);
+                        redirect('agenda/dashboard');
+                    } else {
+                        log_message('error', 'Agenda/Agendamentos/editar - Erro ao reagendar: ' . $resultado['message']);
+                        $this->session->set_flashdata('erro', 'Erro ao reagendar: ' . $resultado['message']);
                     }
-
-                    log_message('debug', 'Agenda/Agendamentos/editar - Agendamento atualizado com sucesso');
-                    $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
-                    redirect('agenda/dashboard');
                 } else {
-                    log_message('error', 'Agenda/Agendamentos/editar - Falha ao atualizar agendamento');
+                    // Apenas atualização de status e observações (sem mudança de data/hora)
+                    $dados = [
+                        'status' => $novo_status,
+                        'observacoes' => $novas_observacoes
+                    ];
 
-                    // Verificar se há mensagem de erro específica
-                    $erro_msg = $this->Agendamento_model->erro_disponibilidade ?? 'Erro ao atualizar agendamento.';
-                    $this->session->set_flashdata('erro', $erro_msg);
+                    log_message('debug', 'Agenda/Agendamentos/editar - Atualizando apenas status/observações');
+
+                    if ($this->Agendamento_model->update($id, $dados)) {
+                        log_message('debug', 'Agenda/Agendamentos/editar - Atualização concluída com sucesso');
+                        $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
+                        redirect('agenda/dashboard');
+                    } else {
+                        log_message('error', 'Agenda/Agendamentos/editar - Falha ao atualizar agendamento');
+                        $this->session->set_flashdata('erro', 'Erro ao atualizar agendamento.');
+                    }
                 }
             } else {
                 log_message('debug', 'Agenda/Agendamentos/editar - Validação falhou: ' . validation_errors());
@@ -567,9 +599,9 @@ class Agendamentos extends Agenda_Controller {
                         // Confirmar agendamento e enviar notificações
                         $this->Pagamento_model->confirmar_agendamento($id);
 
-                        // Enviar notificações WhatsApp
+                        // Enviar notificação apenas para cliente
                         $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'confirmacao');
-                        $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_novo');
+                        // Não notificar profissional aqui - já foi notificado na criação do agendamento
 
                         echo json_encode([
                             'status' => 'pago',

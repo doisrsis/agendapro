@@ -159,12 +159,11 @@ class Pagamento extends CI_Controller {
 
                     log_message('debug', 'Pagamento: Enviando notificações WhatsApp para agendamento #' . $agendamento->id);
 
-                    // Enviar notificações
+                    // Enviar notificação apenas para cliente
                     $resultado_cliente = $this->Agendamento_model->enviar_notificacao_whatsapp($agendamento->id, 'confirmacao');
                     log_message('debug', 'Pagamento: Resultado notificação cliente = ' . ($resultado_cliente ? 'OK' : 'FALHOU'));
 
-                    $resultado_prof = $this->Agendamento_model->enviar_notificacao_whatsapp($agendamento->id, 'profissional_novo');
-                    log_message('debug', 'Pagamento: Resultado notificação profissional = ' . ($resultado_prof ? 'OK' : 'FALHOU'));
+                    // Não notificar profissional aqui - já foi notificado na criação do agendamento
 
                     echo json_encode([
                         'status' => 'pago',

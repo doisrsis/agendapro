@@ -45,6 +45,12 @@
                             Mercado Pago
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="?aba=notificacoes_profissional" class="nav-link <?= $aba_ativa == 'notificacoes_profissional' ? 'active' : '' ?>">
+                            <i class="ti ti-bell me-2"></i>
+                            Notificações Profissional
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -892,10 +898,36 @@
 
                             <div class="alert alert-info">
                                 <i class="ti ti-info-circle me-2"></i>
-                                <strong>Mercado Pago:</strong> Configure a integração para receber pagamentos online.
+                                <strong>Pagamentos:</strong> Configure como deseja receber pagamentos dos agendamentos.
                             </div>
 
-                            <h4 class="mb-3">Credenciais de Teste (Sandbox)</h4>
+                            <!-- Escolha do Tipo de Pagamento -->
+                            <div class="mb-4">
+                                <label class="form-label required">Tipo de Pagamento</label>
+                                <select class="form-select" name="pagamento_tipo" id="pagamento_tipo">
+                                    <option value="mercadopago" <?= ($estabelecimento->pagamento_tipo ?? 'mercadopago') == 'mercadopago' ? 'selected' : '' ?>>
+                                        Mercado Pago (Integração Automática)
+                                    </option>
+                                    <option value="pix_manual" <?= ($estabelecimento->pagamento_tipo ?? 'mercadopago') == 'pix_manual' ? 'selected' : '' ?>>
+                                        PIX Manual (Confirmação Manual)
+                                    </option>
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <strong>Mercado Pago:</strong> Pagamentos confirmados automaticamente via webhook.<br>
+                                    <strong>PIX Manual:</strong> Você confirma manualmente após receber o pagamento.
+                                </small>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Seção Mercado Pago -->
+                            <div id="secao-mercadopago">
+                                <h4 class="mb-3">
+                                    <i class="ti ti-credit-card me-2"></i>
+                                    Credenciais Mercado Pago
+                                </h4>
+
+                                <h5 class="mb-3">Credenciais de Teste (Sandbox)</h5>
 
                             <div class="mb-3">
                                 <label class="form-label">Public Key (Teste)</label>
@@ -941,14 +973,110 @@
                                     Ative para usar as credenciais de teste. Desative para usar produção.
                                 </small>
                             </div>
+                            </div>
+                            <!-- Fim Seção Mercado Pago -->
+
+                            <!-- Seção PIX Manual -->
+                            <div id="secao-pix-manual" style="display: none;">
+                                <h4 class="mb-3">
+                                    <i class="ti ti-qrcode me-2"></i>
+                                    Configuração PIX Manual
+                                </h4>
+
+                                <div class="alert alert-warning">
+                                    <i class="ti ti-alert-triangle me-2"></i>
+                                    <strong>Atenção:</strong> Com PIX Manual, você precisará confirmar manualmente cada pagamento recebido no painel de agendamentos.
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label required">Chave PIX</label>
+                                        <input type="text" class="form-control" name="pix_chave" id="pix_chave"
+                                               value="<?= set_value('pix_chave', $estabelecimento->pix_chave ?? '') ?>"
+                                               placeholder="Digite sua chave PIX">
+                                        <small class="text-muted">CPF, CNPJ, e-mail, telefone ou chave aleatória</small>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label required">Tipo da Chave</label>
+                                        <select class="form-select" name="pix_tipo_chave" id="pix_tipo_chave">
+                                            <option value="">Selecione...</option>
+                                            <option value="cpf" <?= ($estabelecimento->pix_tipo_chave ?? '') == 'cpf' ? 'selected' : '' ?>>CPF</option>
+                                            <option value="cnpj" <?= ($estabelecimento->pix_tipo_chave ?? '') == 'cnpj' ? 'selected' : '' ?>>CNPJ</option>
+                                            <option value="email" <?= ($estabelecimento->pix_tipo_chave ?? '') == 'email' ? 'selected' : '' ?>>E-mail</option>
+                                            <option value="telefone" <?= ($estabelecimento->pix_tipo_chave ?? '') == 'telefone' ? 'selected' : '' ?>>Telefone</option>
+                                            <option value="aleatoria" <?= ($estabelecimento->pix_tipo_chave ?? '') == 'aleatoria' ? 'selected' : '' ?>>Aleatória</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label required">Nome do Recebedor</label>
+                                        <input type="text" class="form-control" name="pix_nome_recebedor"
+                                               value="<?= set_value('pix_nome_recebedor', $estabelecimento->pix_nome_recebedor ?? '') ?>"
+                                               placeholder="Nome que aparecerá no PIX">
+                                        <small class="text-muted">Nome completo ou razão social</small>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label required">Cidade</label>
+                                        <input type="text" class="form-control" name="pix_cidade"
+                                               value="<?= set_value('pix_cidade', $estabelecimento->pix_cidade ?? '') ?>"
+                                               placeholder="Sua cidade">
+                                        <small class="text-muted">Obrigatório pelo padrão PIX</small>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="ti ti-info-circle me-2"></i>
+                                    <strong>Como funciona:</strong>
+                                    <ol class="mb-0 mt-2">
+                                        <li>Cliente agenda e escolhe pagar via PIX</li>
+                                        <li>Sistema gera QR Code com valor do serviço</li>
+                                        <li>Cliente paga e envia comprovante pelo WhatsApp</li>
+                                        <li>Você confirma o pagamento no painel de agendamentos</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            <!-- Fim Seção PIX Manual -->
 
                             <div class="text-end">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="ti ti-device-floppy me-2"></i>
-                                    Salvar Integração
+                                    Salvar Configurações
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    <script>
+                    // Alternar entre seções de Mercado Pago e PIX Manual
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const selectTipoPagamento = document.getElementById('pagamento_tipo');
+                        const secaoMercadoPago = document.getElementById('secao-mercadopago');
+                        const secaoPixManual = document.getElementById('secao-pix-manual');
+
+                        function alternarSecao() {
+                            if (selectTipoPagamento.value === 'pix_manual') {
+                                secaoMercadoPago.style.display = 'none';
+                                secaoPixManual.style.display = 'block';
+                            } else {
+                                secaoMercadoPago.style.display = 'block';
+                                secaoPixManual.style.display = 'none';
+                            }
+                        }
+
+                        selectTipoPagamento.addEventListener('change', alternarSecao);
+                        alternarSecao(); // Executar ao carregar
+                    });
+                    </script>
+                    <?php endif; ?>
+
+                    <!-- Aba Notificações Profissional -->
+                    <?php if ($aba_ativa == 'notificacoes_profissional'): ?>
+                    <div class="tab-pane active">
+                        <?php $this->load->view('painel/configuracoes/notificacoes_profissional'); ?>
                     </div>
                     <?php endif; ?>
 

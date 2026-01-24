@@ -88,8 +88,7 @@ class Webhook_mercadopago extends CI_Controller {
             // Enviar notificação WhatsApp de confirmação para cliente
             $this->Agendamento_model->enviar_notificacao_whatsapp($pagamento_local->agendamento_id, 'confirmacao');
 
-            // Enviar notificação WhatsApp para profissional/estabelecimento
-            $this->Agendamento_model->enviar_notificacao_whatsapp($pagamento_local->agendamento_id, 'profissional_novo');
+            // Não notificar profissional aqui - já foi notificado na criação do agendamento
         }
 
         // Responder sucesso

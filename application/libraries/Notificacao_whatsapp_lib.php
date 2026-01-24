@@ -228,6 +228,13 @@ class Notificacao_whatsapp_lib {
         $mensagem .= "👤 *Profissional:* {$agendamento->profissional_nome}\n\n";
         $mensagem .= "📍 *Local:* {$agendamento->estabelecimento_nome}\n\n";
         $mensagem .= "Te esperamos! 😊\n\n";
+
+        // Adicionar nota sobre comprovante se for PIX Manual pendente
+        if (isset($agendamento->forma_pagamento) && $agendamento->forma_pagamento == 'pix_manual' &&
+            isset($agendamento->pagamento_status) && $agendamento->pagamento_status == 'pendente') {
+            $mensagem .= "📎 _Caso ainda não tenha enviado o comprovante de pagamento, por favor, envie para confirmarmos seu agendamento._\n\n";
+        }
+
         $mensagem .= "_Caso queira *cancelar* ou *reagendar*, digite *menu*._";
 
         $resultado = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem);

@@ -47,6 +47,26 @@ class Bot_conversa_model extends CI_Model
                 ->get($this->table)
                 ->row();
         } else {
+            // Se conversa está encerrada, reativar
+            if ($conversa->encerrada == 1) {
+                log_message('debug', "Bot: Reativando conversa encerrada para {$numero}");
+                $this->db
+                    ->where('id', $conversa->id)
+                    ->update($this->table, [
+                        'encerrada' => 0,
+                        'data_encerramento' => NULL,
+                        'estado' => 'menu',
+                        'dados_temporarios' => json_encode([]),
+                        'ultima_interacao' => date('Y-m-d H:i:s')
+                    ]);
+
+                // Recarregar conversa reativada
+                $conversa = $this->db
+                    ->where('id', $conversa->id)
+                    ->get($this->table)
+                    ->row();
+            }
+
             // Buscar timeout configurado do estabelecimento (padrão: 30 minutos)
             $this->load->model('Estabelecimento_model');
             $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);

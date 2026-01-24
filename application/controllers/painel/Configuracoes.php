@@ -492,27 +492,80 @@ class Configuracoes extends CI_Controller {
     }
 
     /**
-     * Salvar integração Mercado Pago
+     * Salvar integração Mercado Pago e PIX Manual
      */
     private function salvar_integracao_mercadopago() {
+        // Normalizar chave PIX (remover traços de UUID se for chave aleatória)
+        $pix_chave = $this->input->post('pix_chave');
+        $pix_tipo = $this->input->post('pix_tipo_chave');
+
+        if ($pix_tipo == 'aleatoria' && !empty($pix_chave)) {
+            // Remover traços de UUID para padronizar armazenamento
+            $pix_chave = str_replace('-', '', $pix_chave);
+        }
+
         $dados = [
             'mp_public_key_test' => $this->input->post('mp_public_key_test'),
             'mp_access_token_test' => $this->input->post('mp_access_token_test'),
             'mp_public_key_prod' => $this->input->post('mp_public_key_prod'),
             'mp_access_token_prod' => $this->input->post('mp_access_token_prod'),
-            'mp_sandbox' => $this->input->post('mp_sandbox') ? 1 : 0
+            'mp_sandbox' => $this->input->post('mp_sandbox') ? 1 : 0,
+
+            // Campos PIX Manual
+            'pagamento_tipo' => $this->input->post('pagamento_tipo'),
+            'pix_chave' => $pix_chave,
+            'pix_tipo_chave' => $pix_tipo,
+            'pix_nome_recebedor' => $this->input->post('pix_nome_recebedor'),
+            'pix_cidade' => $this->input->post('pix_cidade')
         ];
 
-        // DEBUG: Log dos dados
+        // Validar campos PIX Manual se tipo for pix_manual
+        if ($dados['pagamento_tipo'] == 'pix_manual') {
+            // Carregar biblioteca PIX
+            $this->load->library('Pix_lib');
+
+            if (empty($dados['pix_chave']) || empty($dados['pix_tipo_chave']) ||
+                empty($dados['pix_nome_recebedor']) || empty($dados['pix_cidade'])) {
+                $this->session->set_flashdata('erro', 'Preencha todos os campos obrigatórios do PIX Manual.');
+                redirect('painel/configuracoes?aba=mercadopago');
+                return;
+            }
+
+            // Log para debug
+            log_message('debug', 'PIX Manual - Validando chave: ' . $dados['pix_chave'] . ' | Tipo: ' . $dados['pix_tipo_chave']);
+
+            // Teste direto da validação
+            $chave_limpa = str_replace('-', '', $dados['pix_chave']);
+            log_message('debug', 'PIX Manual - Chave limpa: ' . $chave_limpa . ' | Tamanho: ' . strlen($chave_limpa));
+            log_message('debug', 'PIX Manual - É hexadecimal? ' . (ctype_xdigit($chave_limpa) ? 'true' : 'false'));
+
+            // Validar chave PIX
+            $validacao = $this->pix_lib->validar_chave_pix($dados['pix_chave'], $dados['pix_tipo_chave']);
+
+            log_message('debug', 'PIX Manual - Resultado validação: ' . ($validacao ? 'true' : 'false'));
+
+            if (!$validacao) {
+                log_message('error', 'PIX Manual - Validação falhou para chave: ' . $dados['pix_chave'] . ' tipo: ' . $dados['pix_tipo_chave']);
+                $this->session->set_flashdata('erro', 'Chave PIX inválida para o tipo selecionado. Verifique se a chave está correta.');
+                redirect('painel/configuracoes?aba=mercadopago');
+                return;
+            }
+        }
+
         log_message('debug', 'Configuracoes/salvar_mercadopago - Dados POST: ' . json_encode($_POST));
         log_message('debug', 'Configuracoes/salvar_mercadopago - Dados para salvar: ' . json_encode($dados));
 
         if ($this->Estabelecimento_model->update($this->estabelecimento_id, $dados)) {
             log_message('debug', 'Configuracoes/salvar_mercadopago - Salvo com sucesso');
-            $this->session->set_flashdata('sucesso', 'Integração Mercado Pago atualizada!');
+
+            $mensagem = ($dados['pagamento_tipo'] == 'pix_manual')
+                ? 'Configurações de PIX Manual atualizadas!'
+                : 'Integração Mercado Pago atualizada!';
+
+            $this->session->set_flashdata('sucesso', $mensagem);
         } else {
             log_message('error', 'Configuracoes/salvar_mercadopago - Erro ao salvar');
-            $this->session->set_flashdata('erro', 'Erro ao atualizar integração.');
+            $this->session->set_flashdata('erro', 'Erro ao atualizar configurações.');
         }
 
         redirect('painel/configuracoes?aba=mercadopago');

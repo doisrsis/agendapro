@@ -72,6 +72,30 @@
                                 <?= form_error('status', '<div class="invalid-feedback d-block">', '</div>') ?>
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Forma de Pagamento</label>
+                                    <select class="form-select" name="forma_pagamento">
+                                        <option value="nao_definido" <?= $agendamento->forma_pagamento == 'nao_definido' ? 'selected' : '' ?>>Não Definido</option>
+                                        <option value="pix" <?= $agendamento->forma_pagamento == 'pix' ? 'selected' : '' ?>>PIX (Mercado Pago)</option>
+                                        <option value="pix_manual" <?= $agendamento->forma_pagamento == 'pix_manual' ? 'selected' : '' ?>>PIX Manual</option>
+                                        <option value="presencial" <?= $agendamento->forma_pagamento == 'presencial' ? 'selected' : '' ?>>Presencial</option>
+                                        <option value="cartao" <?= $agendamento->forma_pagamento == 'cartao' ? 'selected' : '' ?>>Cartão</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Status do Pagamento</label>
+                                    <select class="form-select" name="pagamento_status">
+                                        <option value="nao_requerido" <?= $agendamento->pagamento_status == 'nao_requerido' ? 'selected' : '' ?>>Não Requerido</option>
+                                        <option value="pendente" <?= $agendamento->pagamento_status == 'pendente' ? 'selected' : '' ?>>Pendente</option>
+                                        <option value="pago" <?= $agendamento->pagamento_status == 'pago' ? 'selected' : '' ?>>Pago</option>
+                                        <option value="presencial" <?= $agendamento->pagamento_status == 'presencial' ? 'selected' : '' ?>>Presencial</option>
+                                        <option value="expirado" <?= $agendamento->pagamento_status == 'expirado' ? 'selected' : '' ?>>Expirado</option>
+                                        <option value="cancelado" <?= $agendamento->pagamento_status == 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Observações</label>
                                 <textarea class="form-control" name="observacoes" rows="3"><?= set_value('observacoes', $agendamento->observacoes) ?></textarea>
