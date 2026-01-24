@@ -1419,43 +1419,33 @@ class Webhook_waha extends CI_Controller {
                     return;
                 }
 
-                // Gerar URL do QR Code
-                $qrcode_url = $this->pix_lib->gerar_qrcode_url($br_code, 400);
-
-                // Salvar dados do PIX no agendamento
+                // Salvar dados do PIX no agendamento (sem QR Code)
                 $this->Agendamento_model->update($agendamento_id, [
                     'pagamento_status' => 'pendente',
                     'pagamento_valor' => $valor_pagamento,
-                    'pagamento_pix_qrcode' => $qrcode_url,
+                    'pagamento_pix_qrcode' => null,
                     'pagamento_pix_copia_cola' => $br_code,
                     'forma_pagamento' => 'pix_manual'
                 ]);
 
                 $valor_pag_formatado = number_format($valor_pagamento, 2, ',', '.');
 
+                // Mensagem 1: Detalhes completos + instruções
                 $mensagem = "🎉 *Agendamento Criado!*\n\n";
                 $mensagem .= "📋 Serviço: *{$dados['servico_nome']}*\n";
                 $mensagem .= "👤 Profissional: *{$dados['profissional_nome']}*\n";
                 $mensagem .= "📅 Data: *{$data_formatada}*\n";
                 $mensagem .= "⏰ Horário: *{$dados['hora']}*\n";
                 $mensagem .= "💰 Valor: *R$ {$valor_pag_formatado}*\n\n";
-                $mensagem .= "💳 *PAGAMENTO VIA PIX*\n\n";
-                $mensagem .= "Escaneie o QR Code abaixo ou use o código Pix Copia e Cola:\n\n";
+                $mensagem .= "💳 *PAGAMENTO VIA PIX (Copia e Cola)*\n\n";
+                $mensagem .= "📎 Após realizar o pagamento, envie o comprovante aqui no WhatsApp.\n\n";
+                $mensagem .= "✅ Confirmaremos seu agendamento assim que recebermos o pagamento.\n\n";
+                $mensagem .= "_Digite *menu* para voltar ao menu._";
 
-                // Enviar mensagem com informações
                 $this->waha_lib->enviar_texto($numero, $mensagem);
 
-                // Enviar QR Code como imagem
-                $this->waha_lib->enviar_imagem($numero, $qrcode_url, "QR Code PIX - R$ {$valor_pag_formatado}");
-
-                // Enviar código copia e cola
-                $this->waha_lib->enviar_texto($numero,
-                    "📋 *Pix Copia e Cola:*\n\n" .
-                    "`{$br_code}`\n\n" .
-                    "📎 *Após realizar o pagamento, envie o comprovante aqui no WhatsApp.*\n\n" .
-                    "Confirmaremos seu agendamento assim que recebermos o pagamento. ✅\n\n" .
-                    "_Digite *menu* para voltar ao menu._"
-                );
+                // Mensagem 2: Apenas código PIX (fácil de copiar)
+                $this->waha_lib->enviar_texto($numero, $br_code);
 
                 // Notificar profissional sobre novo agendamento pendente
                 $this->Agendamento_model->enviar_notificacao_whatsapp($agendamento_id, 'profissional_novo');

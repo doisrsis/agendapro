@@ -2,182 +2,160 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Biblioteca PIX - Geração de BR Code e QR Code
+ * Biblioteca PIX - Wrapper para piggly/php-pix
  *
- * Gera código PIX (copia e cola) seguindo padrão do Banco Central
- * e converte em QR Code para pagamentos
+ * Gera código PIX (copia e cola) usando biblioteca validada piggly/php-pix
+ * Testada em 10+ bancos brasileiros
  *
  * @author Rafael Dias - doisr.com.br
- * @date 23/01/2026
+ * @date 24/01/2026
  */
+
+// Carregar classes da biblioteca piggly/php-pix na ordem correta
+require_once FCPATH . 'vendor/piggly/php-pix/src/Exceptions/InvalidPixKeyException.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Exceptions/InvalidPixKeyTypeException.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Exceptions/InvalidEmvFieldException.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Exceptions/EmvIdIsRequiredException.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Exceptions/CannotParseKeyTypeException.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Utils/Helper.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Utils/Cast.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Parser.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Emv/AbstractField.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Emv/Field.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Emv/MultiField.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/Emv/MPM.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/AbstractPayload.php';
+require_once FCPATH . 'vendor/piggly/php-pix/src/StaticPayload.php';
+
+use Piggly\Pix\StaticPayload;
+use Piggly\Pix\Parser;
+
 class Pix_lib {
 
     private $CI;
 
     public function __construct() {
-        $this->CI =& get_instance();
+        // Verificar se get_instance() existe (ambiente CodeIgniter)
+        if (function_exists('get_instance')) {
+            $this->CI =& get_instance();
+        }
     }
 
     /**
-     * Gera BR Code (código copia e cola) PIX
+     * Gera BR Code (código copia e cola) PIX usando biblioteca piggly/php-pix
      *
      * @param array $dados Dados do PIX
      *   - chave_pix: Chave PIX do recebedor
+     *   - tipo_chave: Tipo da chave (cpf, cnpj, email, telefone, aleatoria)
      *   - nome_recebedor: Nome do recebedor
      *   - cidade: Cidade do recebedor
-     *   - valor: Valor da transação (float)
-     *   - txid: Identificador único da transação (opcional)
-     *   - descricao: Descrição da transação (opcional)
-     *
-     * @return string BR Code gerado
+     *   - valor: Valor da transação (opcional)
+     *   - txid: ID da transação (opcional)
+     *   - descricao: Descrição (opcional)
+     * @return string|false BR Code gerado ou false em caso de erro
      */
     public function gerar_br_code($dados) {
-        // Validar dados obrigatórios
-        if (empty($dados['chave_pix']) || empty($dados['nome_recebedor']) || empty($dados['cidade'])) {
-            log_message('error', 'PIX: Dados obrigatórios não informados');
+        try {
+            if (empty($dados['chave_pix']) || empty($dados['nome_recebedor']) || empty($dados['cidade'])) {
+                log_message('error', 'PIX: Dados obrigatórios não informados');
+                return false;
+            }
+
+            // Determinar tipo da chave PIX
+            $tipo_chave = $this->determinar_tipo_chave($dados['chave_pix']);
+
+            // Criar payload estático
+            $payload = new StaticPayload();
+
+            // Configurar chave PIX
+            $payload->setPixKey($tipo_chave, $dados['chave_pix']);
+
+            // Configurar dados do recebedor
+            $payload->setMerchantName($dados['nome_recebedor']);
+            $payload->setMerchantCity($dados['cidade']);
+
+            // Configurar valor (se informado)
+            if (isset($dados['valor']) && $dados['valor'] > 0) {
+                $payload->setAmount($dados['valor']);
+            }
+
+            // Configurar TID (se informado)
+            if (isset($dados['txid']) && !empty($dados['txid'])) {
+                $payload->setTid($dados['txid']);
+            }
+
+            // Configurar descrição (se informada)
+            if (isset($dados['descricao']) && !empty($dados['descricao'])) {
+                $payload->setDescription($dados['descricao']);
+            }
+
+            // Gerar BR Code
+            $brcode = $payload->getPixCode();
+
+            log_message('debug', 'PIX: BR Code gerado - ' . substr($brcode, 0, 50) . '...');
+
+            return $brcode;
+
+        } catch (Exception $e) {
+            log_message('error', 'PIX: Erro ao gerar BR Code - ' . $e->getMessage());
             return false;
         }
-
-        // Preparar dados
-        $chave_pix = $dados['chave_pix'];
-        $nome_recebedor = $this->limpar_string($dados['nome_recebedor'], 25);
-        $cidade = $this->limpar_string($dados['cidade'], 15);
-        $valor = isset($dados['valor']) ? number_format($dados['valor'], 2, '.', '') : null;
-        $txid = isset($dados['txid']) ? substr($dados['txid'], 0, 25) : null;
-        $descricao = isset($dados['descricao']) ? $this->limpar_string($dados['descricao'], 72) : null;
-
-        // Merchant Account Information (ID 26 - PIX)
-        $payload_pix = $this->gerar_campo('00', 'BR.GOV.BCB.PIX'); // GUI
-        $payload_pix .= $this->gerar_campo('01', $chave_pix); // Chave PIX
-
-        if ($descricao) {
-            $payload_pix .= $this->gerar_campo('02', $descricao); // Descrição
-        }
-
-        $merchant_account = $this->gerar_campo('26', $payload_pix);
-
-        // Merchant Category Code (MCC)
-        $merchant_category = $this->gerar_campo('52', '0000');
-
-        // Transaction Currency (986 = BRL)
-        $currency = $this->gerar_campo('53', '986');
-
-        // Transaction Amount (se informado)
-        $amount = '';
-        if ($valor) {
-            $amount = $this->gerar_campo('54', $valor);
-        }
-
-        // Country Code
-        $country = $this->gerar_campo('58', 'BR');
-
-        // Merchant Name
-        $merchant_name = $this->gerar_campo('59', $nome_recebedor);
-
-        // Merchant City
-        $merchant_city = $this->gerar_campo('60', $cidade);
-
-        // Additional Data Field (txid)
-        $additional_data = '';
-        if ($txid) {
-            $additional_data_payload = $this->gerar_campo('05', $txid);
-            $additional_data = $this->gerar_campo('62', $additional_data_payload);
-        }
-
-        // Montar payload completo (sem CRC ainda)
-        $payload = '00020101'; // Payload Format Indicator
-        $payload .= '010212'; // Point of Initiation Method (12 = static, 11 = dynamic)
-        $payload .= $merchant_account;
-        $payload .= $merchant_category;
-        $payload .= $currency;
-        $payload .= $amount;
-        $payload .= $country;
-        $payload .= $merchant_name;
-        $payload .= $merchant_city;
-        $payload .= $additional_data;
-        $payload .= '6304'; // CRC16 placeholder
-
-        // Calcular CRC16
-        $crc = $this->calcular_crc16($payload);
-        $payload .= $crc;
-
-        log_message('debug', 'PIX: BR Code gerado - ' . substr($payload, 0, 50) . '...');
-
-        return $payload;
     }
 
     /**
-     * Gera campo do BR Code no formato ID+Tamanho+Valor
-     */
-    private function gerar_campo($id, $valor) {
-        $tamanho = strlen($valor);
-        return $id . str_pad($tamanho, 2, '0', STR_PAD_LEFT) . $valor;
-    }
-
-    /**
-     * Limpa string removendo acentos e caracteres especiais
-     */
-    private function limpar_string($string, $max_length = null) {
-        // Remover acentos
-        $string = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $string);
-
-        // Remover caracteres especiais, manter apenas letras, números e espaços
-        $string = preg_replace('/[^A-Za-z0-9 ]/', '', $string);
-
-        // Converter para maiúsculas
-        $string = strtoupper($string);
-
-        // Limitar tamanho
-        if ($max_length) {
-            $string = substr($string, 0, $max_length);
-        }
-
-        return $string;
-    }
-
-    /**
-     * Calcula CRC16-CCITT do payload PIX
-     */
-    private function calcular_crc16($payload) {
-        $polynomial = 0x1021;
-        $crc = 0xFFFF;
-
-        for ($i = 0; $i < strlen($payload); $i++) {
-            $crc ^= (ord($payload[$i]) << 8);
-
-            for ($j = 0; $j < 8; $j++) {
-                if (($crc & 0x8000) !== 0) {
-                    $crc = (($crc << 1) ^ $polynomial) & 0xFFFF;
-                } else {
-                    $crc = ($crc << 1) & 0xFFFF;
-                }
-            }
-        }
-
-        return strtoupper(str_pad(dechex($crc), 4, '0', STR_PAD_LEFT));
-    }
-
-    /**
-     * Gera URL do QR Code a partir do BR Code
-     * Usa API do QR Server (gratuita e sem limite)
+     * Determina o tipo da chave PIX
      *
-     * @param string $br_code BR Code gerado
-     * @param int $size Tamanho do QR Code em pixels (padrão: 300)
-     * @return string URL do QR Code
+     * @param string $chave Chave PIX
+     * @return string Tipo da chave (document, email, phone, random)
+     */
+    private function determinar_tipo_chave($chave) {
+        $chave = trim($chave);
+
+        // Email
+        if (filter_var($chave, FILTER_VALIDATE_EMAIL)) {
+            return 'email';
+        }
+
+        // Telefone
+        $telefone = preg_replace('/[^0-9]/', '', $chave);
+        if (strlen($telefone) >= 10 && strlen($telefone) <= 13) {
+            return 'phone';
+        }
+
+        // CPF/CNPJ
+        $documento = preg_replace('/[^0-9]/', '', $chave);
+        if (strlen($documento) == 11 || strlen($documento) == 14) {
+            return 'document';
+        }
+
+        // Chave aleatória (UUID)
+        $chave_limpa = str_replace('-', '', $chave);
+        if (strlen($chave_limpa) == 32 && ctype_xdigit($chave_limpa)) {
+            return 'random';
+        }
+
+        // Padrão: random
+        return 'random';
+    }
+
+    /**
+     * Gera URL do QR Code
+     *
+     * @param string $br_code BR Code do PIX
+     * @param int $size Tamanho da imagem (padrão: 300)
+     * @return string|false URL do QR Code ou false em caso de erro
      */
     public function gerar_qrcode_url($br_code, $size = 300) {
         if (empty($br_code)) {
             return false;
         }
 
-        // Usar API QR Server (gratuita, sem autenticação)
+        // Usar API pública para gerar QR Code
         $url = 'https://api.qrserver.com/v1/create-qr-code/';
         $url .= '?size=' . $size . 'x' . $size;
         $url .= '&data=' . urlencode($br_code);
         $url .= '&format=png';
         $url .= '&margin=10';
-
-        log_message('debug', 'PIX: QR Code URL gerada');
 
         return $url;
     }
@@ -187,19 +165,17 @@ class Pix_lib {
      *
      * @param string $chave Chave PIX
      * @param string $tipo Tipo da chave (cpf, cnpj, email, telefone, aleatoria)
-     * @return bool
+     * @return bool True se válida, false caso contrário
      */
     public function validar_chave_pix($chave, $tipo) {
         $chave = trim($chave);
 
         switch ($tipo) {
             case 'cpf':
-                // Remove formatação
                 $cpf = preg_replace('/[^0-9]/', '', $chave);
                 return strlen($cpf) == 11 && $this->validar_cpf($cpf);
 
             case 'cnpj':
-                // Remove formatação
                 $cnpj = preg_replace('/[^0-9]/', '', $chave);
                 return strlen($cnpj) == 14 && $this->validar_cnpj($cnpj);
 
@@ -207,14 +183,11 @@ class Pix_lib {
                 return filter_var($chave, FILTER_VALIDATE_EMAIL) !== false;
 
             case 'telefone':
-                // Formato: +5575999999999 ou 5575999999999
                 $telefone = preg_replace('/[^0-9]/', '', $chave);
                 return strlen($telefone) >= 10 && strlen($telefone) <= 13;
 
             case 'aleatoria':
                 // Chave aleatória: UUID com ou sem hífens
-                // Formato com hífens: 420ab7c4-4d63-46d4-809e-cd3eebc129ec (36 caracteres)
-                // Formato sem hífens: 420ab7c44d6346d4809ecd3eebc129ec (32 caracteres)
                 $chave_limpa = str_replace('-', '', $chave);
                 return strlen($chave_limpa) == 32 && ctype_xdigit($chave_limpa);
 
@@ -225,6 +198,9 @@ class Pix_lib {
 
     /**
      * Valida CPF
+     *
+     * @param string $cpf CPF sem formatação
+     * @return bool True se válido, false caso contrário
      */
     private function validar_cpf($cpf) {
         if (strlen($cpf) != 11 || preg_match('/(\d)\1{10}/', $cpf)) {
@@ -245,6 +221,9 @@ class Pix_lib {
 
     /**
      * Valida CNPJ
+     *
+     * @param string $cnpj CNPJ sem formatação
+     * @return bool True se válido, false caso contrário
      */
     private function validar_cnpj($cnpj) {
         if (strlen($cnpj) != 14 || preg_match('/(\d)\1{13}/', $cnpj)) {
@@ -281,6 +260,10 @@ class Pix_lib {
 
     /**
      * Formata chave PIX para exibição
+     *
+     * @param string $chave Chave PIX
+     * @param string $tipo Tipo da chave
+     * @return string Chave formatada
      */
     public function formatar_chave_pix($chave, $tipo) {
         switch ($tipo) {

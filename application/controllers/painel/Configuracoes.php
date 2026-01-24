@@ -500,8 +500,16 @@ class Configuracoes extends CI_Controller {
         $pix_tipo = $this->input->post('pix_tipo_chave');
 
         if ($pix_tipo == 'aleatoria' && !empty($pix_chave)) {
-            // Remover traços de UUID para padronizar armazenamento
-            $pix_chave = str_replace('-', '', $pix_chave);
+            // Garantir que UUID tenha traços no formato correto (biblioteca piggly requer)
+            $chave_limpa = str_replace('-', '', $pix_chave);
+            if (strlen($chave_limpa) == 32) {
+                // Formatar UUID: 8-4-4-4-12
+                $pix_chave = substr($chave_limpa, 0, 8) . '-' .
+                             substr($chave_limpa, 8, 4) . '-' .
+                             substr($chave_limpa, 12, 4) . '-' .
+                             substr($chave_limpa, 16, 4) . '-' .
+                             substr($chave_limpa, 20, 12);
+            }
         }
 
         $dados = [
