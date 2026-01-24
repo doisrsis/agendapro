@@ -52,6 +52,11 @@ class Agendamento_model extends CI_Model {
             $this->db->where('a.status', $filtros['status']);
         }
 
+        // Filtro de status com IN (array de status)
+        if (!empty($filtros['status_in']) && is_array($filtros['status_in'])) {
+            $this->db->where_in('a.status', $filtros['status_in']);
+        }
+
         if (!empty($filtros['data'])) {
             $this->db->where('a.data', $filtros['data']);
         }

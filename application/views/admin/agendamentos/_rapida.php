@@ -184,6 +184,19 @@
 
                 <!-- Ações -->
                 <div class="d-grid gap-2">
+                    <!-- Botão Confirmar Pagamento PIX Manual (apenas para PIX pendente quando estabelecimento usa PIX Manual) -->
+                    <?php if (($ag->forma_pagamento == 'pix' || $ag->forma_pagamento == 'pix_manual') &&
+                              $ag->pagamento_status == 'pendente' &&
+                              isset($estabelecimento) && $estabelecimento->pagamento_tipo == 'pix_manual'): ?>
+                    <button type="button"
+                            class="btn btn-success btn-confirmar-pix"
+                            data-agendamento-id="<?= $ag->id ?>"
+                            data-cliente-nome="<?= $ag->cliente_nome ?>">
+                        <i class="ti ti-check-circle me-2"></i>
+                        Confirmar Pagamento PIX
+                    </button>
+                    <?php endif; ?>
+
                     <!-- Botão Finalizar (apenas para confirmado) -->
                     <?php if ($ag->status == 'confirmado'): ?>
                     <button type="button"
@@ -445,6 +458,29 @@ document.querySelectorAll('.btn-nao-compareceu').forEach(function(btn) {
                         timerProgressBar: true
                     });
                 }, 300);
+            }
+        });
+    });
+});
+
+// Confirmar Pagamento PIX Manual
+document.querySelectorAll('.btn-confirmar-pix').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const agendamentoId = this.getAttribute('data-agendamento-id');
+        const clienteNome = this.getAttribute('data-cliente-nome');
+
+        Swal.fire({
+            title: 'Confirmar Pagamento PIX',
+            html: `Confirmar que o pagamento PIX foi recebido de <strong>${clienteNome}</strong>?<br><br><small class="text-muted">O cliente será notificado via WhatsApp.</small>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="ti ti-check-circle me-1"></i> Sim, confirmar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#2fb344',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '<?= base_url('painel/agendamentos/confirmar_pagamento_pix_manual/') ?>' + agendamentoId;
             }
         });
     });

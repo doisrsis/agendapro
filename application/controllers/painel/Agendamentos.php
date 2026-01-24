@@ -38,9 +38,13 @@ class Agendamentos extends Painel_Controller {
             $filtros['data'] = date('Y-m-d');
         }
 
-        // Filtro de status
-        if ($this->input->get('status') && $this->input->get('status') !== 'todos') {
-            $filtros['status'] = $this->input->get('status');
+        // Filtro de status com padrão para confirmados e pendentes
+        $status_get = $this->input->get('status');
+        if ($status_get && $status_get !== 'todos') {
+            $filtros['status'] = $status_get;
+        } elseif (!$status_get || $status_get === 'todos') {
+            // Padrão: apenas confirmados e pendentes
+            $filtros['status_in'] = ['confirmado', 'pendente'];
         }
 
         // Filtro de profissional
@@ -59,6 +63,10 @@ class Agendamentos extends Painel_Controller {
         $data['pagination'] = '';
         $data['profissionais'] = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
         $data['estatisticas'] = $this->get_estatisticas();
+
+        // Carregar dados do estabelecimento para verificar tipo de pagamento
+        $this->load->model('Estabelecimento_model');
+        $data['estabelecimento'] = $this->Estabelecimento_model->get($this->estabelecimento_id);
 
         $this->load->view('painel/layout/header', $data);
         $this->load->view('admin/agendamentos/index', $data);
@@ -392,45 +400,36 @@ class Agendamentos extends Painel_Controller {
             return;
         }
 
-        // Verificar se é PIX Manual pendente
-        if ($agendamento->forma_pagamento != 'pix_manual' || $agendamento->pagamento_status != 'pendente') {
+        // Carregar estabelecimento para verificar tipo de pagamento
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
+
+        // Verificar se é PIX pendente e estabelecimento usa PIX Manual
+        if (!in_array($agendamento->forma_pagamento, ['pix', 'pix_manual']) ||
+            $agendamento->pagamento_status != 'pendente' ||
+            $estabelecimento->pagamento_tipo != 'pix_manual') {
             $this->session->set_flashdata('erro', 'Este agendamento não está aguardando confirmação de pagamento PIX Manual.');
             redirect('painel/agendamentos/visualizar/' . $id);
             return;
         }
 
-        // Atualizar agendamento
+        // Atualizar agendamento - pagamento e status
         $dados_atualizacao = [
             'status' => 'confirmado',
             'pagamento_status' => 'pago',
-            'confirmado_em' => date('Y-m-d H:i:s')
+            'forma_pagamento' => 'pix_manual'
         ];
 
         if ($this->Agendamento_model->update($id, $dados_atualizacao)) {
             log_message('info', 'Pagamento PIX Manual confirmado - agendamento_id=' . $id);
 
-            // Enviar notificação de confirmação ao cliente
-            if ($agendamento->cliente_whatsapp) {
-                $data_formatada = date('d/m/Y', strtotime($agendamento->data));
-                $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
-
-                $this->Notificacao_whatsapp_lib->enviar_confirmacao(
-                    $this->Agendamento_model->get($id)
-                );
-
-                log_message('info', 'Notificação de confirmação enviada ao cliente - agendamento_id=' . $id);
-            }
-
-            // Enviar notificação ao profissional (se configurado)
-            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'profissional_novo');
-
-            $this->session->set_flashdata('sucesso', 'Pagamento confirmado! O cliente foi notificado via WhatsApp.');
+            $this->session->set_flashdata('sucesso', 'Pagamento PIX confirmado com sucesso!');
         } else {
             log_message('error', 'Erro ao confirmar pagamento PIX Manual - agendamento_id=' . $id);
             $this->session->set_flashdata('erro', 'Erro ao confirmar pagamento.');
         }
 
-        redirect('painel/agendamentos/visualizar/' . $id);
+        redirect('painel/agendamentos');
     }
 
     /**
@@ -460,11 +459,35 @@ class Agendamentos extends Painel_Controller {
             return;
         }
 
-        // Finalizar agendamento
-        $resultado = $this->Agendamento_model->update($id, [
+        // Carregar estabelecimento para verificar tipo de pagamento
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
+
+        // Preparar dados de atualização
+        $dados_atualizacao = [
             'status' => 'finalizado',
             'hora_fim_real' => date('H:i:s')
-        ]);
+        ];
+
+        // Lógica de pagamento ao finalizar
+        if ($agendamento->forma_pagamento == 'pix') {
+            // Se é PIX e estabelecimento usa PIX Manual
+            if ($estabelecimento->pagamento_tipo == 'pix_manual') {
+                $dados_atualizacao['forma_pagamento'] = 'pix_manual';
+                $dados_atualizacao['pagamento_status'] = 'pago';
+            }
+            // Se é PIX e estabelecimento usa Mercado Pago
+            // Não altera pagamento, apenas finaliza
+        } elseif ($agendamento->forma_pagamento == 'presencial') {
+            // Pagamento presencial: marcar como pago
+            $dados_atualizacao['pagamento_status'] = 'pago';
+        } elseif ($agendamento->forma_pagamento == 'pix_manual') {
+            // PIX Manual: marcar como pago
+            $dados_atualizacao['pagamento_status'] = 'pago';
+        }
+
+        // Finalizar agendamento
+        $resultado = $this->Agendamento_model->update($id, $dados_atualizacao);
 
         if ($resultado) {
             // Enviar notificação WhatsApp de agradecimento
