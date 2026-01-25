@@ -80,7 +80,7 @@
     </div>
     <?php else: ?>
     <?php foreach ($agendamentos as $ag): ?>
-    <div class="col-md-6 col-lg-4">
+    <div class="col-12 col-sm-12 col-md-6 col-lg-4">
         <div class="card card-sm">
             <div class="card-body">
                 <!-- Header do Card: Cliente + Horário -->
@@ -209,7 +209,7 @@
                     <?php endif; ?>
 
                     <!-- Botões de Ação Secundários -->
-                    <div class="btn-group">
+                    <div class="btn-group flex-wrap" role="group">
                         <!-- Botão Não Compareceu -->
                         <?php if (!in_array($ag->status, ['finalizado', 'cancelado', 'nao_compareceu'])): ?>
                         <button type="button"
@@ -218,7 +218,8 @@
                                 data-cliente-nome="<?= $ag->cliente_nome ?>"
                                 title="Marcar como Não Compareceu">
                             <i class="ti ti-user-x me-1"></i>
-                            Não Compareceu
+                            <span class="d-none d-sm-inline">Não Compareceu</span>
+                            <span class="d-inline d-sm-none">Faltou</span>
                         </button>
                         <?php endif; ?>
 
@@ -246,7 +247,8 @@
                                 data-tem-link="<?= $tem_link ? '1' : '0' ?>"
                                 title="<?= $texto_botao ?>">
                             <i class="ti <?= $icone ?> me-1"></i>
-                            <?= $tem_link ? 'Reenviar Link' : 'Gerar PIX' ?>
+                            <span class="d-none d-sm-inline"><?= $tem_link ? 'Reenviar Link' : 'Gerar PIX' ?></span>
+                            <span class="d-inline d-sm-none">PIX</span>
                         </button>
                         <?php endif; ?>
 

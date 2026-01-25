@@ -113,7 +113,56 @@ class Agendamentos extends Painel_Controller {
                             $valor = $estabelecimento->agendamento_taxa_fixa;
                         }
 
-                        // Gerar PIX
+                        // Verificar tipo de pagamento do estabelecimento
+                        if ($estabelecimento->pagamento_tipo == 'pix_manual') {
+                            // PIX MANUAL - Gerar PIX copia e cola
+                            if (empty($estabelecimento->pix_chave)) {
+                                $this->session->set_flashdata('erro', 'Estabelecimento não possui chave PIX configurada.');
+                                redirect('painel/agendamentos');
+                                return;
+                            }
+
+                            // Gerar código PIX copia e cola
+                            $this->load->library('Pix_lib');
+                            $pix_copia_cola = $this->pix_lib->gerar_br_code([
+                                'chave_pix' => $estabelecimento->pix_chave,
+                                'nome_recebedor' => $estabelecimento->pix_nome_recebedor ?? $estabelecimento->nome,
+                                'cidade' => $estabelecimento->pix_cidade ?? 'Cidade',
+                                'valor' => $valor,
+                                'txid' => "AG" . str_pad($agendamento_id, 10, '0', STR_PAD_LEFT),
+                                'descricao' => $servico->nome ?? 'Agendamento'
+                            ]);
+
+                            if (!$pix_copia_cola) {
+                                $this->session->set_flashdata('erro', 'Erro ao gerar código PIX.');
+                                redirect('painel/agendamentos');
+                                return;
+                            }
+
+                            // Salvar PIX copia e cola no agendamento
+                            $this->Agendamento_model->atualizar($agendamento_id, [
+                                'pagamento_status' => 'pendente',
+                                'forma_pagamento' => 'pix_manual',
+                                'pagamento_valor' => $valor,
+                                'pagamento_pix_copia_cola' => $pix_copia_cola
+                            ]);
+
+                            // Enviar PIX copia e cola via WhatsApp
+                            $agendamento_completo = $this->Agendamento_model->get_by_id($agendamento_id);
+                            $this->load->library('Notificacao_whatsapp_lib');
+                            $resultado_whatsapp = $this->notificacao_whatsapp_lib->enviar_pix_copia_cola($agendamento_completo, $pix_copia_cola);
+
+                            if ($resultado_whatsapp['success']) {
+                                $this->session->set_flashdata('sucesso', 'Agendamento criado! PIX copia e cola enviado via WhatsApp para o cliente.');
+                            } else {
+                                $this->session->set_flashdata('aviso', 'Agendamento criado! Não foi possível enviar WhatsApp: ' . ($resultado_whatsapp['error'] ?? 'Erro desconhecido'));
+                            }
+
+                            redirect('painel/agendamentos');
+                            return;
+                        }
+
+                        // MERCADO PAGO - Gerar PIX via API
                         $this->load->library('mercadopago_lib');
                         $this->load->model('Pagamento_model');
 
@@ -1190,7 +1239,81 @@ class Agendamentos extends Painel_Controller {
             return;
         }
 
-        // CASO 1: Já tem token de pagamento (reenvio)
+        // Carregar estabelecimento para verificar tipo de pagamento
+        $this->load->model('Estabelecimento_model');
+        $estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
+
+        // Se estabelecimento usa PIX Manual, enviar PIX copia e cola
+        if ($estabelecimento->pagamento_tipo == 'pix_manual') {
+            // Verificar se já tem PIX copia e cola gerado
+            if (!empty($agendamento->pagamento_pix_copia_cola)) {
+                // Reenviar PIX copia e cola existente
+                $this->load->library('Notificacao_whatsapp_lib');
+                $resultado = $this->notificacao_whatsapp_lib->enviar_pix_copia_cola($agendamento, $agendamento->pagamento_pix_copia_cola);
+
+                if ($resultado['success']) {
+                    echo json_encode(['success' => true, 'message' => 'PIX copia e cola reenviado com sucesso!']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Erro ao enviar WhatsApp: ' . ($resultado['error'] ?? 'Erro desconhecido')]);
+                }
+                return;
+            }
+
+            // Gerar novo PIX copia e cola usando dados do estabelecimento
+            if (empty($estabelecimento->pix_chave)) {
+                echo json_encode(['success' => false, 'message' => 'Estabelecimento não possui chave PIX configurada.']);
+                return;
+            }
+
+            // Buscar serviço para obter valor
+            $this->load->model('Servico_model');
+            $servico = $this->Servico_model->get_by_id($agendamento->servico_id);
+
+            if (!$servico || $servico->preco <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Serviço não possui valor configurado para pagamento.']);
+                return;
+            }
+
+            // Gerar código PIX copia e cola
+            $this->load->library('Pix_lib');
+            $pix_copia_cola = $this->pix_lib->gerar_br_code([
+                'chave_pix' => $estabelecimento->pix_chave,
+                'nome_recebedor' => $estabelecimento->pix_nome_recebedor ?? $estabelecimento->nome,
+                'cidade' => $estabelecimento->pix_cidade ?? 'Cidade',
+                'valor' => $servico->preco,
+                'txid' => "AG" . str_pad($id, 10, '0', STR_PAD_LEFT),
+                'descricao' => $servico->nome
+            ]);
+
+            if (!$pix_copia_cola) {
+                echo json_encode(['success' => false, 'message' => 'Erro ao gerar código PIX.']);
+                return;
+            }
+
+            // Salvar PIX copia e cola no agendamento
+            $this->Agendamento_model->update($id, [
+                'forma_pagamento' => 'pix_manual',
+                'pagamento_status' => 'pendente',
+                'pagamento_valor' => $servico->preco,
+                'pagamento_pix_copia_cola' => $pix_copia_cola
+            ]);
+
+            // Recarregar agendamento
+            $agendamento = $this->Agendamento_model->get_by_id($id);
+
+            // Enviar via WhatsApp
+            $this->load->library('Notificacao_whatsapp_lib');
+            $resultado = $this->notificacao_whatsapp_lib->enviar_pix_copia_cola($agendamento, $pix_copia_cola);
+
+            if ($resultado['success']) {
+                echo json_encode(['success' => true, 'message' => 'PIX copia e cola gerado e enviado com sucesso!']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'PIX gerado, mas erro ao enviar WhatsApp: ' . ($resultado['error'] ?? 'Erro desconhecido')]);
+            }
+            return;
+        }
+
+        // CASO 1: Estabelecimento usa Mercado Pago - Já tem token de pagamento (reenvio)
         if (!empty($agendamento->pagamento_token)) {
             // Permitir reenvio para: pendente, cancelado ou expirado
             if (!in_array($agendamento->pagamento_status, ['pendente', 'cancelado', 'expirado'])) {

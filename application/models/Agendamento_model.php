@@ -269,6 +269,7 @@ class Agendamento_model extends CI_Model {
         if (isset($data['qtd_reagendamentos'])) $update_data['qtd_reagendamentos'] = $data['qtd_reagendamentos'];
 
         // Campos de pagamento
+        if (isset($data['forma_pagamento'])) $update_data['forma_pagamento'] = $data['forma_pagamento'];
         if (isset($data['pagamento_status'])) $update_data['pagamento_status'] = $data['pagamento_status'];
         if (isset($data['pagamento_valor'])) $update_data['pagamento_valor'] = $data['pagamento_valor'];
         if (isset($data['pagamento_pix_qrcode'])) $update_data['pagamento_pix_qrcode'] = $data['pagamento_pix_qrcode'];

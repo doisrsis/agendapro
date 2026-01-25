@@ -852,6 +852,66 @@ class Notificacao_whatsapp_lib {
     }
 
     /**
+     * Enviar PIX copia e cola via WhatsApp (PIX Manual)
+     * Usado quando estabelecimento usa PIX Manual
+     * Envia DUAS mensagens separadas: 1) Confirmação do agendamento, 2) Código PIX puro
+     *
+     * @param object $agendamento Objeto do agendamento com joins
+     * @param string $pix_copia_cola Código PIX copia e cola
+     * @return array
+     */
+    public function enviar_pix_copia_cola($agendamento, $pix_copia_cola) {
+        if (!$this->configurar_waha($agendamento->estabelecimento_id)) {
+            return ['success' => false, 'error' => 'WhatsApp não configurado'];
+        }
+
+        $numero = $this->limpar_numero($agendamento->cliente_whatsapp);
+        if (!$numero) {
+            log_message('warning', 'Notificacao WhatsApp: Cliente sem WhatsApp - PIX Manual #' . $agendamento->id);
+            return ['success' => false, 'error' => 'Número do cliente não informado'];
+        }
+
+        $chat_id = $this->CI->waha_lib->obter_chat_id_valido($numero);
+        if (!$chat_id) {
+            return ['success' => false, 'error' => 'Número não encontrado no WhatsApp'];
+        }
+
+        $data_formatada = date('d/m/Y', strtotime($agendamento->data));
+        $hora_formatada = date('H:i', strtotime($agendamento->hora_inicio));
+        $valor_formatado = number_format($agendamento->pagamento_valor ?? $agendamento->servico_preco, 2, ',', '.');
+
+        // MENSAGEM 1: Confirmação do agendamento
+        $mensagem1 = "🎉 *Agendamento Criado!*\n\n";
+        $mensagem1 .= "📋 *Serviço:* {$agendamento->servico_nome}\n";
+        $mensagem1 .= "👤 *Profissional:* {$agendamento->profissional_nome}\n";
+        $mensagem1 .= "📅 *Data:* {$data_formatada}\n";
+        $mensagem1 .= "⏰ *Horário:* {$hora_formatada}\n";
+        $mensagem1 .= "💰 *Valor:* R$ {$valor_formatado}\n\n";
+        $mensagem1 .= "💳 *PAGAMENTO VIA PIX (Copia e Cola)*\n\n";
+        $mensagem1 .= "📎 Após realizar o pagamento, envie o comprovante aqui no WhatsApp.\n\n";
+        $mensagem1 .= "✅ Confirmaremos seu agendamento assim que recebermos o pagamento.\n\n";
+        $mensagem1 .= "_Digite menu para voltar ao menu._";
+
+        // Enviar primeira mensagem
+        $resultado1 = $this->CI->waha_lib->enviar_texto($chat_id, $mensagem1);
+
+        if (!$resultado1['success']) {
+            $this->registrar_log($agendamento, 'pix_copia_cola_erro', $resultado1);
+            return $resultado1;
+        }
+
+        // Aguardar 1 segundo entre mensagens
+        sleep(1);
+
+        // MENSAGEM 2: Código PIX puro (sem formatação)
+        $resultado2 = $this->CI->waha_lib->enviar_texto($chat_id, $pix_copia_cola);
+
+        $this->registrar_log($agendamento, 'pix_copia_cola', $resultado2);
+
+        return $resultado2;
+    }
+
+    /**
      * Enviar resumo diário da agenda para profissional/estabelecimento
      *
      * @param int $estabelecimento_id ID do estabelecimento

@@ -178,7 +178,6 @@
                     </div>
 
                     <!-- Pagamento -->
-                    <?php if (isset($agendamento)): ?>
                     <div class="card mt-3">
                         <div class="card-header">
                             <h3 class="card-title">Pagamento</h3>
@@ -207,7 +206,6 @@
                             </div>
                         </div>
                     </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </form>
