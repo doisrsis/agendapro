@@ -1425,7 +1425,7 @@ class Webhook_waha extends CI_Controller {
                     'pagamento_valor' => $valor_pagamento,
                     'pagamento_pix_qrcode' => null,
                     'pagamento_pix_copia_cola' => $br_code,
-                    'forma_pagamento' => 'pix_manual'
+                    'forma_pagamento' => 'pix'
                 ]);
 
                 $valor_pag_formatado = number_format($valor_pagamento, 2, ',', '.');

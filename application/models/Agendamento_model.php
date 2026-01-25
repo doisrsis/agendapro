@@ -279,6 +279,8 @@ class Agendamento_model extends CI_Model {
         if (isset($data['pagamento_token'])) $update_data['pagamento_token'] = $data['pagamento_token'];
         if (isset($data['pagamento_expira_adicional_em'])) $update_data['pagamento_expira_adicional_em'] = $data['pagamento_expira_adicional_em'];
 
+        log_message('debug', 'Agendamento_model->update() - ID: ' . $id . ' - update_data: ' . json_encode($update_data));
+
         // Campos de Notificação / Controle
         if (isset($data['confirmacao_enviada'])) $update_data['confirmacao_enviada'] = $data['confirmacao_enviada'];
         if (isset($data['confirmacao_enviada_em'])) $update_data['confirmacao_enviada_em'] = $data['confirmacao_enviada_em'];
@@ -1018,6 +1020,11 @@ class Agendamento_model extends CI_Model {
                            'Reagendado de ' . date('d/m/Y', strtotime($data_anterior)) . ' às ' .
                            date('H:i', strtotime($hora_anterior)),
             'pagamento_status' => $agendamento->pagamento_status,
+            'forma_pagamento' => $agendamento->forma_pagamento,
+            'pagamento_valor' => $agendamento->pagamento_valor,
+            'pagamento_pix_qrcode' => $agendamento->pagamento_pix_qrcode,
+            'pagamento_pix_copia_cola' => $agendamento->pagamento_pix_copia_cola,
+            'pagamento_token' => $agendamento->pagamento_token,
             'qtd_reagendamentos' => $contador_atual + 1,
             'confirmacao_enviada' => 0,
             'confirmacao_enviada_em' => null,

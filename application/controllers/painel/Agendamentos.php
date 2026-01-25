@@ -93,7 +93,9 @@ class Agendamentos extends Painel_Controller {
                     'data' => $this->input->post('data'),
                     'hora_inicio' => $this->input->post('hora_inicio'),
                     'status' => $this->input->post('status') ?: 'pendente',
-                    'observacoes' => $this->input->post('observacoes')
+                    'observacoes' => $this->input->post('observacoes'),
+                    'forma_pagamento' => $this->input->post('forma_pagamento') ?: 'nao_definido',
+                    'pagamento_status' => $this->input->post('pagamento_status') ?: 'nao_requerido'
                 ];
 
                 $agendamento_id = $this->Agendamento_model->criar($dados);
@@ -103,7 +105,14 @@ class Agendamentos extends Painel_Controller {
                     $this->load->model('Estabelecimento_model');
                     $estabelecimento = $this->Estabelecimento_model->get($this->estabelecimento_id);
 
-                    if ($estabelecimento->agendamento_requer_pagamento != 'nao') {
+                    // Verificar se requer pagamento E se pagamento está pendente
+                    $pagamento_status_manual = $this->input->post('pagamento_status');
+                    $forma_pagamento_manual = $this->input->post('forma_pagamento');
+
+                    if ($estabelecimento->agendamento_requer_pagamento != 'nao'
+                        && $forma_pagamento_manual == 'pix'
+                        && $pagamento_status_manual != 'pago') {
+
                         // Calcular valor
                         $valor = 0;
                         if ($estabelecimento->agendamento_requer_pagamento == 'valor_total') {
@@ -139,13 +148,16 @@ class Agendamentos extends Painel_Controller {
                                 return;
                             }
 
-                            // Salvar PIX copia e cola no agendamento
-                            $this->Agendamento_model->atualizar($agendamento_id, [
-                                'pagamento_status' => 'pendente',
-                                'forma_pagamento' => 'pix_manual',
+                            // Preparar dados de atualização do PIX
+                            $dados_pix = [
+                                'forma_pagamento' => 'pix',
                                 'pagamento_valor' => $valor,
-                                'pagamento_pix_copia_cola' => $pix_copia_cola
-                            ]);
+                                'pagamento_pix_copia_cola' => $pix_copia_cola,
+                                'pagamento_status' => 'pendente'
+                            ];
+
+                            // Salvar PIX copia e cola no agendamento
+                            $this->Agendamento_model->atualizar($agendamento_id, $dados_pix);
 
                             // Enviar PIX copia e cola via WhatsApp
                             $agendamento_completo = $this->Agendamento_model->get_by_id($agendamento_id);
@@ -223,17 +235,20 @@ class Agendamentos extends Painel_Controller {
                             // Gerar token único para acesso público
                             $token_pagamento = $this->Agendamento_model->gerar_token_pagamento();
 
-                            // Salvar dados do PIX no agendamento
-                            $this->Agendamento_model->atualizar($agendamento_id, [
-                                'pagamento_status' => 'pendente',
+                            // Preparar dados de atualização do Mercado Pago
+                            $dados_mp = [
                                 'forma_pagamento' => 'pix',
                                 'pagamento_valor' => $valor,
                                 'pagamento_pix_qrcode' => $pix_data['point_of_interaction']['transaction_data']['qr_code_base64'] ?? null,
                                 'pagamento_pix_copia_cola' => $pix_data['point_of_interaction']['transaction_data']['qr_code'] ?? null,
                                 'pagamento_expira_em' => date('Y-m-d H:i:s', strtotime("+{$estabelecimento->agendamento_tempo_expiracao_pix} minutes")),
                                 'pagamento_token' => $token_pagamento,
-                                'pagamento_lembrete_enviado' => 0
-                            ]);
+                                'pagamento_lembrete_enviado' => 0,
+                                'pagamento_status' => 'pendente'
+                            ];
+
+                            // Salvar dados do PIX no agendamento
+                            $this->Agendamento_model->atualizar($agendamento_id, $dados_mp);
 
                             // Criar registro de pagamento
                             $this->Pagamento_model->criar_agendamento([
@@ -330,8 +345,15 @@ class Agendamentos extends Painel_Controller {
                 $status = $this->input->post('status');
                 $observacoes = $this->input->post('observacoes');
 
+                // Normalizar hora_anterior para comparação (remover segundos se houver)
+                $hora_anterior_normalizada = substr($hora_anterior, 0, 5); // HH:MM
+                $nova_hora_normalizada = strlen($nova_hora) > 5 ? substr($nova_hora, 0, 5) : $nova_hora;
+
+                log_message('debug', 'Editar Agendamento - Comparação: data_anterior=' . $data_anterior . ', nova_data=' . $nova_data . ', hora_anterior=' . $hora_anterior_normalizada . ', nova_hora=' . $nova_hora_normalizada);
+
                 // Verificar se houve mudança de data/hora (reagendamento)
-                if ($nova_data != $data_anterior || $nova_hora != $hora_anterior) {
+                if ($nova_data != $data_anterior || $nova_hora_normalizada != $hora_anterior_normalizada) {
+                    log_message('debug', 'Editar Agendamento - REAGENDAMENTO detectado - ID: ' . $id);
                     // Usar método reagendar_criar_novo para manter histórico completo
                     // Calcular hora_fim baseado na duração do serviço
                     $servico = $this->Servico_model->get_by_id($agendamento->servico_id);
@@ -346,7 +368,7 @@ class Agendamentos extends Painel_Controller {
                     );
 
                     if ($resultado['success']) {
-                        // Atualizar status e observações no novo agendamento
+                        // Atualizar status, observações e dados de pagamento no novo agendamento
                         $novo_id = $resultado['novo_agendamento_id'];
                         $dados_extras = [];
 
@@ -356,6 +378,17 @@ class Agendamentos extends Painel_Controller {
 
                         if ($status && $status != 'pendente') {
                             $dados_extras['status'] = $status;
+                        }
+
+                        // Adicionar campos de pagamento do formulário
+                        $forma_pagamento_post = $this->input->post('forma_pagamento');
+                        if ($forma_pagamento_post !== null && $forma_pagamento_post !== false) {
+                            $dados_extras['forma_pagamento'] = $forma_pagamento_post;
+                        }
+
+                        $pagamento_status_post = $this->input->post('pagamento_status');
+                        if ($pagamento_status_post !== null && $pagamento_status_post !== false) {
+                            $dados_extras['pagamento_status'] = $pagamento_status_post;
                         }
 
                         if (!empty($dados_extras)) {
@@ -374,13 +407,18 @@ class Agendamentos extends Painel_Controller {
                         'observacoes' => $observacoes
                     ];
 
-                    // Adicionar campos de pagamento se fornecidos
-                    if ($this->input->post('forma_pagamento')) {
-                        $dados['forma_pagamento'] = $this->input->post('forma_pagamento');
+                    // Adicionar campos de pagamento - sempre incluir se existirem no POST
+                    $forma_pagamento_post = $this->input->post('forma_pagamento');
+                    if ($forma_pagamento_post !== null && $forma_pagamento_post !== false) {
+                        $dados['forma_pagamento'] = $forma_pagamento_post;
                     }
-                    if ($this->input->post('pagamento_status')) {
-                        $dados['pagamento_status'] = $this->input->post('pagamento_status');
+
+                    $pagamento_status_post = $this->input->post('pagamento_status');
+                    if ($pagamento_status_post !== null && $pagamento_status_post !== false) {
+                        $dados['pagamento_status'] = $pagamento_status_post;
                     }
+
+                    log_message('debug', 'Editar Agendamento - ID: ' . $id . ' - Dados para update: ' . json_encode($dados));
 
                     if ($this->Agendamento_model->update($id, $dados)) {
                         $this->session->set_flashdata('sucesso', 'Agendamento atualizado com sucesso!');
@@ -454,7 +492,7 @@ class Agendamentos extends Painel_Controller {
         $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
 
         // Verificar se é PIX pendente e estabelecimento usa PIX Manual
-        if (!in_array($agendamento->forma_pagamento, ['pix', 'pix_manual']) ||
+        if ($agendamento->forma_pagamento != 'pix' ||
             $agendamento->pagamento_status != 'pendente' ||
             $estabelecimento->pagamento_tipo != 'pix_manual') {
             $this->session->set_flashdata('erro', 'Este agendamento não está aguardando confirmação de pagamento PIX Manual.');
@@ -466,7 +504,7 @@ class Agendamentos extends Painel_Controller {
         $dados_atualizacao = [
             'status' => 'confirmado',
             'pagamento_status' => 'pago',
-            'forma_pagamento' => 'pix_manual'
+            'forma_pagamento' => 'pix'
         ];
 
         if ($this->Agendamento_model->update($id, $dados_atualizacao)) {
@@ -520,18 +558,14 @@ class Agendamentos extends Painel_Controller {
 
         // Lógica de pagamento ao finalizar
         if ($agendamento->forma_pagamento == 'pix') {
-            // Se é PIX e estabelecimento usa PIX Manual
+            // Se é PIX e estabelecimento usa PIX Manual, marcar como pago
             if ($estabelecimento->pagamento_tipo == 'pix_manual') {
-                $dados_atualizacao['forma_pagamento'] = 'pix_manual';
                 $dados_atualizacao['pagamento_status'] = 'pago';
             }
             // Se é PIX e estabelecimento usa Mercado Pago
             // Não altera pagamento, apenas finaliza
         } elseif ($agendamento->forma_pagamento == 'presencial') {
             // Pagamento presencial: marcar como pago
-            $dados_atualizacao['pagamento_status'] = 'pago';
-        } elseif ($agendamento->forma_pagamento == 'pix_manual') {
-            // PIX Manual: marcar como pago
             $dados_atualizacao['pagamento_status'] = 'pago';
         }
 
@@ -1292,7 +1326,7 @@ class Agendamentos extends Painel_Controller {
 
             // Salvar PIX copia e cola no agendamento
             $this->Agendamento_model->update($id, [
-                'forma_pagamento' => 'pix_manual',
+                'forma_pagamento' => 'pix',
                 'pagamento_status' => 'pendente',
                 'pagamento_valor' => $servico->preco,
                 'pagamento_pix_copia_cola' => $pix_copia_cola
