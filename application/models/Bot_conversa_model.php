@@ -17,6 +17,20 @@ class Bot_conversa_model extends CI_Model
     }
 
     /**
+     * Obtém apenas se existir uma conversa ativa (não encerrada)
+     * Não cria nova e não reativa encerradas automaticamente
+     */
+    public function get_ativa($estabelecimento_id, $numero)
+    {
+        return $this->db
+            ->where('estabelecimento_id', $estabelecimento_id)
+            ->where('numero_whatsapp', $numero)
+            ->where('encerrada', 0)
+            ->get($this->table)
+            ->row();
+    }
+
+    /**
      * Obtém ou cria uma conversa para o número
      * Reseta automaticamente se a última interação ultrapassou o timeout configurado
      *

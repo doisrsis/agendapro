@@ -404,9 +404,30 @@ class Webhook_waha extends CI_Controller {
             $estabelecimento = $this->Estabelecimento_model->get_by_id($estabelecimento_id);
 
             if ($estabelecimento && $estabelecimento->waha_bot_ativo) {
-                log_message('debug', 'WAHA Webhook: Bot ativo para estabelecimento ' . $estabelecimento_id . ' - processando mensagem');
-                // Usar número completo (com @lid ou @c.us) para compatibilidade com novos números WhatsApp
-                $this->processar_bot_agendamento($estabelecimento, $numero_completo, $body, $message_id, $pushName, $numero_real);
+
+                // --- NOVO FILTRO DE ATIVAÇÃO PRIVACIDADE ---
+                // FIX: Passar $body (mensagem original) em vez de $body_lower (que não existe)
+                $filtro = $this->verificar_filtro_ativacao($estabelecimento, $body, $numero_completo);
+
+                if ($filtro['processar']) {
+                    log_message('debug', 'WAHA Webhook: Bot ativo para estabelecimento ' . $estabelecimento_id . ' - processando mensagem');
+
+                    // Se o filtro retornou uma mensagem modificada (ex: forçar 'oi'), usar ela
+                    // Caso contrário usar a mensagem original
+                    $mensagem_processar = $filtro['mensagem'] ?? $body;
+
+                    $this->processar_bot_agendamento(
+                        $estabelecimento,
+                        $numero_completo,
+                        $mensagem_processar,
+                        $message_id,
+                        $pushName,
+                        $numero_real
+                    );
+                } else {
+                    log_message('debug', 'WAHA Webhook: Ignorado pelo Filtro de Ativacao - motivo: ' . ($filtro['motivo'] ?? 'desconhecido'));
+                }
+
             } else {
                 log_message('debug', 'WAHA Webhook: Bot desativado para estabelecimento ' . $estabelecimento_id . ' - mensagem ignorada');
             }
@@ -414,6 +435,119 @@ class Webhook_waha extends CI_Controller {
             // Mensagem para o SaaS Admin - bot de suporte
             $this->processar_bot_suporte($numero_completo, $body, $message_id);
         }
+    }
+
+    /**
+     * NOVO: Verifica se o bot deve ser ativado para esta mensagem
+     * Regras:
+     * 1. Sessão Ativa? -> SIM (Sempre processa para não quebrar fluxo)
+     * 2. Modo Público? -> SIM (Processa tudo)
+     * 3. Modo Privado? -> Só processa se tiver palavra-chave
+     */
+    private function verificar_filtro_ativacao($estabelecimento, $mensagem, $numero) {
+        $resultado = [
+            'processar' => false,
+            'motivo' => '',
+            'mensagem' => $mensagem
+        ];
+
+        // 0. Ignorar mensagens de GRUPO (@g.us)
+        // O bot não deve responder a grupos a menos que explicitamente configurado (futuro)
+        if (strpos($numero, '@g.us') !== false) {
+            $resultado['motivo'] = 'grupo_ignorado';
+            return $resultado;
+        }
+
+        // 1. Verificar se já existe conversa ativa (PRIORIDADE MÁXIMA)
+        // BUGFIX: Usar get_ativa para NÃO criar sessão nova automaticamente nesta verificação
+        // Se o cliente já está falando com o bot, não podemos ignorar ele
+        $conversa = $this->Bot_conversa_model->get_ativa($estabelecimento->id, $numero);
+
+        // FIX: Se a conversa existe e não está encerrada,
+        // significa que o usuário já passou pelo filtro ou está em atendimento.
+        if ($conversa) {
+            $resultado['processar'] = true;
+            $resultado['motivo'] = 'sessao_ativa_fluxo';
+            return $resultado;
+        }
+
+        // 2. Verificar configurações do estabelecimento
+        $modo = $estabelecimento->bot_modo_gatilho ?? 'sempre_ativo';
+
+        // Modo Público: Libera tudo
+        if ($modo === 'sempre_ativo') {
+            $resultado['processar'] = true;
+            $resultado['motivo'] = 'modo_publico';
+            return $resultado;
+        }
+
+        // Modo Privado (Palavra-Chave)
+        if ($modo === 'palavra_chave') {
+            $palavras = json_decode($estabelecimento->bot_palavras_chave, true);
+
+            // Se não tiver palavras configuradas, assume comportamento padrão (segurança)
+            if (empty($palavras)) {
+                $resultado['processar'] = true;
+                $resultado['motivo'] = 'sem_palavras_configuradas';
+                return $resultado;
+            }
+
+            // Normalizar mensagem para busca
+            $msg_norm = strtolower(trim((string)$mensagem));
+
+            log_message('debug', 'Bot Filtro: Verificando Palavras-Chave. Msg: "' . $msg_norm . '"');
+            log_message('debug', 'Bot Filtro: Palavras configuradas (Raw): ' . $estabelecimento->bot_palavras_chave);
+
+            // Verificar cada palavra-chave
+            foreach ($palavras as $palavra) {
+                if (!is_string($palavra)) continue; // Proteção contra nulos
+
+                $p_norm = strtolower(trim($palavra));
+                if (empty($p_norm)) continue;
+
+                // Busca parcial (strpos) para flexibilidade
+                if (strpos($msg_norm, $p_norm) !== false) {
+                    $resultado['processar'] = true;
+                    $resultado['motivo'] = 'palavra_chave_encontrada: ' . $p_norm;
+
+                    // Forçar inicio de conversa se for a primeira mensagem
+                    // Se detectou a palavra, já trata como um "oi" para abrir o menu
+                    $resultado['mensagem'] = 'oi';
+                    return $resultado;
+                }
+            }
+
+            // Se chegou aqui, não encontrou palavra-chave
+            $resultado['processar'] = false;
+            $resultado['motivo'] = 'nenhuma_palavra_chave';
+            return $resultado;
+        }
+
+        // Default seguro
+        $resultado['processar'] = true;
+        return $resultado;
+    }
+
+
+
+
+
+    /**
+     * Normaliza texto para comparação (remove acentos, lowercase)
+     *
+     * @param string $texto Texto a normalizar
+     * @return string Texto normalizado
+     */
+    private function normalizar_texto($texto) {
+        $texto = strtolower(trim($texto));
+        // Remover acentos
+        $texto = preg_replace('/[áàãâä]/u', 'a', $texto);
+        $texto = preg_replace('/[éèêë]/u', 'e', $texto);
+        $texto = preg_replace('/[íìîï]/u', 'i', $texto);
+        $texto = preg_replace('/[óòõôö]/u', 'o', $texto);
+        $texto = preg_replace('/[úùûü]/u', 'u', $texto);
+        $texto = preg_replace('/[ç]/u', 'c', $texto);
+        return $texto;
     }
 
     /**
@@ -1931,10 +2065,12 @@ class Webhook_waha extends CI_Controller {
                     "✅ Agendamento cancelado com sucesso!\n\n" .
                     "📅 *{$data}* às *{$hora}*\n" .
                     "💇 {$dados['servico_nome']}\n\n" .
-                    "_Digite *menu* para voltar ao menu ou *0* para sair._"
+                    "Até breve! 👋\n\n" .
+                    "_Precisa de mais alguma coisa? Digite qualquer mensagem!_"
                 );
 
-                $this->Bot_conversa_model->resetar($conversa->id);
+                // Encerrar conversa (próxima mensagem mostra menu)
+                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
                 return;
             }
 
