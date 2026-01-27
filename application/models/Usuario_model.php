@@ -33,6 +33,12 @@ class Usuario_model extends CI_Model {
             $dados['senha'] = password_hash($dados['senha'], PASSWORD_BCRYPT);
         }
 
+        // Remover campos inexistentes no banco
+        // FIX: Usar array_key_exists pois isset retorna false para NULL
+        if (array_key_exists('telefone', $dados)) {
+            unset($dados['telefone']);
+        }
+
         // Definir valores padrão
         $dados['ativo'] = $dados['ativo'] ?? 1;
         $dados['primeiro_acesso'] = 1;
@@ -123,7 +129,7 @@ class Usuario_model extends CI_Model {
         }
 
         $usuarios = $this->db
-            ->select('id, email, tipo, nome, telefone, ativo, estabelecimento_id, profissional_id, ultimo_acesso')
+            ->select('id, email, tipo, nome, ativo, estabelecimento_id, profissional_id, ultimo_acesso')
             ->get($this->table)
             ->result();
 
@@ -182,6 +188,11 @@ class Usuario_model extends CI_Model {
             $dados['senha'] = password_hash($dados['senha'], PASSWORD_BCRYPT);
         } else {
             unset($dados['senha']);
+        }
+
+        // Remover campos inexistentes no banco
+        if (array_key_exists('telefone', $dados)) {
+            unset($dados['telefone']);
         }
 
         $dados['atualizado_em'] = date('Y-m-d H:i:s');
@@ -325,7 +336,7 @@ class Usuario_model extends CI_Model {
      */
     public function get_by_estabelecimento($estabelecimento_id) {
         return $this->db
-            ->select('id, email, tipo, nome, telefone, ativo, ultimo_acesso')
+            ->select('id, email, tipo, nome, ativo, ultimo_acesso')
             ->where('estabelecimento_id', $estabelecimento_id)
             ->get($this->table)
             ->result();

@@ -63,12 +63,13 @@ class Estabelecimento_model extends CI_Model {
         // Preparar dados
         $insert_data = [
             'nome' => $data['nome'],
-            'cnpj_cpf' => $data['cnpj_cpf'] ?? null,
+            // Converter string vazia para NULL para evitar erro de duplicidade em unique key
+            'cnpj_cpf' => !empty($data['cnpj_cpf']) ? $data['cnpj_cpf'] : null,
             'endereco' => $data['endereco'] ?? null,
             'cep' => $data['cep'] ?? null,
             'cidade' => $data['cidade'] ?? null,
             'estado' => $data['estado'] ?? null,
-            'telefone' => $data['telefone'] ?? null,
+
             'whatsapp' => $data['whatsapp'] ?? null,
             'email' => $data['email'] ?? null,
             'logo' => $data['logo'] ?? null,
@@ -98,12 +99,12 @@ class Estabelecimento_model extends CI_Model {
         $update_data = [];
 
         if (isset($data['nome'])) $update_data['nome'] = $data['nome'];
-        if (isset($data['cnpj_cpf'])) $update_data['cnpj_cpf'] = $data['cnpj_cpf'];
+        if (isset($data['cnpj_cpf'])) $update_data['cnpj_cpf'] = !empty($data['cnpj_cpf']) ? $data['cnpj_cpf'] : null;
         if (isset($data['endereco'])) $update_data['endereco'] = $data['endereco'];
         if (isset($data['cep'])) $update_data['cep'] = $data['cep'];
         if (isset($data['cidade'])) $update_data['cidade'] = $data['cidade'];
         if (isset($data['estado'])) $update_data['estado'] = $data['estado'];
-        if (isset($data['telefone'])) $update_data['telefone'] = $data['telefone'];
+
         if (isset($data['whatsapp'])) $update_data['whatsapp'] = $data['whatsapp'];
         if (isset($data['email'])) $update_data['email'] = $data['email'];
         if (isset($data['logo'])) $update_data['logo'] = $data['logo'];
@@ -154,6 +155,8 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['waha_ativo'])) $update_data['waha_ativo'] = $data['waha_ativo'];
         if (isset($data['waha_bot_ativo'])) $update_data['waha_bot_ativo'] = $data['waha_bot_ativo'];
         if (isset($data['bot_timeout_minutos'])) $update_data['bot_timeout_minutos'] = $data['bot_timeout_minutos'];
+        if (isset($data['bot_modo_gatilho'])) $update_data['bot_modo_gatilho'] = $data['bot_modo_gatilho'];
+        if (isset($data['bot_palavras_chave'])) $update_data['bot_palavras_chave'] = $data['bot_palavras_chave'];
 
         // Campos de reagendamento
         if (isset($data['permite_reagendamento'])) $update_data['permite_reagendamento'] = $data['permite_reagendamento'];
