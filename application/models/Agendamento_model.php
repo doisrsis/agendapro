@@ -1015,7 +1015,10 @@ class Agendamento_model extends CI_Model {
             'data' => $nova_data,
             'hora_inicio' => $nova_hora_inicio,
             'hora_fim' => $nova_hora_fim,
-            'status' => 'pendente',
+            // FIX: Manter status confirmado se o original já estava confirmado ou pago
+            'status' => ($agendamento->status == 'confirmado' || in_array($agendamento->pagamento_status, ['aprovado', 'pago']))
+                        ? 'confirmado'
+                        : 'pendente',
             'observacoes' => ($agendamento->observacoes ? $agendamento->observacoes . ' | ' : '') .
                            'Reagendado de ' . date('d/m/Y', strtotime($data_anterior)) . ' às ' .
                            date('H:i', strtotime($hora_anterior)),
