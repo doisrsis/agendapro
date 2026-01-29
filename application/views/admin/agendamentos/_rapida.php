@@ -185,7 +185,7 @@
                 <!-- Ações -->
                 <div class="d-grid gap-2">
                     <!-- Botão Confirmar Pagamento PIX Manual (apenas para PIX pendente quando estabelecimento usa PIX Manual) -->
-                    <?php if (($ag->forma_pagamento == 'pix' || $ag->forma_pagamento == 'pix_manual') &&
+                    <?php if ($ag->forma_pagamento == 'pix' &&
                               $ag->pagamento_status == 'pendente' &&
                               isset($estabelecimento) && $estabelecimento->pagamento_tipo == 'pix_manual'): ?>
                     <button type="button"

@@ -811,11 +811,95 @@
                                 <form method="post">
                                     <input type="hidden" name="aba" value="whatsapp">
 
-                                    <div class="mb-3">
+                                    <!-- Filtro de Ativação (Privacidade) -->
+                                    <div class="mb-4">
                                         <label class="form-label">
-                                            <i class="ti ti-clock me-1"></i>
-                                            Timeout da Sessão (minutos)
+                                            <i class="ti ti-shield-lock me-1"></i>
+                                            Filtro de Ativação (Opções de Privacidade)
                                         </label>
+
+                                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                                            <!-- Modo Público -->
+                                            <label class="form-selectgroup-item flex-fill">
+                                                <input type="radio" name="bot_modo_gatilho" value="sempre_ativo"
+                                                       class="form-selectgroup-input"
+                                                       <?= ($estabelecimento->bot_modo_gatilho ?? 'sempre_ativo') === 'sempre_ativo' ? 'checked' : '' ?>>
+                                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                                    <div class="me-3">
+                                                        <span class="form-selectgroup-check"></span>
+                                                    </div>
+                                                    <div class="form-selectgroup-label-content d-flex align-items-center">
+                                                        <span class="avatar bg-success-lt me-3">
+                                                            <i class="ti ti-world icon-lg"></i>
+                                                        </span>
+                                                        <div>
+                                                            <strong>Bot Público (Responde a Todos)</strong>
+                                                            <span class="d-block text-muted">O bot responderá automaticamente a qualquer mensagem recebida.</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </label>
+
+                                            <!-- Modo Privado -->
+                                            <label class="form-selectgroup-item flex-fill">
+                                                <input type="radio" name="bot_modo_gatilho" value="palavra_chave"
+                                                       class="form-selectgroup-input"
+                                                       <?= ($estabelecimento->bot_modo_gatilho ?? 'sempre_ativo') === 'palavra_chave' ? 'checked' : '' ?>>
+                                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                                    <div class="me-3">
+                                                        <span class="form-selectgroup-check"></span>
+                                                    </div>
+                                                    <div class="form-selectgroup-label-content d-flex align-items-center">
+                                                        <span class="avatar bg-secondary-lt me-3">
+                                                            <i class="ti ti-lock icon-lg"></i>
+                                                        </span>
+                                                        <div>
+                                                            <strong>Bot Privado (Requer Ativação)</strong>
+                                                            <span class="d-block text-muted">O bot ficará "invisível" e só responderá se a mensagem contiver uma Palavra-Chave específica.</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Configuração de Palavras-Chave -->
+                                    <div id="palavras-chave-container" class="mb-4" style="display: none;">
+                                        <div class="card bg-muted-lt">
+                                            <div class="card-body">
+                                                <label class="form-label required">
+                                                    <i class="ti ti-key me-1"></i>
+                                                    Palavras-Chave de Ativação
+                                                </label>
+                                                <textarea class="form-control mb-2" name="bot_palavras_chave" rows="3"
+                                                          placeholder="Ex: agendar, marcar, horário, agenda"><?=
+                                                    isset($estabelecimento->bot_palavras_chave) && !empty($estabelecimento->bot_palavras_chave)
+                                                        ? implode(", ", json_decode($estabelecimento->bot_palavras_chave, true) ?: [])
+                                                        : "agendar, agendamento, marcar, horário"
+                                                ?></textarea>
+                                                <small class="form-hint">
+                                                    Separe as palavras por vírgula. Ex: <code>agendar, marcar, quero agendar</code>.
+                                                    <br>O bot será ativado se a mensagem do cliente contiver <strong>qualquer uma</strong> dessas palavras.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                    // Lógica para mostrar/ocultar palavras-chave
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const radios = document.querySelectorAll('input[name="bot_modo_gatilho"]');
+                                        const container = document.getElementById('palavras-chave-container');
+
+                                        function atualizarVisibilidade() {
+                                            const selecionado = document.querySelector('input[name="bot_modo_gatilho"]:checked');
+                                            container.style.display = (selecionado && selecionado.value === 'palavra_chave') ? 'block' : 'none';
+                                        }
+
+                                        radios.forEach(radio => radio.addEventListener('change', atualizarVisibilidade));
+                                        atualizarVisibilidade(); // Executar ao carregar
+                                    });
+                                    </script>
                                         <input type="number" class="form-control" name="bot_timeout_minutos"
                                                value="<?= set_value('bot_timeout_minutos', $estabelecimento->bot_timeout_minutos ?? 30) ?>"
                                                min="5" max="120" step="5">

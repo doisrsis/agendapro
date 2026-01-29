@@ -187,8 +187,7 @@
                                 <label class="form-label">Forma de Pagamento</label>
                                 <select class="form-select" name="forma_pagamento">
                                     <option value="nao_definido" <?= ($agendamento->forma_pagamento ?? 'nao_definido') == 'nao_definido' ? 'selected' : '' ?>>Não Definido</option>
-                                    <option value="pix" <?= ($agendamento->forma_pagamento ?? '') == 'pix' ? 'selected' : '' ?>>PIX (Mercado Pago)</option>
-                                    <option value="pix_manual" <?= ($agendamento->forma_pagamento ?? '') == 'pix_manual' ? 'selected' : '' ?>>PIX Manual</option>
+                                    <option value="pix" <?= ($agendamento->forma_pagamento ?? '') == 'pix' ? 'selected' : '' ?>>PIX</option>
                                     <option value="presencial" <?= ($agendamento->forma_pagamento ?? '') == 'presencial' ? 'selected' : '' ?>>Presencial</option>
                                     <option value="cartao" <?= ($agendamento->forma_pagamento ?? '') == 'cartao' ? 'selected' : '' ?>>Cartão</option>
                                 </select>

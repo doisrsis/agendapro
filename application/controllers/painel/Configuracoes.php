@@ -171,40 +171,65 @@ class Configuracoes extends CI_Controller {
      * As credenciais da API são herdadas do Super Admin
      */
     private function salvar_integracao_whatsapp() {
-        // Salvar configurações do bot
-        $bot_timeout_minutos = $this->input->post('bot_timeout_minutos');
+        $dados = [];
 
+        // Timeout (já existe)
+        $bot_timeout_minutos = $this->input->post('bot_timeout_minutos');
         log_message('debug', "Configuracoes: POST bot_timeout_minutos = " . var_export($bot_timeout_minutos, true));
 
         if ($bot_timeout_minutos !== null && $bot_timeout_minutos !== '') {
             $timeout = (int) $bot_timeout_minutos;
-
             log_message('debug', "Configuracoes: Timeout convertido = {$timeout}");
 
             // Validar range (5 a 120 minutos)
             if ($timeout >= 5 && $timeout <= 120) {
-                $dados = [
-                    'bot_timeout_minutos' => $timeout
-                ];
-
-                log_message('debug', "Configuracoes: Tentando atualizar estabelecimento {$this->estabelecimento_id} com dados: " . json_encode($dados));
-
-                $resultado = $this->Estabelecimento_model->update($this->estabelecimento_id, $dados);
-
-                log_message('debug', "Configuracoes: Resultado update = " . var_export($resultado, true));
-
-                if ($resultado) {
-                    $this->session->set_flashdata('sucesso', 'Configurações do bot atualizadas com sucesso!');
-                } else {
-                    log_message('error', "Configuracoes: Falha ao atualizar estabelecimento");
-                    $this->session->set_flashdata('erro', 'Erro ao atualizar configurações.');
-                }
+                $dados['bot_timeout_minutos'] = $timeout;
             } else {
                 log_message('debug', "Configuracoes: Timeout fora do range: {$timeout}");
                 $this->session->set_flashdata('erro', 'Timeout deve estar entre 5 e 120 minutos.');
+                redirect('painel/configuracoes?aba=whatsapp');
+                return;
             }
-        } else {
-            log_message('debug', "Configuracoes: bot_timeout_minutos está vazio ou null");
+        }
+
+        // Filtro de Ativação (NOVO)
+        $bot_modo_gatilho = $this->input->post('bot_modo_gatilho');
+        if (in_array($bot_modo_gatilho, ['sempre_ativo', 'palavra_chave'])) {
+            $dados['bot_modo_gatilho'] = $bot_modo_gatilho;
+        }
+
+        // Palavras-chave
+        if ($bot_modo_gatilho === 'palavra_chave') {
+            $palavras_raw = $this->input->post('bot_palavras_chave');
+            // Processar vírgulas ou quebras de linha
+            $palavras_array = preg_split('/[,\n\r]+/', $palavras_raw);
+
+            // Limpar e filtrar
+            $palavras = array_values(array_filter(array_map('trim', $palavras_array), function($p) {
+                return !empty($p);
+            }));
+
+            // Se vazio, definir padrão
+            if (empty($palavras)) {
+                $palavras = ['agendar', 'agendamento', 'marcar', 'horário'];
+            }
+
+            $dados['bot_palavras_chave'] = json_encode($palavras);
+        }
+
+        if (!empty($dados)) {
+            log_message('debug', "Configuracoes: Tentando atualizar estabelecimento {$this->estabelecimento_id} com dados: " . json_encode($dados));
+
+            $resultado = $this->Estabelecimento_model->update($this->estabelecimento_id, $dados);
+
+            log_message('debug', "Configuracoes: Resultado update = " . var_export($resultado, true));
+
+            if ($resultado) {
+                $this->session->set_flashdata('sucesso', 'Configurações do bot atualizadas com sucesso!');
+            } else {
+                log_message('error', "Configuracoes: Falha ao atualizar estabelecimento");
+                $this->session->set_flashdata('erro', 'Erro ao atualizar configurações.');
+            }
         }
 
         redirect('painel/configuracoes?aba=whatsapp');

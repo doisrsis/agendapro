@@ -432,8 +432,15 @@ class Webhook_waha extends CI_Controller {
                 log_message('debug', 'WAHA Webhook: Bot desativado para estabelecimento ' . $estabelecimento_id . ' - mensagem ignorada');
             }
         } else {
-            // Mensagem para o SaaS Admin - bot de suporte
-            $this->processar_bot_suporte($numero_completo, $body, $message_id);
+            // Mensagem para o SaaS Admin - bot de suporte (apenas se integração global estiver ativa)
+            $waha_ativo_global = $this->Configuracao_model->get('waha_ativo');
+
+            // Só processa se a configuração global estiver ATIVA (1)
+            if ($waha_ativo_global == '1') {
+                $this->processar_bot_suporte($numero_completo, $body, $message_id);
+            } else {
+                log_message('debug', 'WAHA Webhook: Bot SaaS Admin inativo pela configuração global (waha_ativo=0)');
+            }
         }
     }
 

@@ -105,10 +105,10 @@
                                                 <i class="ti ti-clock me-1"></i>PIX Pendente (Mercado Pago)
                                             </span>
                                         <?php endif; ?>
-                                    <?php elseif ($agendamento->forma_pagamento == 'pix_manual'): ?>
+                                    <?php elseif ($agendamento->forma_pagamento == 'pix'): ?>
                                         <?php if ($agendamento->pagamento_status == 'pago'): ?>
                                             <span class="badge bg-success">
-                                                <i class="ti ti-check me-1"></i>Pago via PIX Manual
+                                                <i class="ti ti-check me-1"></i>Pago via PIX
                                             </span>
                                         <?php else: ?>
                                             <span class="badge bg-warning">
@@ -153,7 +153,7 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <?php if ($agendamento->forma_pagamento == 'pix_manual' && $agendamento->pagamento_status == 'pendente'): ?>
+                            <?php if ($agendamento->forma_pagamento == 'pix' && $agendamento->pagamento_status == 'pendente' && isset($estabelecimento) && $estabelecimento->pagamento_tipo == 'pix_manual'): ?>
                             <!-- Botão Confirmar Pagamento PIX Manual -->
                             <a href="<?= base_url('painel/agendamentos/confirmar_pagamento_pix_manual/' . $agendamento->id) ?>"
                                class="btn btn-success"
@@ -170,7 +170,7 @@
                             </div>
                             <?php endif; ?>
 
-                            <?php if ($agendamento->status == 'pendente' && $agendamento->forma_pagamento != 'pix_manual'): ?>
+                            <?php if ($agendamento->status == 'pendente' && !($agendamento->forma_pagamento == 'pix' && $agendamento->pagamento_status == 'pendente' && isset($estabelecimento) && $estabelecimento->pagamento_tipo == 'pix_manual')): ?>
                             <a href="<?= base_url('painel/agendamentos/confirmar/' . $agendamento->id) ?>" class="btn btn-success">
                                 <i class="ti ti-check me-1"></i>
                                 Confirmar
