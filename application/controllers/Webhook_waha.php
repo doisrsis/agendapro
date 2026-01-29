@@ -460,15 +460,38 @@ class Webhook_waha extends CI_Controller {
 
         // 1. Verificar se já existe conversa ativa (PRIORIDADE MÁXIMA)
         // BUGFIX: Usar get_ativa para NÃO criar sessão nova automaticamente nesta verificação
-        // Se o cliente já está falando com o bot, não podemos ignorar ele
         $conversa = $this->Bot_conversa_model->get_ativa($estabelecimento->id, $numero);
 
-        // FIX: Se a conversa existe e não está encerrada,
-        // significa que o usuário já passou pelo filtro ou está em atendimento.
+        // FIX: Se a conversa existe, verificar se EXPIROU antes de aprovar
         if ($conversa) {
-            $resultado['processar'] = true;
-            $resultado['motivo'] = 'sessao_ativa_fluxo';
-            return $resultado;
+            // Verificar Timeout Rigoroso
+            $timeout_minutos = $estabelecimento->bot_timeout_minutos ?? 30;
+            $ultima_interacao = strtotime($conversa->ultima_interacao);
+            $agora = time();
+            $diferenca_minutos = ($agora - $ultima_interacao) / 60;
+
+            // Estados críticos que NÃO devem expirar (aguardando resposta importante)
+            // Se o usuário está no meio de uma confirmação, damos mais tempo ou não expiramos
+            // Por enquanto, vamos manter timeout padrão para tudo para forçar renovação após inatividade
+            $estados_sem_timeout = [
+               // 'confirmando_agendamento', // Comentado: Se demorar, expira e perde o agendamento
+            ];
+
+            if ($diferenca_minutos > $timeout_minutos) {
+                // SESSÃO EXPIRADA - SILENCIOSA
+                // Encerra a sessão atual e obriga o usuário a usar palavra-chave novamente
+                log_message('debug', "Bot Filtro: Sessão expirada (silenciosa) para {$numero} - Diff: " . round($diferenca_minutos, 1) . " min");
+
+                $this->Bot_conversa_model->encerrar($conversa->id);
+
+                // Tratar como se não houvesse conversa (cai na verificação de palavra-chave abaixo)
+                $conversa = null;
+            } else {
+                // Sessão Ativa e Válida (dentro do tempo)
+                $resultado['processar'] = true;
+                $resultado['motivo'] = 'sessao_ativa_valida';
+                return $resultado;
+            }
         }
 
         // 2. Verificar configurações do estabelecimento
@@ -1065,10 +1088,10 @@ class Webhook_waha extends CI_Controller {
                     "✅ Agendamento cancelado com sucesso!\n\n" .
                     "📅 *{$data}* às *{$hora}*\n" .
                     "💇 {$ag->servico_nome}\n\n" .
-                    "_Digite *menu* para voltar ao menu ou *0* para sair._"
+                    "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._"
                 );
 
-                $this->Bot_conversa_model->resetar($conversa->id);
+                $this->Bot_conversa_model->encerrar($conversa->id);
                 return;
             }
         }
@@ -1089,7 +1112,7 @@ class Webhook_waha extends CI_Controller {
             $this->waha_lib->enviar_texto($numero,
                 "Obrigado por entrar em contato! 😊\n\n" .
                 "Até a próxima! 👋\n\n" .
-                "_Digite *oi* quando precisar de mim novamente._"
+                "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._"
             );
             return;
         }
@@ -1130,7 +1153,7 @@ class Webhook_waha extends CI_Controller {
             $this->Bot_conversa_model->encerrar($conversa->id);
             $this->waha_lib->enviar_texto($numero,
                 "Tudo bem! 😊\n\n" .
-                "Quando quiser reagendar, é só digitar *menu* e escolher a opção *2 - Meus Agendamentos*.\n\n" .
+                "Quando quiser reagendar, é só digitar *Agendar*.\n\n" .
                 "Até logo! 👋"
             );
             return;
@@ -1664,7 +1687,7 @@ class Webhook_waha extends CI_Controller {
                 $mensagem .= "⏰ Expira em *{$tempo_expiracao} minutos*\n\n";
                 $mensagem .= "🔗 *Acesse o link para pagar:*\n{$link_pagamento}\n\n";
                 $mensagem .= "⚠️ _Seu agendamento só será confirmado após o pagamento._\n\n";
-                $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
+                $mensagem .= "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._";
 
             } else {
                 // Erro ao gerar PIX - cancelar agendamento
@@ -1673,7 +1696,7 @@ class Webhook_waha extends CI_Controller {
 
                 $mensagem = "Desculpe, ocorreu um erro ao gerar o pagamento PIX. 😔\n\n";
                 $mensagem .= "Por favor, tente novamente ou entre em contato diretamente.\n\n";
-                $mensagem .= "_Digite qualquer mensagem para voltar ao menu._";
+                $mensagem .= "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._";
             }
         } else {
             // Não gerou PIX - pode ser pagamento presencial ou sem pagamento
@@ -1694,7 +1717,7 @@ class Webhook_waha extends CI_Controller {
                 }
                 $mensagem .= "\nVocê receberá um lembrete próximo ao horário.\n\n";
                 $mensagem .= "Até breve! 👋\n\n";
-                $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
+                $mensagem .= "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._";
             } else {
                 // Não requer pagamento - manter como pendente para confirmação posterior
                 $mensagem = "🎉 *Agendamento Criado!*\n\n";
@@ -1709,14 +1732,14 @@ class Webhook_waha extends CI_Controller {
                 }
                 $mensagem .= "\n✅ Você receberá uma mensagem para confirmar sua presença próximo à data do agendamento.\n\n";
                 $mensagem .= "Até lá! 👋\n\n";
-                $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
+                $mensagem .= "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._";
             }
         }
 
         $this->waha_lib->enviar_texto($numero, $mensagem);
 
-        // Encerrar conversa (próxima mensagem mostra menu)
-        $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
+        // Encerrar conversa (próxima mensagem será filtrada)
+        $this->Bot_conversa_model->encerrar($conversa->id);
     }
 
     /**
@@ -2066,11 +2089,11 @@ class Webhook_waha extends CI_Controller {
                     "📅 *{$data}* às *{$hora}*\n" .
                     "💇 {$dados['servico_nome']}\n\n" .
                     "Até breve! 👋\n\n" .
-                    "_Precisa de mais alguma coisa? Digite qualquer mensagem!_"
+                    "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._"
                 );
 
-                // Encerrar conversa (próxima mensagem mostra menu)
-                $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
+                // Encerrar conversa (próxima mensagem será filtrada)
+                $this->Bot_conversa_model->encerrar($conversa->id);
                 return;
             }
 
@@ -2510,7 +2533,7 @@ class Webhook_waha extends CI_Controller {
                 $mensagem .= "📌 {$estabelecimento->endereco}\n";
             }
             $mensagem .= "\nAté lá! 👋\n\n";
-            $mensagem .= "_Precisa de mais alguma coisa? Digite qualquer mensagem!_";
+            $mensagem .= "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._";
 
             $this->waha_lib->enviar_texto($numero, $mensagem);
 
@@ -2520,8 +2543,8 @@ class Webhook_waha extends CI_Controller {
                 'hora_anterior' => $dados['agendamento_hora_original']
             ]);
 
-            // Encerrar conversa (próxima mensagem mostra menu)
-            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
+            // Encerrar conversa (próxima mensagem será filtrada)
+            $this->Bot_conversa_model->encerrar($conversa->id);
             return;
         }
 
@@ -2630,12 +2653,12 @@ class Webhook_waha extends CI_Controller {
                 "Obrigado por confirmar sua presença!\n\n" .
                 "Você receberá um lembrete próximo ao horário do seu atendimento.\n\n" .
                 "Até breve! 👋\n\n" .
-                "_Precisa de mais alguma coisa? Digite qualquer mensagem!_"
+                "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._"
             );
 
             log_message('info', "Bot: Agendamento #{$agendamento_id} confirmado pelo cliente via bot");
 
-            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
+            $this->Bot_conversa_model->encerrar($conversa->id);
             return;
         }
 
@@ -2753,11 +2776,12 @@ class Webhook_waha extends CI_Controller {
                 "❌ *Agendamento Cancelado*\n\n" .
                 "Seu agendamento foi cancelado com sucesso.\n\n" .
                 "Quando precisar, é só entrar em contato novamente! 👋\n\n" .
-                "_Precisa de mais alguma coisa? Digite qualquer mensagem!_"
+                "Quando precisar, é só entrar em contato novamente! 👋\n\n" .
+                "_Atendimento encerrado. Para iniciar um novo, digite *Agendar*._"
             );
 
             log_message('info', "Bot: Agendamento #{$agendamento_id} cancelado pelo cliente via confirmação segura");
-            $this->Bot_conversa_model->atualizar_estado($conversa->id, 'encerrada', []);
+            $this->Bot_conversa_model->encerrar($conversa->id);
             return;
         }
 
