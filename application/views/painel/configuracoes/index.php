@@ -811,6 +811,25 @@
                                 <form method="post">
                                     <input type="hidden" name="aba" value="whatsapp">
 
+                                    <!-- Ativar/Desativar Bot Geral -->
+                                    <div class="mb-4">
+                                        <div class="card bg-primary-lt">
+                                            <div class="card-body">
+                                                <label class="form-check form-switch form-switch-lg mb-0">
+                                                    <input class="form-check-input" type="checkbox" name="waha_bot_ativo" value="1"
+                                                        <?= ($estabelecimento->waha_bot_ativo ?? 0) ? 'checked' : '' ?>>
+                                                    <span class="form-check-label">
+                                                        <strong>Ativar Bot de Agendamento</strong>
+                                                        <span class="form-check-description text-dark">
+                                                            Quando ativado, o sistema responderá automaticamente conforme as regras abaixo.
+                                                            Se desativado, nenhuma mensagem será enviada.
+                                                        </span>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Filtro de Ativação (Privacidade) -->
                                     <div class="mb-4">
                                         <label class="form-label">

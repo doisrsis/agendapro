@@ -175,6 +175,11 @@ class Configuracoes extends CI_Controller {
 
         // Timeout (já existe)
         $bot_timeout_minutos = $this->input->post('bot_timeout_minutos');
+
+        // NOVO: Status do Bot (Ativo/Inativo)
+        $waha_bot_ativo = $this->input->post('waha_bot_ativo') ? 1 : 0;
+        $dados['waha_bot_ativo'] = $waha_bot_ativo;
+
         log_message('debug', "Configuracoes: POST bot_timeout_minutos = " . var_export($bot_timeout_minutos, true));
 
         if ($bot_timeout_minutos !== null && $bot_timeout_minutos !== '') {
@@ -411,8 +416,7 @@ class Configuracoes extends CI_Controller {
                 'waha_status' => 'conectando',
                 'waha_webhook_url' => $webhook_url,
                 'whatsapp_api_tipo' => 'waha',
-                'waha_ativo' => 1,
-                'waha_bot_ativo' => 1,
+                // 'waha_bot_ativo' => 1, // REMOVIDO: Respeitar configuração manual
                 'waha_numero_conectado' => ''
             ]);
             $this->session->set_flashdata('sucesso', 'Escaneie o QR Code com seu WhatsApp para conectar.');
