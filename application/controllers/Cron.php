@@ -533,7 +533,7 @@ class Cron extends CI_Controller {
         // Buscar estabelecimento completo
         $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
 
-        if (!$estabelecimento || !$estabelecimento->waha_ativo) {
+        if (!$estabelecimento || !$estabelecimento->waha_bot_ativo) {
             throw new Exception("Estabelecimento sem WAHA ativo");
         }
 
@@ -658,7 +658,7 @@ class Cron extends CI_Controller {
         // Buscar estabelecimento completo
         $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
 
-        if (!$estabelecimento || !$estabelecimento->waha_ativo) {
+        if (!$estabelecimento || !$estabelecimento->waha_bot_ativo) {
             throw new Exception("Estabelecimento sem WAHA ativo");
         }
 
@@ -732,7 +732,7 @@ class Cron extends CI_Controller {
         // Buscar estabelecimento completo
         $estabelecimento = $this->Estabelecimento_model->get($agendamento->estabelecimento_id);
 
-        if (!$estabelecimento || !$estabelecimento->waha_ativo) {
+        if (!$estabelecimento || !$estabelecimento->waha_bot_ativo) {
             return; // Não lançar exceção, apenas não enviar
         }
 

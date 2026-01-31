@@ -1,0 +1,300 @@
+﻿INFO - 2026-01-31 06:32:02 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:02 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:02 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:02 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:02 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:02 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:02 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:02 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:02 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:02 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:02 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:02 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:02 --> Model "Profissional_model" initialized
+INFO - 2026-01-31 06:32:02 --> Model "Servico_model" initialized
+INFO - 2026-01-31 06:32:02 --> Model "Cliente_model" initialized
+INFO - 2026-01-31 06:32:02 --> Model "Agendamento_model" initialized
+INFO - 2026-01-31 06:32:02 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:02 --> Model "Bot_conversa_model" initialized
+INFO - 2026-01-31 06:32:02 --> Model "Estabelecimento_model" initialized
+INFO - 2026-01-31 06:32:02 --> CRON: Iniciando verificaÃ§Ã£o de pagamentos pendentes
+INFO - 2026-01-31 06:32:02 --> CRON: VerificaÃ§Ã£o concluÃ­da - {"lembretes_enviados":0,"agendamentos_cancelados":0,"erros":[]}
+INFO - 2026-01-31 06:32:02 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:02 --> Total execution time: 0.0134
+INFO - 2026-01-31 06:32:20 --> Config Class Initialized
+INFO - 2026-01-31 06:32:20 --> Hooks Class Initialized
+DEBUG - 2026-01-31 06:32:20 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:20 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:20 --> URI Class Initialized
+INFO - 2026-01-31 06:32:20 --> Router Class Initialized
+INFO - 2026-01-31 06:32:20 --> Output Class Initialized
+INFO - 2026-01-31 06:32:20 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:20 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:20 --> Input Class Initialized
+INFO - 2026-01-31 06:32:20 --> Language Class Initialized
+INFO - 2026-01-31 06:32:20 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:20 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:20 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:20 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:20 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:20 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:20 --> Model "Estabelecimento_model" initialized
+INFO - 2026-01-31 06:32:20 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:20 --> Model "Bot_conversa_model" initialized
+INFO - 2026-01-31 06:32:20 --> WAHA Webhook RECEBIDO [est:11]: {"id":"evt_01kg9pawa764qdpd2teb7sja8m","timestamp":1769851941191,"event":"message.any","session":"est_11_barbearia_perfil","metadata":{"tipo":"estabelecimento","estabelecimento_id":"11","nome":"Barbearia Perfil"},"me":{"id":"557588252924@c.us","pushName":"Barbearia PerfilðŸ’ˆ","lid":"250860617642157@lid","jid":"557588252924:1@s.whatsapp.net"},"payload":{"id":"false_status@broadcast_ACCA0F7E8150112BC8948784049085BA_557597032882@c.us","timestamp":1769851940,"from":"status@broadcast","fromMe":false,"source":"app","body":"https://vt.tiktok.com/ZSa4Bp9ej/","to":"557597032882@c.us","participant":"557597032882@c.us","hasMedia":true,"media":{"url":"http://localhost:80/api/files/est_11_barbearia_perfil/ACCA0F7E8150112BC8948784049085BA.jpeg","mimetype":"image/jpeg"},"ack":2,"location":null,"vCards":null,"ackName":"DEVICE","replyTo":null,"_data":{"Info":{"Chat":"status@broadcast","Sender":"557597032882@s.whatsapp.net","IsFromMe":false,"IsGroup":true,"AddressingMode":"","SenderAlt":"80852826488900
+INFO - 2026-01-31 06:32:20 --> WAHA Webhook PROCESSANDO [est:11] - Payload length: 14228
+INFO - 2026-01-31 06:32:20 --> Config Class Initialized
+DEBUG - 2026-01-31 06:32:20 --> WAHA Webhook [message.any]: {"id":"evt_01kg9pawa764qdpd2teb7sja8m","timestamp":1769851941191,"event":"message.any","session":"est_11_barbearia_perfil","metadata":{"tipo":"estabelecimento","estabelecimento_id":"11","nome":"Barbearia Perfil"},"me":{"id":"557588252924@c.us","pushName":"Barbearia PerfilðŸ’ˆ","lid":"250860617642157@lid","jid":"557588252924:1@s.whatsapp.net"},"payload":{"id":"false_status@broadcast_ACCA0F7E8150112BC8948784049085BA_557597032882@c.us","timestamp":1769851940,"from":"status@broadcast","fromMe":false
+DEBUG - 2026-01-31 06:32:20 --> WAHA Webhook: Evento nÃ£o tratado: message.any
+INFO - 2026-01-31 06:32:20 --> Hooks Class Initialized
+INFO - 2026-01-31 06:32:20 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:20 --> Total execution time: 0.0079
+DEBUG - 2026-01-31 06:32:20 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:20 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:20 --> URI Class Initialized
+INFO - 2026-01-31 06:32:20 --> Router Class Initialized
+INFO - 2026-01-31 06:32:20 --> Output Class Initialized
+INFO - 2026-01-31 06:32:20 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:20 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:20 --> Input Class Initialized
+INFO - 2026-01-31 06:32:20 --> Language Class Initialized
+INFO - 2026-01-31 06:32:20 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:20 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:20 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:20 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:20 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:20 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:20 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:20 --> Model "Estabelecimento_model" initialized
+INFO - 2026-01-31 06:32:20 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:20 --> Model "Bot_conversa_model" initialized
+INFO - 2026-01-31 06:32:20 --> WAHA Webhook RECEBIDO [est:11]: {"id":"evt_01kg9pawa7bskwk8b23wn2c9mh","timestamp":1769851941191,"event":"message","session":"est_11_barbearia_perfil","metadata":{"tipo":"estabelecimento","estabelecimento_id":"11","nome":"Barbearia Perfil"},"me":{"id":"557588252924@c.us","pushName":"Barbearia PerfilðŸ’ˆ","lid":"250860617642157@lid","jid":"557588252924:1@s.whatsapp.net"},"payload":{"id":"false_status@broadcast_ACCA0F7E8150112BC8948784049085BA_557597032882@c.us","timestamp":1769851940,"from":"status@broadcast","fromMe":false,"source":"app","body":"https://vt.tiktok.com/ZSa4Bp9ej/","to":"557597032882@c.us","participant":"557597032882@c.us","hasMedia":true,"media":{"url":"http://localhost:80/api/files/est_11_barbearia_perfil/ACCA0F7E8150112BC8948784049085BA.jpeg","mimetype":"image/jpeg"},"ack":2,"location":null,"vCards":null,"ackName":"DEVICE","replyTo":null,"_data":{"Info":{"Chat":"status@broadcast","Sender":"557597032882@s.whatsapp.net","IsFromMe":false,"IsGroup":true,"AddressingMode":"","SenderAlt":"80852826488900@lid
+INFO - 2026-01-31 06:32:20 --> WAHA Webhook PROCESSANDO [est:11] - Payload length: 14224
+DEBUG - 2026-01-31 06:32:20 --> WAHA Webhook [message]: {"id":"evt_01kg9pawa7bskwk8b23wn2c9mh","timestamp":1769851941191,"event":"message","session":"est_11_barbearia_perfil","metadata":{"tipo":"estabelecimento","estabelecimento_id":"11","nome":"Barbearia Perfil"},"me":{"id":"557588252924@c.us","pushName":"Barbearia PerfilðŸ’ˆ","lid":"250860617642157@lid","jid":"557588252924:1@s.whatsapp.net"},"payload":{"id":"false_status@broadcast_ACCA0F7E8150112BC8948784049085BA_557597032882@c.us","timestamp":1769851940,"from":"status@broadcast","fromMe":false,"so
+INFO - 2026-01-31 06:32:20 --> WAHA Mensagem de  (Mocinha): https://vt.tiktok.com/ZSa4Bp9ej/
+DEBUG - 2026-01-31 06:32:20 --> Bot Filtro: Verificando Palavras-Chave. Msg: "https://vt.tiktok.com/zsa4bp9ej/"
+DEBUG - 2026-01-31 06:32:20 --> Bot Filtro: Palavras configuradas (Raw): ["agendar","agendamento","marcar","hor\u00e1rio","agenda","horario"]
+DEBUG - 2026-01-31 06:32:20 --> WAHA Webhook: Ignorado pelo Filtro de Ativacao - motivo: nenhuma_palavra_chave
+INFO - 2026-01-31 06:32:20 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:20 --> Total execution time: 0.0149
+INFO - 2026-01-31 06:32:25 --> Config Class Initialized
+INFO - 2026-01-31 06:32:25 --> Hooks Class Initialized
+DEBUG - 2026-01-31 06:32:25 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:25 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:25 --> URI Class Initialized
+INFO - 2026-01-31 06:32:25 --> Router Class Initialized
+INFO - 2026-01-31 06:32:25 --> Output Class Initialized
+INFO - 2026-01-31 06:32:25 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:25 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:25 --> Input Class Initialized
+INFO - 2026-01-31 06:32:25 --> Language Class Initialized
+INFO - 2026-01-31 06:32:25 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:25 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:25 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:25 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:25 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:25 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:25 --> Model "Usuario_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Estabelecimento_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Assinatura_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Profissional_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Servico_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Cliente_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Agendamento_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:25 --> Language file loaded: language/english/form_validation_lang.php
+DEBUG - 2026-01-31 06:32:25 --> Agendamento_model::create - Calculando hora_fim: 09:20:00
+DEBUG - 2026-01-31 06:32:25 --> Agendamento_model::create - Verificando disponibilidade: prof=4, data=2026-01-31, inicio=08:40:00, fim=09:20:00, excluir_id=
+INFO - 2026-01-31 06:32:25 --> Model "Horario_estabelecimento_model" initialized
+DEBUG - 2026-01-31 06:32:25 --> Horario_estabelecimento_model::verificar_horario_almoco COM hora_fim - hora_inicio=08:40:00, hora_fim=09:20:00, almoco=12:00:00-13:00:00, resultado=DISPONIVEL
+INFO - 2026-01-31 06:32:25 --> Model "Feriado_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Bloqueio_model" initialized
+INFO - 2026-01-31 06:32:25 --> Config Class Initialized
+INFO - 2026-01-31 06:32:25 --> Hooks Class Initialized
+DEBUG - 2026-01-31 06:32:25 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:25 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:25 --> URI Class Initialized
+INFO - 2026-01-31 06:32:25 --> Router Class Initialized
+INFO - 2026-01-31 06:32:25 --> Output Class Initialized
+INFO - 2026-01-31 06:32:25 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:25 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:25 --> Input Class Initialized
+INFO - 2026-01-31 06:32:25 --> Language Class Initialized
+INFO - 2026-01-31 06:32:25 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:25 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:25 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:25 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:25 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:25 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:25 --> Model "Usuario_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Estabelecimento_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Assinatura_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Profissional_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Servico_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Cliente_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Agendamento_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:25 --> File loaded: /home/dois8950/iafila.doisr.com.br/application/views/painel/layout/header.php
+INFO - 2026-01-31 06:32:25 --> File loaded: /home/dois8950/iafila.doisr.com.br/application/views/admin/agendamentos/_calendario.php
+INFO - 2026-01-31 06:32:25 --> File loaded: /home/dois8950/iafila.doisr.com.br/application/views/admin/agendamentos/_lista.php
+INFO - 2026-01-31 06:32:25 --> File loaded: /home/dois8950/iafila.doisr.com.br/application/views/admin/agendamentos/_rapida.php
+INFO - 2026-01-31 06:32:25 --> File loaded: /home/dois8950/iafila.doisr.com.br/application/views/admin/agendamentos/index.php
+INFO - 2026-01-31 06:32:25 --> File loaded: /home/dois8950/iafila.doisr.com.br/application/views/painel/layout/footer.php
+INFO - 2026-01-31 06:32:25 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:25 --> Total execution time: 0.0114
+INFO - 2026-01-31 06:32:25 --> Config Class Initialized
+INFO - 2026-01-31 06:32:25 --> Hooks Class Initialized
+DEBUG - 2026-01-31 06:32:25 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:25 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:25 --> URI Class Initialized
+INFO - 2026-01-31 06:32:25 --> Router Class Initialized
+INFO - 2026-01-31 06:32:25 --> Output Class Initialized
+INFO - 2026-01-31 06:32:25 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:25 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:25 --> Input Class Initialized
+INFO - 2026-01-31 06:32:25 --> Language Class Initialized
+INFO - 2026-01-31 06:32:25 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:25 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:25 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:25 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:25 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:25 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:25 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:25 --> Model "Usuario_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Estabelecimento_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Assinatura_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Profissional_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Servico_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Cliente_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Agendamento_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:25 --> Model "Bloqueio_model" initialized
+INFO - 2026-01-31 06:32:25 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:25 --> Total execution time: 0.0098
+INFO - 2026-01-31 06:32:34 --> Config Class Initialized
+INFO - 2026-01-31 06:32:34 --> Hooks Class Initialized
+DEBUG - 2026-01-31 06:32:34 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:34 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:34 --> URI Class Initialized
+INFO - 2026-01-31 06:32:34 --> Router Class Initialized
+INFO - 2026-01-31 06:32:34 --> Output Class Initialized
+INFO - 2026-01-31 06:32:34 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:34 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:34 --> Input Class Initialized
+INFO - 2026-01-31 06:32:34 --> Language Class Initialized
+INFO - 2026-01-31 06:32:34 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:34 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:34 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:34 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:34 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:34 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:34 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:34 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:34 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:34 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:34 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:34 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:34 --> Model "Usuario_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Estabelecimento_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Assinatura_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Profissional_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Servico_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Cliente_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Agendamento_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:34 --> Model "Pagamento_model" initialized
+DEBUG - 2026-01-31 06:32:35 --> Agendamento_model->update() - ID: 346 - update_data: {"forma_pagamento":"pix","pagamento_status":"pendente","pagamento_valor":"30.00","pagamento_pix_qrcode":"iVBORw0KGgoAAAANSUhEUgAABWQAAAVkAQMAAABpQ4TyAAAABlBMVEX\/\/\/8AAABVwtN+AAAKy0lEQVR42uzdQXLiyBIGYBEstOQIHIWjmaNxFB2BpRcEejFuiapMlTDtnhk0L75\/4\/C0LX14l5OZVZ2IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI\/LPpx0Uuj3\/cjeO16z7Ge9cd6p+4ff3r\/N3XN8fp62n6+pVDetg4jufpu4\/0yzm0tLS0tLS0tLS0tLS0tH+DdkjfX6YHf+U6Pfj61z\/ui\/a48uDTX\/\/ls+jG6aOeJ\/34eFj1EY\/Lh9DS0tLS0tLS0tLS0tJuV1teHLT3VK7uJ\/1tesE+fNQv5anUvkUVsi9\/glAwz9X3Jy0tLS0tLS0tLS0tLe1\/S1uVr1\/KXXnxoTQ\/v\/5xSA+5TOrSOd2Fjug5Fc60tLS0tLS0tLS0tLS0\/yfa7qHclVo3jM7uwy8vO6nz\/G3VOQ1faWlpaWlpaWlpaWlpaWn\/cW2aFu7CC9emhsO66JAGfU9pUbVMC9\/Kfx\/S1PDPZptpaWlpaWlpaWlpaWlp\/03t8uSiXzXu6bEuWtW8h6lV+1Xr3kq5OtTTwv3vP+QPzlmipaWlpaWlpaWlpaWl\/de0aznUO6eNVLVurnnDRy5t1zEch9TV2j8OLS0tLS0tLS0tLS0t7b+mPZbbU8ItKqe66dmVjuk5NTvHVoI2nINbnVw0LDHpHhdaWlpaWlpaWlpaWlrarWpLv3JuemZtNUIbRmb7ZdPzlPTntAraXAEd0gWftLS0tLS0tLS0tLS0tLR\/j\/ZSvzgM+v7Kx2P39LaszPOL5xOLLl23vnuaL445fndyES0tLS0tLS0tLS0tLe1mtM2a90t3n7S3p7+8rHmvafT4sGwah8J5KH8vWlpaWlpaWlpaWlpa2i1qq7tLShl7D53S82Pg91bK1S7tmi4feg\/Ksf7I4frR229MC9PS0tLS0tLS0tLS0tJuQzsW9emh3YWytayL3sqLQsHcT4urn+X5oXBu3qKyL28+Lm4DpaWlpaWlpaWlpaWlpaX9E+1Q6uJlfRxuDn1y6edxZef08hg1vpf+bnVab\/MaUlpaWlpaWlpaWlpaWtpNa3O\/d1oXffW6lj7smoZmca55z13cQQ393eqj0tLS0tLS0tLS0tLS0m5R26UmZ7jz5V6mhauO6ceiYzq\/sDp0qJx\/e08F9K25exraryMtLS0tLS0tLS0tLS3tNrVVzVv6lfEWldI5HUMNXGrfanS2FM75KpZdKZhz53SoJc9CS0tLS0tLS0tLS0tLS\/v72rWiukvKxp0vy6K6X+nzhofeQoVeHtK\/MC1MS0tLS0tLS0tLS0tL+07tyqbnLk0JV\/qxtWva19eP3sOfIPd1z11cWM0dZ1paWlpaWlpaWlpaWtotaqufPT0qz\/u0c9qFwd4wLVz9cjjvtktt2NPizpdxucg6lAJ6+TBaWlpaWlpaWlpaWlrarWnLoUPVyUVjPTo7pgtQGjVvuX403KIyK+\/Nj16uIa1++Zual5aWlpaWlpaWlpaWlvZd2nz+bdUpDfO4zaNr10Znm\/O34zdbnD+5RYWWlpaWlpaWlpaWlpaW9qk2d1dP9XTwId31cu2qNdHGQbv5zpc8epynhtceQktLS0tLS0tLS0tLS7tRbXVy0fSzu2ate26NGM\/TwvPX5p0vh\/prvjjmFiTPp4VpaWlpaWlpaWlpaWlp36vtygUol7rmHWv1C03PxsDv8yZo1zix6PjCPae0tLS0tLS0tLS0tLS0b9T2YYQ25DJdnxluT5nL1mNr53SsX9S4i\/Pr6748NJxYNLZuBaWlpaWlpaWlpaWlpaWl\/bG2C1PC6UWNo5EaO6flRfm6lkP5yGX0+Bb6vcs+70hLS0tLS0tLS0tLS0u7We2TaeHyot2ysB2mFx3r7z+\/157TjmkpoKv+7ren9dLS0tLS0tLS0tLS0tK+V9svm55d6px2j9p3LNPCc9t1qEeNP8tdL\/nOl\/HRSd2Xj1z1cFP7lZaWlpaWlpaWlpaWlnZT2m65Jlp2TOPOaZjDDeui\/fII27HWXZdvXJu\/faXPS0tLS0tLS0tLS0tLS0s7\/sb8bb77JRTTu9KSPaTp4ONyYfX7tdF5BLn6yOWQJlpaWlpaWlpaWlpaWtqta+efmd6Xr2kZw6FD5QW38qJ88O6pvjm0+ZB41G956PddaVpaWlpaWlpaWlpaWtp3acMLxvKiQ33+7X35w9X5t+FreMg8PXwt08LNndNZOXSvh5aWlpaWlpaWlpaWlvYN2j7dXRKano2d06ed089Qtqbjjxrn3x6nQ3SHVDi\/cnIRLS0tLS0tLS0tLS0t7du06ejaXdrm7MLFJyX70OQs7dfP8pA8SvsxPeQjdUjLn6B\/Yf6WlpaWlpaWlpaWlpaWlvYlbSmmq2nh0KJdmxbOL\/wMTeMwenxO2jByfKzLflpaWlpaWlpaWlpaWtpNa4f6dz+7xU2h564LLyz93X1aD+3T94fy4o9aHQrofToz6ZVpYVpaWlpaWlpaWlpaWtptaPOgb7hF5bY8uva4nBJOt6g0bg691spbeAgtLS0tLS0tLS0tLS3tlrXNu0x+rYmexupOzvkFVSd1bnYm5TgN887t13uZt7225m+rndNXzr+lpaWlpaWlpaWlpaWlpf0tbVkP7evKPL4oaIe6yA5lfcyp1SzOC6zH9NEvzyt0WlpaWlpaWlpaWlpa2ndp+2WFeapffEjqefd01g71rmmf+rx5cbVaWP1oFczDioiWlpaWlpaWlpaWlpZ2U9rwO5dafS07qGXndB\/ufFk\/wejw\/Z0v5cSial75lXOWaGlpaWlpaWlpaWlpad+mnXXTf9ylndP50KF9qHnzuuh8FUvQjmmItyyu7tP87ZP2Ky0tLS0tLS0tLS0tLS3tD7TVUUmnem10rF\/UPmB37Xll5\/RQH\/kbF1e7RbN4TE1jWlpaWlpaWlpaWlpa2u1p42m9U+2bDx16UvN2K\/3e3CQe693T+QbRY\/0nCKPGIy0tLS0tLS0tLS0tLe12ten02Xu49DM0Qcd6wDefXPS5PvCbbw7NF8eErydaWlpaWlpaWlpaWlrazWrHxdrobqVcjZd9Lpuev5Qrzc9d8xDdfHJRXmClpaWlpaWlpaWlpaWl3ZK2qa9q3kP5fnwsYHZLbc7lcaHnPdW+8S7OZSHdP9\/ipKWlpaWlpaWlpaWlpaX9obbrqpOLurQ2+nxdNLVo4ym9ob8btLf0\/wo+n\/R5aWlpaWlpaWlpaWlpad+r7VvlanVdy3zoULPP2xg5Pq1cHPPxqH2rPm94WN\/6yLS0tLS0tLS0tLS0tLRb0w7p+0s9JXxtrYvul5d9fvuiVgEdjj+ipaWlpaWlpaWlpaWl\/a9ow+ZnqXnnJmd1\/u3cDD2mcjUsrvblo5bbVO5l\/vZQfjnntfNvaWlpaWlpaWlpaWlpaWl\/qN2VU3sb66HnpF02ifO0cPh+H3ZMw67ptzuntLS0tLS0tLS0tLS0tNvUhnXR+OI86Nvs854eP3Rf2TVt1LrD6lG\/tLS0tLS0tLS0tLS0tBvSNqeFL0n7Ude88\/ro\/IJjabumxdV4iO758f2tvLRaYC16WlpaWlpaWlpaWlpa2k1q104umkdou\/rkoqr52dW7p8dydG35mtuv11TzDrW2TxPAtLS0tLS0tLS0tLS0tLR\/phURERERERERERERERERERERERERERERERERERHZdP4XAAD\/\/zwknS5wujzEAAAAAElFTkSuQmCC","pagamento_pix_copia_cola":"00020126580014br.gov.bcb.pix013664412758-c668-4c51-bc86-70f527f43a1b520400005303986540530.005802BR5925FERREIRAJANINE202310162016009Sao Paulo62250521mpqrinter14422093541863041F6A","pagamento_expira_em":"2026-01-31 06:42:35","pagamento_lembrete_enviado":0,"pagamento_token":"0ed2d49d4d5e4c156f0df4b8c3ba6850"}
+DEBUG - 2026-01-31 06:32:35 --> Notificacao WhatsApp: waha_status=conectado, session=est_12_barbearia_do_bruxo
+DEBUG - 2026-01-31 06:32:35 --> Notificacao WhatsApp: WAHA nÃ£o estÃ¡ ativo para estabelecimento 12
+INFO - 2026-01-31 06:32:35 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:35 --> Total execution time: 1.1564
+INFO - 2026-01-31 06:32:35 --> Config Class Initialized
+INFO - 2026-01-31 06:32:35 --> Hooks Class Initialized
+DEBUG - 2026-01-31 06:32:35 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:35 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:35 --> URI Class Initialized
+INFO - 2026-01-31 06:32:35 --> Router Class Initialized
+INFO - 2026-01-31 06:32:35 --> Output Class Initialized
+INFO - 2026-01-31 06:32:35 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:35 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:35 --> Input Class Initialized
+INFO - 2026-01-31 06:32:35 --> Language Class Initialized
+INFO - 2026-01-31 06:32:35 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:35 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:35 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:35 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:35 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:35 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:35 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:35 --> Webhook MP recebido: {"action":"payment.created","api_version":"v1","data":{"id":"144220935418"},"date_created":"2026-01-31T09:32:35Z","id":128676244818,"live_mode":true,"type":"payment","user_id":"1513069201"}
+INFO - 2026-01-31 06:32:35 --> Webhook MP: Tipo de notificaÃ§Ã£o - payment
+INFO - 2026-01-31 06:32:35 --> Mercadopago_lib::processar_webhook - Dados recebidos: {"action":"payment.created","api_version":"v1","data":{"id":"144220935418"},"date_created":"2026-01-31T09:32:35Z","id":128676244818,"live_mode":true,"type":"payment","user_id":"1513069201"}
+INFO - 2026-01-31 06:32:35 --> Mercadopago_lib::processar_webhook - Tipo: payment, ID: 144220935418
+INFO - 2026-01-31 06:32:35 --> Config Class Initialized
+INFO - 2026-01-31 06:32:35 --> Hooks Class Initialized
+DEBUG - 2026-01-31 06:32:35 --> UTF-8 Support Enabled
+INFO - 2026-01-31 06:32:35 --> Utf8 Class Initialized
+INFO - 2026-01-31 06:32:35 --> URI Class Initialized
+INFO - 2026-01-31 06:32:35 --> Router Class Initialized
+INFO - 2026-01-31 06:32:35 --> Output Class Initialized
+INFO - 2026-01-31 06:32:35 --> Security Class Initialized
+DEBUG - 2026-01-31 06:32:35 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-01-31 06:32:35 --> Input Class Initialized
+INFO - 2026-01-31 06:32:35 --> Language Class Initialized
+INFO - 2026-01-31 06:32:35 --> Loader Class Initialized
+INFO - 2026-01-31 06:32:35 --> Helper loaded: url_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: form_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: security_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: date_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: text_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: cookie_helper
+INFO - 2026-01-31 06:32:35 --> Helper loaded: logo_helper
+INFO - 2026-01-31 06:32:35 --> Database Driver Class Initialized
+INFO - 2026-01-31 06:32:35 --> Session: Class initialized using 'files' driver.
+INFO - 2026-01-31 06:32:35 --> Form Validation Class Initialized
+INFO - 2026-01-31 06:32:35 --> Controller Class Initialized
+INFO - 2026-01-31 06:32:35 --> Model "Configuracao_model" initialized
+INFO - 2026-01-31 06:32:35 --> Webhook MP recebido: {"resource":"144220935418","topic":"payment"}
+INFO - 2026-01-31 06:32:35 --> Webhook MP: Tipo de notificaÃ§Ã£o - unknown
+INFO - 2026-01-31 06:32:35 --> Webhook MP: â„¹ï¸ Tipo de notificaÃ§Ã£o ignorado - unknown
+INFO - 2026-01-31 06:32:35 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:35 --> Total execution time: 0.0088
+INFO - 2026-01-31 06:32:36 --> Mercadopago_lib::processar_webhook - Resposta API: {"status":404,"response":{"message":"Payment not found","error":"not_found","status":404,"cause":[{"code":2000,"description":"Payment not found","data":"31-01-2026T09:32:36UTC;b7e7d256-c6bf-434a-8b0e-53e7ec72eb1d"}]}}
+ERROR - 2026-01-31 06:32:36 --> Mercadopago_lib::processar_webhook - Erro ao buscar pagamento: {"status":404,"response":{"message":"Payment not found","error":"not_found","status":404,"cause":[{"code":2000,"description":"Payment not found","data":"31-01-2026T09:32:36UTC;b7e7d256-c6bf-434a-8b0e-53e7ec72eb1d"}]}}
+ERROR - 2026-01-31 06:32:36 --> Severity: Warning --> Undefined array key "WARNING" /home/dois8950/iafila.doisr.com.br/system/core/Log.php 181
+INFO - 2026-01-31 06:32:36 --> Final output sent to browser
+DEBUG - 2026-01-31 06:32:36 --> Total execution time: 0.4578

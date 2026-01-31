@@ -50,8 +50,8 @@ class Notificacao_whatsapp_lib {
         }
 
         // Verificar se WAHA está ativo para o estabelecimento
-        if (!$estabelecimento->waha_ativo) {
-            log_message('debug', 'Notificacao WhatsApp: WAHA não está ativo para estabelecimento ' . $estabelecimento_id);
+        if (!$estabelecimento->waha_bot_ativo) {
+            log_message('debug', 'Notificacao WhatsApp: WAHA Bot não está ativo para estabelecimento ' . $estabelecimento_id);
             return false;
         }
 
