@@ -23,7 +23,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'https://iafila.doisr.com.br/';
+// Configuração dinâmica de URL
+if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] == 'gestor.zappagenda.com.br') {
+    $config['base_url'] = 'https://gestor.zappagenda.com.br/';
+} elseif (isset($_SERVER['CI_ENV']) && $_SERVER['CI_ENV'] == 'production') {
+    $config['base_url'] = 'https://gestor.zappagenda.com.br/';
+} else {
+    $config['base_url'] = 'https://iafila.doisr.com.br/'; // Ambiente de Dev/Local
+}
 /*
 |--------------------------------------------------------------------------
 | Index File
