@@ -90,7 +90,15 @@ class Configuracoes extends Admin_Controller {
                 'crlf' => "\r\n",
                 'wordwrap' => TRUE,
                 'validate' => TRUE,
-                'smtp_debug' => 2
+                'smtp_debug' => 2,
+                // Permitir certificados auto-assinados ou que não batem com o IP
+                'smtp_options' => array(
+                    'ssl' => array(
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true
+                    )
+                )
             );
 
             // Carregar library de e-mail

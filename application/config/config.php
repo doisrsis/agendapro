@@ -24,8 +24,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |
 */
 // Configuração dinâmica de URL
-if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] == 'gestor.zappagenda.com.br') {
-    $config['base_url'] = 'https://gestor.zappagenda.com.br/';
+if (isset($_SERVER['HTTP_HOST'])) {
+    $host = $_SERVER['HTTP_HOST'];
+    if ($host == 'gestor.zappagenda.com.br' || $host == 'zappagenda.com.br' || $host == 'www.zappagenda.com.br') {
+        $config['base_url'] = (is_https() ? 'https' : 'http') . '://' . $host . '/';
+    } else {
+        $config['base_url'] = 'https://iafila.doisr.com.br/'; // Default/Dev
+    }
 } elseif (isset($_SERVER['CI_ENV']) && $_SERVER['CI_ENV'] == 'production') {
     $config['base_url'] = 'https://gestor.zappagenda.com.br/';
 } else {
