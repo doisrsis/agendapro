@@ -109,6 +109,9 @@ $route['agenda/(:any)'] = 'agenda/$1';
 // ROTAS PÚBLICAS
 // =========================================================================
 
+// Página de Links (Linktree)
+$route['links/(:any)'] = 'links/index/$1';
+
 // Webhook Mercado Pago
 $route['webhook/mercadopago'] = 'webhook/mercadopago';
 

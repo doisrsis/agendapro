@@ -22,7 +22,7 @@ if (!function_exists('exibir_logo')) {
 
         // Buscar logo e nome do sistema
         $logo = $CI->Configuracao_model->get_valor('sistema_logo');
-        $nome_sistema = $CI->Configuracao_model->get_valor('sistema_nome', 'Dashboard Administrativo');
+        $nome_sistema = $CI->Configuracao_model->get_valor('sistema_nome', 'Gestor ZappAgenda');
 
         // Se tem logo e o arquivo existe
         if ($logo && file_exists('./assets/img/logo/' . $logo)) {
@@ -50,7 +50,7 @@ if (!function_exists('exibir_logo_login')) {
         $CI->load->model('Configuracao_model');
 
         $logo = $CI->Configuracao_model->get_valor('sistema_logo');
-        $nome_sistema = $CI->Configuracao_model->get_valor('sistema_nome', 'Dashboard Administrativo');
+        $nome_sistema = $CI->Configuracao_model->get_valor('sistema_nome', 'Gestor ZappAgenda');
 
         if ($logo && file_exists('./assets/img/logo/' . $logo)) {
             return '<img src="' . base_url('assets/img/logo/' . $logo) . '"
@@ -73,6 +73,6 @@ if (!function_exists('get_nome_sistema')) {
     function get_nome_sistema() {
         $CI =& get_instance();
         $CI->load->model('Configuracao_model');
-        return $CI->Configuracao_model->get_valor('sistema_nome', 'Dashboard Administrativo');
+        return $CI->Configuracao_model->get_valor('sistema_nome', 'Gestor ZappAgenda');
     }
 }

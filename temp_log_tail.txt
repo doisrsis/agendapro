@@ -1,0 +1,20 @@
+﻿INFO - 2026-02-02 22:24:01 --> Helper loaded: security_helper
+INFO - 2026-02-02 22:24:01 --> Helper loaded: date_helper
+INFO - 2026-02-02 22:24:01 --> Helper loaded: text_helper
+INFO - 2026-02-02 22:24:01 --> Helper loaded: cookie_helper
+INFO - 2026-02-02 22:24:01 --> Helper loaded: logo_helper
+INFO - 2026-02-02 22:24:01 --> Database Driver Class Initialized
+INFO - 2026-02-02 22:24:01 --> Session: Class initialized using 'files' driver.
+INFO - 2026-02-02 22:24:01 --> Form Validation Class Initialized
+INFO - 2026-02-02 22:24:01 --> Controller Class Initialized
+INFO - 2026-02-02 22:24:01 --> Model "Profissional_model" initialized
+INFO - 2026-02-02 22:24:01 --> Model "Servico_model" initialized
+INFO - 2026-02-02 22:24:01 --> Model "Cliente_model" initialized
+INFO - 2026-02-02 22:24:01 --> Model "Agendamento_model" initialized
+INFO - 2026-02-02 22:24:01 --> Model "Configuracao_model" initialized
+INFO - 2026-02-02 22:24:01 --> Model "Bot_conversa_model" initialized
+INFO - 2026-02-02 22:24:01 --> Model "Estabelecimento_model" initialized
+INFO - 2026-02-02 22:24:01 --> CRON: Iniciando verificaÃ§Ã£o de pagamentos pendentes
+INFO - 2026-02-02 22:24:01 --> CRON: VerificaÃ§Ã£o concluÃ­da - {"lembretes_enviados":0,"agendamentos_cancelados":0,"erros":[]}
+INFO - 2026-02-02 22:24:01 --> Final output sent to browser
+DEBUG - 2026-02-02 22:24:01 --> Total execution time: 0.0136

@@ -52,6 +52,14 @@ class Estabelecimento_model extends CI_Model {
     }
 
     /**
+     * Buscar estabelecimento por Slug
+     */
+    public function get_by_slug($slug) {
+        $query = $this->db->get_where($this->table, ['slug' => $slug]);
+        return $query->row();
+    }
+
+    /**
      * Criar novo estabelecimento
      */
     public function create($data) {
@@ -66,6 +74,7 @@ class Estabelecimento_model extends CI_Model {
             // Converter string vazia para NULL para evitar erro de duplicidade em unique key
             'cnpj_cpf' => !empty($data['cnpj_cpf']) ? $data['cnpj_cpf'] : null,
             'endereco' => $data['endereco'] ?? null,
+            'bairro' => $data['bairro'] ?? null,
             'cep' => $data['cep'] ?? null,
             'cidade' => $data['cidade'] ?? null,
             'estado' => $data['estado'] ?? null,
@@ -73,10 +82,17 @@ class Estabelecimento_model extends CI_Model {
             'whatsapp' => $data['whatsapp'] ?? null,
             'email' => $data['email'] ?? null,
             'logo' => $data['logo'] ?? null,
+            'tema' => $data['tema'] ?? 'light',
             'plano' => $data['plano'] ?? 'trimestral',
             'plano_vencimento' => $data['plano_vencimento'] ?? null,
             'status' => $data['status'] ?? 'ativo',
             'tempo_minimo_agendamento' => $data['tempo_minimo_agendamento'] ?? 60,
+
+            // Linktree
+            'slug' => !empty($data['slug']) ? $data['slug'] : url_title(convert_accented_characters($data['nome']), '-', TRUE) . '-' . substr(md5(uniqid()), 0, 4),
+            'instagram' => $data['instagram'] ?? null,
+            'facebook' => $data['facebook'] ?? null,
+            'website' => $data['website'] ?? null,
         ];
 
         if ($this->db->insert($this->table, $insert_data)) {
@@ -101,6 +117,7 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['nome'])) $update_data['nome'] = $data['nome'];
         if (isset($data['cnpj_cpf'])) $update_data['cnpj_cpf'] = !empty($data['cnpj_cpf']) ? $data['cnpj_cpf'] : null;
         if (isset($data['endereco'])) $update_data['endereco'] = $data['endereco'];
+        if (isset($data['bairro'])) $update_data['bairro'] = $data['bairro'];
         if (isset($data['cep'])) $update_data['cep'] = $data['cep'];
         if (isset($data['cidade'])) $update_data['cidade'] = $data['cidade'];
         if (isset($data['estado'])) $update_data['estado'] = $data['estado'];
@@ -108,11 +125,20 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['whatsapp'])) $update_data['whatsapp'] = $data['whatsapp'];
         if (isset($data['email'])) $update_data['email'] = $data['email'];
         if (isset($data['logo'])) $update_data['logo'] = $data['logo'];
+        if (isset($data['tema'])) $update_data['tema'] = $data['tema'];
         if (isset($data['plano'])) $update_data['plano'] = $data['plano'];
         if (isset($data['plano_vencimento'])) $update_data['plano_vencimento'] = $data['plano_vencimento'];
         if (isset($data['status'])) $update_data['status'] = $data['status'];
         if (isset($data['tempo_minimo_agendamento'])) $update_data['tempo_minimo_agendamento'] = $data['tempo_minimo_agendamento'];
-        if (isset($data['usar_intervalo_fixo'])) $update_data['usar_intervalo_fixo'] = $data['usar_intervalo_fixo'];
+        if (isset($data['estado'])) $update_data['estado'] = $data['estado'];
+
+        // Linktree
+        if (isset($data['slug'])) {
+            $update_data['slug'] = !empty($data['slug']) ? $data['slug'] : url_title(convert_accented_characters($data['nome'] ?? $this->get($id)->nome), '-', TRUE);
+        }
+        if (isset($data['instagram'])) $update_data['instagram'] = $data['instagram'];
+        if (isset($data['facebook'])) $update_data['facebook'] = $data['facebook'];
+        if (isset($data['website'])) $update_data['website'] = $data['website'];
         if (isset($data['intervalo_agendamento'])) $update_data['intervalo_agendamento'] = $data['intervalo_agendamento'];
         if (isset($data['dias_antecedencia_agenda'])) $update_data['dias_antecedencia_agenda'] = $data['dias_antecedencia_agenda'];
 

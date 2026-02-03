@@ -60,7 +60,7 @@
                     <!-- Aba Dados Gerais -->
                     <?php if ($aba_ativa == 'geral'): ?>
                     <div class="tab-pane active">
-                        <form method="post">
+                        <form method="post" enctype="multipart/form-data">
                             <input type="hidden" name="aba" value="geral">
 
                             <div class="row">
@@ -93,9 +93,53 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Endereço</label>
-                                <input type="text" class="form-control" name="endereco"
-                                       value="<?= set_value('endereco', $estabelecimento->endereco ?? '') ?>">
+                                <label class="form-label">Logo do Estabelecimento</label>
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <?php if (!empty($estabelecimento->logo)): ?>
+                                            <span class="avatar avatar-xl" style="background-image: url(<?= base_url('assets/uploads/' . $estabelecimento->logo) ?>)"></span>
+                                        <?php else: ?>
+                                            <span class="avatar avatar-xl"><?= substr($estabelecimento->nome, 0, 2) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="col">
+                                        <input type="file" class="form-control" name="logo">
+                                        <div class="form-text">Formatos: JPG, PNG. Máx: 2MB.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tema Padrão do Linktree</label>
+                                <div class="form-selectgroup">
+                                    <label class="form-selectgroup-item">
+                                        <input type="radio" name="tema" value="light" class="form-selectgroup-input"
+                                            <?= ($estabelecimento->tema ?? 'light') == 'light' ? 'checked' : '' ?>>
+                                        <span class="form-selectgroup-label">
+                                            <i class="ti ti-sun me-1"></i> Claro
+                                        </span>
+                                    </label>
+                                    <label class="form-selectgroup-item">
+                                        <input type="radio" name="tema" value="dark" class="form-selectgroup-input"
+                                            <?= ($estabelecimento->tema ?? 'light') == 'dark' ? 'checked' : '' ?>>
+                                        <span class="form-selectgroup-label">
+                                            <i class="ti ti-moon me-1"></i> Escuro
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Endereço (Rua e Número)</label>
+                                    <input type="text" class="form-control" name="endereco"
+                                           value="<?= set_value('endereco', $estabelecimento->endereco ?? '') ?>">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Bairro</label>
+                                    <input type="text" class="form-control" name="bairro"
+                                           value="<?= set_value('bairro', $estabelecimento->bairro ?? '') ?>">
+                                </div>
                             </div>
 
                             <div class="row">
@@ -115,6 +159,67 @@
                                     <input type="text" class="form-control" name="cep"
                                            value="<?= set_value('cep', $estabelecimento->cep ?? '') ?>"
                                            placeholder="00000-000">
+                                </div>
+                            </div>
+
+                            <div class="hr-text">Página de Links (Linktree)</div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Seu Link Personalizado</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><?= base_url('links/') ?></span>
+                                    <input type="text" class="form-control"
+                                           value="<?= $estabelecimento->slug ?? 'Será gerado ao salvar' ?>"
+                                           readonly id="linkSlug">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="copiarLink()">
+                                        <i class="ti ti-copy"></i> Copiar
+                                    </button>
+                                </div>
+                                <small class="form-hint">O link é gerado automaticamente pelo sistema.</small>
+                            </div>
+
+                            <script>
+                            function copiarLink() {
+                                var copyText = "<?= base_url('links/') ?>" + document.getElementById("linkSlug").value;
+                                if(document.getElementById("linkSlug").value === 'Será gerado ao salvar') {
+                                    alert('Salve as configurações primeiro para gerar o link!');
+                                    return;
+                                }
+                                navigator.clipboard.writeText(copyText).then(function() {
+                                    alert("Link copiado: " + copyText);
+                                }, function(err) {
+                                    console.error('Erro ao copiar: ', err);
+                                });
+                            }
+                            </script>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Instagram</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-brand-instagram"></i></span>
+                                        <input type="text" class="form-control" name="instagram"
+                                               value="<?= set_value('instagram', $estabelecimento->instagram ?? '') ?>"
+                                               placeholder="@usuario">
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Facebook</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-brand-facebook"></i></span>
+                                        <input type="text" class="form-control" name="facebook"
+                                               value="<?= set_value('facebook', $estabelecimento->facebook ?? '') ?>"
+                                               placeholder="Link do perfil">
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Website</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="ti ti-world"></i></span>
+                                        <input type="text" class="form-control" name="website"
+                                               value="<?= set_value('website', $estabelecimento->website ?? '') ?>"
+                                               placeholder="https://...">
+                                    </div>
                                 </div>
                             </div>
 

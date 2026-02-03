@@ -19,7 +19,7 @@
             font-feature-settings: "cv03", "cv04", "cv11";
         }
         .page {
-            background: linear-gradient(135deg, #fff 0%, #a77843ff 100%);
+            background: linear-gradient(135deg, #fff 0%, #e2e2e2ff 100%);
         }
     </style>
 </head>

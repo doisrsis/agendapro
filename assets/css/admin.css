@@ -1,13 +1,23 @@
 /**
  * Estilos Customizados - Painel Administrativo
  * Sistema de Orçamento Le Cortine
- * 
+ *
  * @author Rafael Dias - doisr.com.br
  * @date 13/11/2024
  */
 
 /* Forçar tema claro */
-body, html {
+/* Forçar tema claro e aplicar ZappAgenda Theme (Verde) */
+:root {
+    --tblr-primary: #00bd6f;
+    --tblr-primary-rgb: 0, 189, 111;
+    --tblr-primary-fg: #ffffff;
+    --tblr-link-color: #00bd6f;
+    --tblr-link-hover-color: #00995a;
+}
+
+body,
+html {
     background-color: #f5f7fb !important;
     color: #1e293b !important;
 }
@@ -25,7 +35,12 @@ body, html {
 /* Textos */
 .page-title,
 .card-title,
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     color: #1e293b !important;
 }
 
@@ -39,11 +54,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Links */
 a {
-    color: #206bc4;
+    color: #00bd6f;
 }
 
 a:hover {
-    color: #1a569d;
+    color: #00995a;
 }
 
 /* Cards */
@@ -112,11 +127,11 @@ a:hover {
 }
 
 .navbar .nav-link:hover {
-    color: #206bc4 !important;
+    color: #00bd6f !important;
 }
 
 .navbar .nav-link.active {
-    color: #206bc4 !important;
+    color: #00bd6f !important;
 }
 
 /* Formulários */
@@ -134,8 +149,8 @@ a:hover {
 
 .form-control:focus,
 .form-select:focus {
-    border-color: #206bc4 !important;
-    box-shadow: 0 0 0 0.25rem rgba(32, 107, 196, 0.1) !important;
+    border-color: #00bd6f !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 189, 111, 0.1) !important;
 }
 
 .form-hint {
@@ -164,7 +179,7 @@ a:hover {
 
 .dropdown-item:hover {
     background-color: #f8f9fa !important;
-    color: #206bc4 !important;
+    color: #00bd6f !important;
 }
 
 /* Breadcrumb */
@@ -181,7 +196,7 @@ a:hover {
 }
 
 .breadcrumb-item a {
-    color: #206bc4 !important;
+    color: #00bd6f !important;
 }
 
 /* Avatar */
@@ -304,11 +319,11 @@ a:hover {
     .page-header {
         padding: 1rem 0;
     }
-    
+
     .card-body {
         padding: 1rem;
     }
-    
+
     .table-responsive {
         font-size: 0.875rem;
     }
@@ -316,6 +331,7 @@ a:hover {
 
 /* Print styles */
 @media print {
+
     .navbar,
     .page-header,
     .card-actions,
@@ -323,11 +339,11 @@ a:hover {
     .footer {
         display: none !important;
     }
-    
+
     .page-wrapper {
         padding: 0 !important;
     }
-    
+
     .card {
         box-shadow: none !important;
         border: 1px solid #ddd !important;
@@ -339,7 +355,7 @@ a:hover {
     .card {
         background: var(--tblr-dark);
     }
-    
+
     .empty-icon {
         color: var(--tblr-secondary-lt);
     }
