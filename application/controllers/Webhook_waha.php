@@ -306,6 +306,13 @@ class Webhook_waha extends CI_Controller {
         }
 
         $from = $payload['from'] ?? '';
+
+        // Ignorar mensagens de Status/Stories (status@broadcast)
+        if ($from == 'status@broadcast') {
+            log_message('debug', 'WAHA Webhook: Status/Story ignorado (status@broadcast)');
+            return;
+        }
+
         $body = $payload['body'] ?? '';
         $message_id = $payload['id'] ?? '';
         $timestamp = $payload['timestamp'] ?? time();

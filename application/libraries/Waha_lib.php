@@ -16,7 +16,7 @@ class Waha_lib {
     private $api_url;
     private $api_key;
     private $session_name;
-    private $timeout = 30;
+    private $timeout = 60;
 
     /**
      * Construtor - Carrega configurações padrão do SaaS
