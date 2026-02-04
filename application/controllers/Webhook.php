@@ -62,8 +62,23 @@ class Webhook extends CI_Controller {
 
                         // Se pagamento aprovado
                         if ($payment_data['status'] == 'approved') {
-                            // Verificar se é pagamento de assinatura ou agendamento
-                            if ($pagamento->assinatura_id) {
+                            // VERIFICAR TIPO DE PAGAMENTO
+
+                            // CASO 1: Pagamento de AGENDAMENTO
+                            if ($pagamento->tipo == 'agendamento' && !empty($pagamento->agendamento_id)) {
+                                log_message('info', 'Webhook MP: 🗓️ Confirmando agendamento #' . $pagamento->agendamento_id);
+
+                                // Confirmar agendamento (Muda status para confirmado e pago)
+                                $this->Pagamento_model->confirmar_agendamento($pagamento->agendamento_id);
+
+                                // Enviar notificação WhatsApp
+                                $this->load->model('Agendamento_model');
+                                $resultado_cliente = $this->Agendamento_model->enviar_notificacao_whatsapp($pagamento->agendamento_id, 'confirmacao');
+
+                                log_message('info', 'Webhook MP: 📲 Notificação enviada para agendamento #' . $pagamento->agendamento_id . ' - Resultado: ' . ($resultado_cliente ? 'OK' : 'FALHOU'));
+                            }
+                            // CASO 2: Pagamento de ASSINATURA (Renovação)
+                            elseif ($pagamento->assinatura_id) {
                                 // Já tem assinatura vinculada - renovar
                                 $this->load->model('Assinatura_model');
                                 $assinatura = $this->Assinatura_model->get($pagamento->assinatura_id);
@@ -83,7 +98,9 @@ class Webhook extends CI_Controller {
                                     $pagamento->valor
                                 );
                                 log_message('info', 'Webhook MP: ✅ Assinatura #' . $pagamento->assinatura_id . ' RENOVADA até ' . $nova_data_fim);
-                            } else {
+                            }
+                            // CASO 3: Pagamento de ASSINATURA (Primeira vez / Novo Estabelecimento)
+                            else {
                                 // Verificar se estabelecimento já tem assinatura
                                 $this->load->model('Assinatura_model');
                                 $assinaturas_existentes = $this->Assinatura_model->get_by_estabelecimento($pagamento->estabelecimento_id);
