@@ -167,7 +167,12 @@
                             <div class="mb-3">
                                 <label class="form-label">Seu Link Personalizado</label>
                                 <div class="input-group">
-                                    <span class="input-group-text"><?= base_url('links/') ?></span>
+                                    <?php
+                                    // Hack visual: Se estiver no gestor, mostramos o domínio principal para ficar bonito
+                                    $link_base = base_url('links/');
+                                    $link_visual = str_replace('gestor.', '', $link_base);
+                                    ?>
+                                    <span class="input-group-text"><?= $link_visual ?></span>
                                     <input type="text" class="form-control"
                                            value="<?= $estabelecimento->slug ?? 'Será gerado ao salvar' ?>"
                                            readonly id="linkSlug">
@@ -180,7 +185,8 @@
 
                             <script>
                             function copiarLink() {
-                                var copyText = "<?= base_url('links/') ?>" + document.getElementById("linkSlug").value;
+                                var base = "<?= $link_visual ?>";
+                                var copyText = base + document.getElementById("linkSlug").value;
                                 if(document.getElementById("linkSlug").value === 'Será gerado ao salvar') {
                                     alert('Salve as configurações primeiro para gerar o link!');
                                     return;
