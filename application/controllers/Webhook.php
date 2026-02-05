@@ -41,10 +41,31 @@ class Webhook extends CI_Controller {
             log_message('info', 'Webhook MP: Tipo de notificação - ' . $tipo);
 
             // Processar apenas notificações de pagamento
+            // Processar notificações de pagamento ou tentar recuperar de unknown
+            $payment_data = null;
+
             if ($tipo == 'payment' || $tipo == 'payment.updated') {
                 $payment_data = $this->mercadopago_lib->processar_webhook($data);
+            } elseif ($tipo == 'unknown' || !empty($data['data']['id']) || !empty($data['id'])) {
+                // Tentativa de recuperação robusta para tipos desconhecidos ou não mapeados
+                $id_pagamento = $data['data']['id'] ?? $data['id'] ?? null;
 
-                if ($payment_data) {
+                if ($id_pagamento) {
+                    log_message('info', 'Webhook MP: ⚠️ Tipo "' . $tipo . '" recebido, mas ID ' . $id_pagamento . ' encontrado. Consultando API...');
+
+                    // Consulta direta à API
+                    $consulta = $this->mercadopago_lib->get_pagamento($id_pagamento);
+
+                    if ($consulta && $consulta['status'] == 200 && !empty($consulta['response']['status'])) {
+                        $payment_data = $consulta['response'];
+                        log_message('info', 'Webhook MP: ✅ Recuperação de pagamento com sucesso! Status: ' . $payment_data['status']);
+                    } else {
+                        log_message('error', 'Webhook MP: ❌ Falha ao recuperar pagamento ' . $id_pagamento);
+                    }
+                }
+            }
+
+            if ($payment_data) {
                     // Buscar pagamento no banco
                     $this->load->model('Pagamento_model');
                     $pagamento = $this->Pagamento_model->get_by_mercadopago_id($payment_data['id']);
@@ -164,19 +185,19 @@ class Webhook extends CI_Controller {
                         return;
                     }
                 } else {
-                    // Erro ao processar - pode ser ID inválido
-                    log_message('warning', 'Webhook MP: ⚠️ Não foi possível buscar dados do pagamento na API');
-                    // Retornar 200 para não reenviar
+                // Não temos dados de pagamento ($payment_data é null)
+                // Verificar se foi um tipo que IGNORAMOS intencionalmente
+                if ($tipo != 'payment' && $tipo != 'payment.updated' && $tipo != 'unknown' && empty($data['data']['id']) && empty($data['id'])) {
+                    log_message('info', 'Webhook MP: ℹ️ Tipo de notificação ignorado - ' . $tipo);
                     http_response_code(200);
-                    echo json_encode(['success' => true, 'processed' => false, 'reason' => 'api_error']);
+                    echo json_encode(['success' => true, 'processed' => false, 'reason' => 'type_not_supported']);
                     return;
                 }
-            } else {
-                // Outros tipos de notificação (order, merchant_order, etc)
-                log_message('info', 'Webhook MP: ℹ️ Tipo de notificação ignorado - ' . $tipo);
-                // Retornar 200 - notificação válida mas não processamos esse tipo
+
+                // Era um tipo suportado (ou recovery) mas falhou ao buscar dados
+                log_message('warning', 'Webhook MP: ⚠️ Não foi possível buscar dados do pagamento na API');
                 http_response_code(200);
-                echo json_encode(['success' => true, 'processed' => false, 'reason' => 'type_not_supported']);
+                echo json_encode(['success' => true, 'processed' => false, 'reason' => 'api_error']);
                 return;
             }
 
