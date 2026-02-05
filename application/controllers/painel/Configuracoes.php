@@ -22,9 +22,16 @@ class Configuracoes extends CI_Controller {
         $this->load->model('Estabelecimento_model');
         $this->load->model('Horario_estabelecimento_model');
 
-        // Obter dados do estabelecimento
+    // Obter dados do estabelecimento
         $this->estabelecimento_id = $this->auth_check->get_estabelecimento_id();
         $this->estabelecimento = $this->Estabelecimento_model->get_by_id($this->estabelecimento_id);
+    }
+
+    /**
+     * Tutorial: Como obter credenciais MP
+     */
+    public function tutorial_mercadopago() {
+        $this->load->view('painel/ajuda/mercadopago_tutorial');
     }
 
     /**

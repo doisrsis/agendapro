@@ -1136,10 +1136,23 @@
 
                             <!-- Seção Mercado Pago -->
                             <div id="secao-mercadopago">
-                                <h4 class="mb-3">
-                                    <i class="ti ti-credit-card me-2"></i>
-                                    Credenciais Mercado Pago
-                                </h4>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="mb-0">
+                                        <i class="ti ti-credit-card me-2"></i>
+                                        Credenciais Mercado Pago
+                                    </h4>
+                                    <a href="<?= base_url('painel/configuracoes/tutorial_mercadopago') ?>"
+                                       target="_blank"
+                                       onclick="window.open(this.href, 'Tutorial', 'width=900,height=800,scrollbars=yes'); return false;"
+                                       class="btn btn-primary d-none d-sm-inline-block">
+                                        <i class="ti ti-help-circle me-1"></i>
+                                        Como obter minhas credenciais?
+                                    </a>
+                                    <!-- Mobile Button -->
+                                    <a href="<?= base_url('painel/configuracoes/tutorial_mercadopago') ?>" target="_blank" class="btn btn-primary btn-icon d-sm-none" aria-label="Ajuda">
+                                        <i class="ti ti-help-circle"></i>
+                                    </a>
+                                </div>
 
                                 <h5 class="mb-3">Credenciais de Teste (Sandbox)</h5>
 

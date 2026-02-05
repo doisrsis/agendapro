@@ -1,0 +1,200 @@
+﻿INFO - 2026-02-05 00:02:37 --> Controller Class Initialized
+INFO - 2026-02-05 00:02:37 --> Model "Configuracao_model" initialized
+INFO - 2026-02-05 00:02:37 --> Webhook MP recebido: {"resource":"144868038484","topic":"payment"}
+INFO - 2026-02-05 00:02:37 --> Webhook MP: Tipo de notificaÃ§Ã£o - unknown
+INFO - 2026-02-05 00:02:37 --> Webhook MP: â„¹ï¸ Tipo de notificaÃ§Ã£o ignorado - unknown
+INFO - 2026-02-05 00:02:37 --> Final output sent to browser
+DEBUG - 2026-02-05 00:02:37 --> Total execution time: 0.0059
+INFO - 2026-02-05 00:02:38 --> Mercadopago_lib::processar_webhook - Resposta API: {"status":404,"response":{"message":"Payment not found","error":"not_found","status":404,"cause":[{"code":2000,"description":"Payment not found","data":"05-02-2026T03:02:38UTC;529f0003-40b7-4352-b013-998460b6d111"}]}}
+ERROR - 2026-02-05 00:02:38 --> Mercadopago_lib::processar_webhook - Erro ao buscar pagamento: {"status":404,"response":{"message":"Payment not found","error":"not_found","status":404,"cause":[{"code":2000,"description":"Payment not found","data":"05-02-2026T03:02:38UTC;529f0003-40b7-4352-b013-998460b6d111"}]}}
+ERROR - 2026-02-05 00:02:38 --> Severity: Warning --> Undefined array key "WARNING" /home/dois8950/iafila.doisr.com.br/system/core/Log.php 181
+INFO - 2026-02-05 00:02:38 --> Final output sent to browser
+DEBUG - 2026-02-05 00:02:38 --> Total execution time: 0.4563
+INFO - 2026-02-05 00:02:42 --> Config Class Initialized
+INFO - 2026-02-05 00:02:42 --> Hooks Class Initialized
+DEBUG - 2026-02-05 00:02:42 --> UTF-8 Support Enabled
+INFO - 2026-02-05 00:02:42 --> Utf8 Class Initialized
+INFO - 2026-02-05 00:02:42 --> URI Class Initialized
+INFO - 2026-02-05 00:02:42 --> Router Class Initialized
+INFO - 2026-02-05 00:02:42 --> Output Class Initialized
+INFO - 2026-02-05 00:02:42 --> Security Class Initialized
+DEBUG - 2026-02-05 00:02:42 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-02-05 00:02:42 --> Input Class Initialized
+INFO - 2026-02-05 00:02:42 --> Language Class Initialized
+INFO - 2026-02-05 00:02:42 --> Loader Class Initialized
+INFO - 2026-02-05 00:02:42 --> Helper loaded: url_helper
+INFO - 2026-02-05 00:02:42 --> Helper loaded: form_helper
+INFO - 2026-02-05 00:02:42 --> Helper loaded: security_helper
+INFO - 2026-02-05 00:02:42 --> Helper loaded: date_helper
+INFO - 2026-02-05 00:02:42 --> Helper loaded: text_helper
+INFO - 2026-02-05 00:02:42 --> Helper loaded: cookie_helper
+INFO - 2026-02-05 00:02:42 --> Helper loaded: logo_helper
+INFO - 2026-02-05 00:02:42 --> Database Driver Class Initialized
+INFO - 2026-02-05 00:02:42 --> Session: Class initialized using 'files' driver.
+INFO - 2026-02-05 00:02:42 --> Form Validation Class Initialized
+INFO - 2026-02-05 00:02:42 --> Controller Class Initialized
+INFO - 2026-02-05 00:02:42 --> Model "Estabelecimento_model" initialized
+INFO - 2026-02-05 00:02:42 --> Model "Configuracao_model" initialized
+INFO - 2026-02-05 00:02:42 --> Model "Bot_conversa_model" initialized
+INFO - 2026-02-05 00:02:42 --> WAHA Webhook RECEBIDO [est:12]: {"id":"evt_01kgnw10j5z61xbpt199yan3w6","timestamp":1770260562501,"event":"message.ack","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_277837240131686@lid_3EB01010EF20FAED24D923","from":"277837240131686@lid","to":null,"participant":null,"fromMe":true,"ack":2,"ackName":"DEVICE","_data":{"Chat":"277837240131686@lid","Sender":"277837240131686@lid","IsFromMe":false,"IsGroup":false,"AddressingMode":"","SenderAlt":"","RecipientAlt":"","BroadcastListOwner":"","BroadcastRecipients":null,"MessageIDs":["3EB01010EF20FAED24D923"],"Timestamp":"2026-02-05T03:02:42Z","Type":"","MessageSender":""}},"environment":{"version":"2026.1.2","engine":"GOWS","tier":"PLUS","browser":null,"platform":"linux/x64"}}
+INFO - 2026-02-05 00:02:42 --> WAHA Webhook PROCESSANDO [est:12] - Payload length: 916
+DEBUG - 2026-02-05 00:02:42 --> WAHA Webhook [message.ack]: {"id":"evt_01kgnw10j5z61xbpt199yan3w6","timestamp":1770260562501,"event":"message.ack","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_277837240131686@lid_3EB01010EF20FAED24D923","from":"277837240131686@lid","to":null,"participant":null,"fromMe":true,"ack":2,"ackName":"DEVICE","
+INFO - 2026-02-05 00:02:42 --> Final output sent to browser
+DEBUG - 2026-02-05 00:02:42 --> Total execution time: 0.0168
+INFO - 2026-02-05 00:04:02 --> Config Class Initialized
+INFO - 2026-02-05 00:04:02 --> Hooks Class Initialized
+DEBUG - 2026-02-05 00:04:02 --> UTF-8 Support Enabled
+INFO - 2026-02-05 00:04:02 --> Utf8 Class Initialized
+INFO - 2026-02-05 00:04:02 --> URI Class Initialized
+INFO - 2026-02-05 00:04:02 --> Router Class Initialized
+INFO - 2026-02-05 00:04:02 --> Output Class Initialized
+INFO - 2026-02-05 00:04:02 --> Security Class Initialized
+DEBUG - 2026-02-05 00:04:02 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-02-05 00:04:02 --> Input Class Initialized
+INFO - 2026-02-05 00:04:02 --> Language Class Initialized
+INFO - 2026-02-05 00:04:02 --> Loader Class Initialized
+INFO - 2026-02-05 00:04:02 --> Helper loaded: url_helper
+INFO - 2026-02-05 00:04:02 --> Helper loaded: form_helper
+INFO - 2026-02-05 00:04:02 --> Helper loaded: security_helper
+INFO - 2026-02-05 00:04:02 --> Helper loaded: date_helper
+INFO - 2026-02-05 00:04:02 --> Helper loaded: text_helper
+INFO - 2026-02-05 00:04:02 --> Helper loaded: cookie_helper
+INFO - 2026-02-05 00:04:02 --> Helper loaded: logo_helper
+INFO - 2026-02-05 00:04:02 --> Database Driver Class Initialized
+INFO - 2026-02-05 00:04:02 --> Session: Class initialized using 'files' driver.
+INFO - 2026-02-05 00:04:02 --> Form Validation Class Initialized
+INFO - 2026-02-05 00:04:02 --> Controller Class Initialized
+INFO - 2026-02-05 00:04:02 --> Model "Profissional_model" initialized
+INFO - 2026-02-05 00:04:02 --> Model "Servico_model" initialized
+INFO - 2026-02-05 00:04:02 --> Model "Cliente_model" initialized
+INFO - 2026-02-05 00:04:02 --> Model "Agendamento_model" initialized
+INFO - 2026-02-05 00:04:02 --> Model "Configuracao_model" initialized
+INFO - 2026-02-05 00:04:02 --> Model "Bot_conversa_model" initialized
+INFO - 2026-02-05 00:04:02 --> Model "Estabelecimento_model" initialized
+INFO - 2026-02-05 00:04:02 --> CRON: Iniciando verificaÃ§Ã£o de pagamentos pendentes
+DEBUG - 2026-02-05 00:04:02 --> Agendamento_model->update() - ID: 387 - update_data: {"status":"cancelado","cancelado_por":"sistema","motivo_cancelamento":"Pagamento n\u00e3o realizado dentro do prazo","pagamento_status":"expirado"}
+DEBUG - 2026-02-05 00:04:02 --> Notificacao_whatsapp_lib class already loaded. Second attempt ignored.
+DEBUG - 2026-02-05 00:04:02 --> Notificacao WhatsApp: waha_status=conectado, session=est_12_barbearia_do_bruxo
+DEBUG - 2026-02-05 00:04:02 --> Notificacao WhatsApp: Configurando para estabelecimento 12
+DEBUG - 2026-02-05 00:04:02 --> Notificacao WhatsApp: Session name = est_12_barbearia_do_bruxo
+DEBUG - 2026-02-05 00:04:02 --> Notificacao WhatsApp: API URL = https://zaptotal.doisrsistemas.com.br
+DEBUG - 2026-02-05 00:04:02 --> WAHA formatar_chat_id: 557588890006@c.us
+DEBUG - 2026-02-05 00:04:02 --> WAHA Request: GET https://zaptotal.doisrsistemas.com.br/api/contacts/check-exists?session=est_12_barbearia_do_bruxo&phone=557588890006@c.us
+DEBUG - 2026-02-05 00:04:02 --> WAHA API Key (primeiros 20 chars): b781f3e57f4e4c4ba3a6...
+DEBUG - 2026-02-05 00:04:03 --> WAHA API [GET] /api/contacts/check-exists?session=est_12_barbearia_do_bruxo&phone=557588890006@c.us - HTTP 200
+DEBUG - 2026-02-05 00:04:03 --> WAHA: NÃºmero encontrado (original): 557588890006
+DEBUG - 2026-02-05 00:04:03 --> WAHA Request: POST https://zaptotal.doisrsistemas.com.br/api/sendText
+DEBUG - 2026-02-05 00:04:03 --> WAHA API Key (primeiros 20 chars): b781f3e57f4e4c4ba3a6...
+DEBUG - 2026-02-05 00:04:04 --> WAHA API [POST] /api/sendText - HTTP 201
+INFO - 2026-02-05 00:04:04 --> Notificacao WhatsApp [cancelamento] - Agendamento #387 - Status: sucesso
+INFO - 2026-02-05 00:04:04 --> CRON: Agendamento #387 cancelado por falta de pagamento
+INFO - 2026-02-05 00:04:04 --> CRON: VerificaÃ§Ã£o concluÃ­da - {"lembretes_enviados":0,"agendamentos_cancelados":1,"erros":[]}
+INFO - 2026-02-05 00:04:04 --> Final output sent to browser
+DEBUG - 2026-02-05 00:04:04 --> Total execution time: 1.4866
+INFO - 2026-02-05 00:04:04 --> Config Class Initialized
+INFO - 2026-02-05 00:04:04 --> Hooks Class Initialized
+DEBUG - 2026-02-05 00:04:04 --> UTF-8 Support Enabled
+INFO - 2026-02-05 00:04:04 --> Utf8 Class Initialized
+INFO - 2026-02-05 00:04:04 --> URI Class Initialized
+INFO - 2026-02-05 00:04:04 --> Router Class Initialized
+INFO - 2026-02-05 00:04:04 --> Output Class Initialized
+INFO - 2026-02-05 00:04:04 --> Security Class Initialized
+DEBUG - 2026-02-05 00:04:04 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-02-05 00:04:04 --> Input Class Initialized
+INFO - 2026-02-05 00:04:04 --> Language Class Initialized
+INFO - 2026-02-05 00:04:04 --> Loader Class Initialized
+INFO - 2026-02-05 00:04:04 --> Helper loaded: url_helper
+INFO - 2026-02-05 00:04:04 --> Helper loaded: form_helper
+INFO - 2026-02-05 00:04:04 --> Helper loaded: security_helper
+INFO - 2026-02-05 00:04:04 --> Helper loaded: date_helper
+INFO - 2026-02-05 00:04:04 --> Helper loaded: text_helper
+INFO - 2026-02-05 00:04:04 --> Helper loaded: cookie_helper
+INFO - 2026-02-05 00:04:04 --> Helper loaded: logo_helper
+INFO - 2026-02-05 00:04:04 --> Database Driver Class Initialized
+INFO - 2026-02-05 00:04:04 --> Session: Class initialized using 'files' driver.
+INFO - 2026-02-05 00:04:04 --> Form Validation Class Initialized
+INFO - 2026-02-05 00:04:04 --> Controller Class Initialized
+INFO - 2026-02-05 00:04:04 --> Model "Estabelecimento_model" initialized
+INFO - 2026-02-05 00:04:04 --> Model "Configuracao_model" initialized
+INFO - 2026-02-05 00:04:04 --> Model "Bot_conversa_model" initialized
+INFO - 2026-02-05 00:04:04 --> WAHA Webhook RECEBIDO [est:12]: {"id":"evt_01kgnw3gv57dxskp26j5fxhv5h","timestamp":1770260644709,"event":"message.any","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_557588890006@c.us_3EB0E8C9ADC88C89CAB4F5","timestamp":1770260644,"from":"557588890006@c.us","fromMe":true,"source":"api","body":"âŒ *Agendamento Cancelado*\n\nOlÃ¡ Rafael Dias,\n\nSeu agendamento foi cancelado:\n\nðŸ“… *Data:* 05/02/2026\nâ° *HorÃ¡rio:* 09:00\nðŸ’‡ *ServiÃ§o:* Sobrancelhas\n\nðŸ“ *Motivo:* Pagamento nÃ£o realizado dentro do prazo\n\nPara reagendar, entre em contato conosco.\n\n_Mensagem automÃ¡tica - nÃ£o responda._","to":null,"participant":null,"hasMedia":false,"media":null,"ack":1,"location":null,"vCards":null,"ackName":"SERVER","replyTo":null,"_data":{"Info":{"Chat":"557588890006@s.whatsapp.net","Sender":"55759891
+INFO - 2026-02-05 00:04:04 --> WAHA Webhook PROCESSANDO [est:12] - Payload length: 2691
+DEBUG - 2026-02-05 00:04:04 --> WAHA Webhook [message.any]: {"id":"evt_01kgnw3gv57dxskp26j5fxhv5h","timestamp":1770260644709,"event":"message.any","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_557588890006@c.us_3EB0E8C9ADC88C89CAB4F5","timestamp":1770260644,"from":"557588890006@c.us","fromMe":true,"source":"api","body":"âŒ *Agendament
+DEBUG - 2026-02-05 00:04:04 --> WAHA Webhook: Evento nÃ£o tratado: message.any
+INFO - 2026-02-05 00:04:04 --> Final output sent to browser
+DEBUG - 2026-02-05 00:04:04 --> Total execution time: 0.0180
+INFO - 2026-02-05 00:04:05 --> Config Class Initialized
+INFO - 2026-02-05 00:04:05 --> Hooks Class Initialized
+DEBUG - 2026-02-05 00:04:05 --> UTF-8 Support Enabled
+INFO - 2026-02-05 00:04:05 --> Utf8 Class Initialized
+INFO - 2026-02-05 00:04:05 --> URI Class Initialized
+INFO - 2026-02-05 00:04:05 --> Router Class Initialized
+INFO - 2026-02-05 00:04:05 --> Output Class Initialized
+INFO - 2026-02-05 00:04:05 --> Security Class Initialized
+DEBUG - 2026-02-05 00:04:05 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-02-05 00:04:05 --> Input Class Initialized
+INFO - 2026-02-05 00:04:05 --> Language Class Initialized
+INFO - 2026-02-05 00:04:05 --> Loader Class Initialized
+INFO - 2026-02-05 00:04:05 --> Helper loaded: url_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: form_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: security_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: date_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: text_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: cookie_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: logo_helper
+INFO - 2026-02-05 00:04:05 --> Database Driver Class Initialized
+INFO - 2026-02-05 00:04:05 --> Session: Class initialized using 'files' driver.
+INFO - 2026-02-05 00:04:05 --> Form Validation Class Initialized
+INFO - 2026-02-05 00:04:05 --> Controller Class Initialized
+INFO - 2026-02-05 00:04:05 --> Model "Estabelecimento_model" initialized
+INFO - 2026-02-05 00:04:05 --> Model "Configuracao_model" initialized
+INFO - 2026-02-05 00:04:05 --> Model "Bot_conversa_model" initialized
+INFO - 2026-02-05 00:04:05 --> WAHA Webhook RECEBIDO [est:12]: {"id":"evt_01kgnw3h5nqsczrf8xb0jxfg8f","timestamp":1770260645045,"event":"message.ack","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_557588890006@c.us_3EB0E8C9ADC88C89CAB4F5","from":"557588890006@c.us","to":null,"participant":null,"fromMe":true,"ack":2,"ackName":"DEVICE","_data":{"Chat":"557588890006@s.whatsapp.net","Sender":"557588890006:53@s.whatsapp.net","IsFromMe":false,"IsGroup":false,"AddressingMode":"","SenderAlt":"","RecipientAlt":"","BroadcastListOwner":"","BroadcastRecipients":null,"MessageIDs":["3EB0E8C9ADC88C89CAB4F5"],"Timestamp":"2026-02-05T03:04:04Z","Type":"","MessageSender":""}},"environment":{"version":"2026.1.2","engine":"GOWS","tier":"PLUS","browser":null,"platform":"linux/x64"}}
+INFO - 2026-02-05 00:04:05 --> WAHA Webhook PROCESSANDO [est:12] - Payload length: 931
+DEBUG - 2026-02-05 00:04:05 --> WAHA Webhook [message.ack]: {"id":"evt_01kgnw3h5nqsczrf8xb0jxfg8f","timestamp":1770260645045,"event":"message.ack","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_557588890006@c.us_3EB0E8C9ADC88C89CAB4F5","from":"557588890006@c.us","to":null,"participant":null,"fromMe":true,"ack":2,"ackName":"DEVICE","_dat
+INFO - 2026-02-05 00:04:05 --> Final output sent to browser
+DEBUG - 2026-02-05 00:04:05 --> Total execution time: 0.0189
+INFO - 2026-02-05 00:04:05 --> Config Class Initialized
+INFO - 2026-02-05 00:04:05 --> Hooks Class Initialized
+DEBUG - 2026-02-05 00:04:05 --> UTF-8 Support Enabled
+INFO - 2026-02-05 00:04:05 --> Utf8 Class Initialized
+INFO - 2026-02-05 00:04:05 --> URI Class Initialized
+INFO - 2026-02-05 00:04:05 --> Router Class Initialized
+INFO - 2026-02-05 00:04:05 --> Output Class Initialized
+INFO - 2026-02-05 00:04:05 --> Security Class Initialized
+DEBUG - 2026-02-05 00:04:05 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-02-05 00:04:05 --> Input Class Initialized
+INFO - 2026-02-05 00:04:05 --> Language Class Initialized
+INFO - 2026-02-05 00:04:05 --> Loader Class Initialized
+INFO - 2026-02-05 00:04:05 --> Helper loaded: url_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: form_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: security_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: date_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: text_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: cookie_helper
+INFO - 2026-02-05 00:04:05 --> Helper loaded: logo_helper
+INFO - 2026-02-05 00:04:05 --> Database Driver Class Initialized
+INFO - 2026-02-05 00:04:05 --> Session: Class initialized using 'files' driver.
+INFO - 2026-02-05 00:04:05 --> Form Validation Class Initialized
+INFO - 2026-02-05 00:04:05 --> Controller Class Initialized
+INFO - 2026-02-05 00:04:05 --> Model "Estabelecimento_model" initialized
+INFO - 2026-02-05 00:04:05 --> Model "Configuracao_model" initialized
+INFO - 2026-02-05 00:04:05 --> Model "Bot_conversa_model" initialized
+INFO - 2026-02-05 00:04:05 --> WAHA Webhook RECEBIDO [est:12]: {"id":"evt_01kgnw3hvzb94f7rg7ecfxdrj9","timestamp":1770260645760,"event":"message.ack","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_277837240131686@lid_3EB0E8C9ADC88C89CAB4F5","from":"277837240131686@lid","to":null,"participant":null,"fromMe":true,"ack":2,"ackName":"DEVICE","_data":{"Chat":"277837240131686@lid","Sender":"277837240131686@lid","IsFromMe":false,"IsGroup":false,"AddressingMode":"","SenderAlt":"","RecipientAlt":"","BroadcastListOwner":"","BroadcastRecipients":null,"MessageIDs":["3EB0E8C9ADC88C89CAB4F5"],"Timestamp":"2026-02-05T03:04:05Z","Type":"","MessageSender":""}},"environment":{"version":"2026.1.2","engine":"GOWS","tier":"PLUS","browser":null,"platform":"linux/x64"}}
+INFO - 2026-02-05 00:04:05 --> WAHA Webhook PROCESSANDO [est:12] - Payload length: 916
+DEBUG - 2026-02-05 00:04:05 --> WAHA Webhook [message.ack]: {"id":"evt_01kgnw3hvzb94f7rg7ecfxdrj9","timestamp":1770260645760,"event":"message.ack","session":"est_12_barbearia_do_bruxo","metadata":{"tipo":"estabelecimento","estabelecimento_id":"12","nome":"Barbearia do Bruxo"},"me":{"id":"557598913210@c.us","pushName":"IAFila","lid":"56114150404182@lid","jid":"557598913210:7@s.whatsapp.net"},"payload":{"id":"true_277837240131686@lid_3EB0E8C9ADC88C89CAB4F5","from":"277837240131686@lid","to":null,"participant":null,"fromMe":true,"ack":2,"ackName":"DEVICE","
+INFO - 2026-02-05 00:04:05 --> Final output sent to browser
+DEBUG - 2026-02-05 00:04:05 --> Total execution time: 0.0229
+INFO - 2026-02-05 00:06:03 --> Config Class Initialized
+INFO - 2026-02-05 00:06:03 --> Hooks Class Initialized
+DEBUG - 2026-02-05 00:06:03 --> UTF-8 Support Enabled
+INFO - 2026-02-05 00:06:03 --> Utf8 Class Initialized
+INFO - 2026-02-05 00:06:03 --> URI Class Initialized
+INFO - 2026-02-05 00:06:03 --> Router Class Initialized
+INFO - 2026-02-05 00:06:03 --> Output Class Initialized
+INFO - 2026-02-05 00:06:03 --> Security Class Initialized
+DEBUG - 2026-02-05 00:06:03 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-02-05 00:06:03 --> Input Class Initialized
+INFO - 2026-02-05 00:06:03 --> Language Class Initialized
+INFO - 2026-02-05 00:06:03 --> Loader Class Initialized
+INFO - 2026-02-05 00:06:03 --> Helper loaded: url_helper
