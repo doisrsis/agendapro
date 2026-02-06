@@ -140,6 +140,7 @@ class Estabelecimento_model extends CI_Model {
         if (isset($data['facebook'])) $update_data['facebook'] = $data['facebook'];
         if (isset($data['website'])) $update_data['website'] = $data['website'];
         if (isset($data['intervalo_agendamento'])) $update_data['intervalo_agendamento'] = $data['intervalo_agendamento'];
+        if (isset($data['usar_intervalo_fixo'])) $update_data['usar_intervalo_fixo'] = $data['usar_intervalo_fixo'];
         if (isset($data['dias_antecedencia_agenda'])) $update_data['dias_antecedencia_agenda'] = $data['dias_antecedencia_agenda'];
 
         // Campos de pagamento de agendamentos
@@ -204,6 +205,7 @@ class Estabelecimento_model extends CI_Model {
         // Cancelamento automático (sistema antigo)
         if (isset($data['cancelar_nao_confirmados'])) $update_data['cancelar_nao_confirmados'] = $data['cancelar_nao_confirmados'];
         if (isset($data['cancelar_nao_confirmados_horas'])) $update_data['cancelar_nao_confirmados_horas'] = $data['cancelar_nao_confirmados_horas'];
+        if (isset($data['confirmacao_automatica'])) $update_data['confirmacao_automatica'] = $data['confirmacao_automatica'];
 
         // Campos de notificações para profissionais
         if (isset($data['notif_prof_novo_agendamento'])) $update_data['notif_prof_novo_agendamento'] = $data['notif_prof_novo_agendamento'];

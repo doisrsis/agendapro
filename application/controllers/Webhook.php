@@ -46,6 +46,26 @@ class Webhook extends CI_Controller {
 
             if ($tipo == 'payment' || $tipo == 'payment.updated') {
                 $payment_data = $this->mercadopago_lib->processar_webhook($data);
+
+                // RETRY LOGIC: Se falhou (ex: 404 da API), tentar novamente após breve delay
+                if (!$payment_data && ($data['action'] ?? '') == 'payment.updated') {
+                     $id_retry = $data['data']['id'] ?? $data['id'] ?? null;
+                     if ($id_retry) {
+                        log_message('info', 'Webhook MP: ⏳ Pagamento não encontrado na primeira tentativa. Aguardando 2s para retry... ID: ' . $id_retry);
+                        sleep(2); // Espera propagação da API
+
+                        // Tentar consulta direta
+                        $consulta_retry = $this->mercadopago_lib->get_pagamento($id_retry);
+                        if ($consulta_retry && $consulta_retry['status'] == 200 && !empty($consulta_retry['response']['status'])) {
+                             $payment_data = $consulta_retry['response'];
+                             log_message('info', 'Webhook MP: ✅ Recuperação com sucesso no Retry! Status: ' . $payment_data['status']);
+                        } else {
+                             log_message('error', 'Webhook MP: ❌ Falha também no Retry para ID ' . $id_retry);
+                             // Opcional: Retornar 500 aqui forçaria o MP a tentar de novo mais tarde.
+                             // http_response_code(500); return;
+                        }
+                     }
+                }
             } elseif ($tipo == 'unknown' || !empty($data['data']['id']) || !empty($data['id'])) {
                 // Tentativa de recuperação robusta para tipos desconhecidos ou não mapeados
                 $id_pagamento = $data['data']['id'] ?? $data['id'] ?? null;

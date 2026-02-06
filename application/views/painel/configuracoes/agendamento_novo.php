@@ -142,7 +142,7 @@ $pagamento_ativo = ($estabelecimento->agendamento_requer_pagamento ?? 'nao') != 
 
                         <div class="mb-3">
                             <label class="form-check">
-                                <input type="checkbox" class="form-check-input" name="confirmacao_automatica"
+                                <input type="checkbox" class="form-check-input" name="confirmacao_automatica" value="1"
                                        <?= ($estabelecimento->confirmacao_automatica ?? 0) ? 'checked' : '' ?>>
                                 <span class="form-check-label">Confirmação Automática de Agendamentos</span>
                             </label>
@@ -713,6 +713,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('cancelar_nao_confirmados').addEventListener('change', function() {
         document.getElementById('cancelamento_opcoes').style.display = this.checked ? 'block' : 'none';
     });
+
+    // Toggle Intervalo Fixo
+    const toggleIntervalo = document.getElementById('usar_intervalo_fixo');
+    const campoIntervalo = document.getElementById('campo-intervalo');
+
+    function atualizaIntervalo() {
+        campoIntervalo.style.display = toggleIntervalo.checked ? 'block' : 'none';
+    }
+
+    toggleIntervalo.addEventListener('change', atualizaIntervalo);
+    atualizaIntervalo(); // Executar ao carregar
 });
 </script>
 

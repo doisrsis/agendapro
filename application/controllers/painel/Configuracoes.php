@@ -184,6 +184,8 @@ class Configuracoes extends CI_Controller {
             'enviar_lembrete_pre_atendimento' => (int)$this->input->post('enviar_lembrete_pre_atendimento'),
             'lembrete_minutos_antes' => $this->input->post('lembrete_minutos_antes') ?? 60,
             'lembrete_antecedencia_chegada' => $this->input->post('lembrete_antecedencia_chegada') ?? 10,
+            // Confirmação Automática
+            'confirmacao_automatica' => (int)$this->input->post('confirmacao_automatica'),
             // Cancelamento automático (sistema antigo)
             'cancelar_nao_confirmados' => (int)$this->input->post('cancelar_nao_confirmados'),
             'cancelar_nao_confirmados_horas' => $this->input->post('cancelar_nao_confirmados_horas') ?? 2

@@ -467,6 +467,9 @@ class Agendamentos extends Painel_Controller {
             'confirmado_em' => date('Y-m-d H:i:s')
         ])) {
             $this->session->set_flashdata('sucesso', 'Agendamento confirmado com sucesso!');
+
+            // Enviar notificação WhatsApp
+            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'confirmacao');
         } else {
             $this->session->set_flashdata('erro', 'Erro ao confirmar agendamento.');
         }
@@ -509,6 +512,9 @@ class Agendamentos extends Painel_Controller {
 
         if ($this->Agendamento_model->update($id, $dados_atualizacao)) {
             log_message('info', 'Pagamento PIX Manual confirmado - agendamento_id=' . $id);
+
+            // Enviar notificação WhatsApp
+            $this->Agendamento_model->enviar_notificacao_whatsapp($id, 'confirmacao');
 
             $this->session->set_flashdata('sucesso', 'Pagamento PIX confirmado com sucesso!');
         } else {
