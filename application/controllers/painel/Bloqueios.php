@@ -115,6 +115,19 @@ class Bloqueios extends Painel_Controller {
                     $dados['hora_fim'] = $this->input->post('hora_fim');
                 }
 
+                // Campos de Recorrência
+                $recorrencia = $this->input->post('recorrencia');
+                $dados['recorrencia'] = $recorrencia ?: 'nao';
+
+                if ($recorrencia && $recorrencia != 'nao') {
+                    $dados['data_limite'] = $this->input->post('data_limite') ?: null;
+
+                    if ($recorrencia == 'semanal') {
+                        // Calcula dia da semana baseado na data de início
+                        $dados['dia_semana'] = date('w', strtotime($dados['data_inicio']));
+                    }
+                }
+
                 if ($this->Bloqueio_model->create($dados)) {
                     $this->session->set_flashdata('sucesso', 'Bloqueio criado com sucesso!');
                     redirect('painel/bloqueios');
@@ -190,6 +203,24 @@ class Bloqueios extends Painel_Controller {
                     $dados['data_fim'] = null;
                     $dados['hora_inicio'] = null;
                     $dados['hora_fim'] = null;
+                }
+
+                // Campos de Recorrência
+                $recorrencia = $this->input->post('recorrencia');
+                $dados['recorrencia'] = $recorrencia ?: 'nao';
+
+                if ($recorrencia && $recorrencia != 'nao') {
+                    $dados['data_limite'] = $this->input->post('data_limite') ?: null;
+
+                    if ($recorrencia == 'semanal') {
+                        $dados['dia_semana'] = date('w', strtotime($dados['data_inicio']));
+                    } else {
+                        $dados['dia_semana'] = null;
+                    }
+                } else {
+                    $dados['recorrencia'] = 'nao';
+                    $dados['dia_semana'] = null;
+                    $dados['data_limite'] = null;
                 }
 
                 if ($this->Bloqueio_model->update($id, $dados)) {

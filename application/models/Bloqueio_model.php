@@ -35,24 +35,60 @@ class Bloqueio_model extends CI_Model {
             $this->db->where('p.estabelecimento_id', $filtros['estabelecimento_id']);
         }
 
-        if (!empty($filtros['data_inicio'])) {
-            // Incluir bloqueios que afetam o período solicitado
-            $this->db->group_start();
-            // Bloqueios com data_fim preenchida
-            $this->db->group_start();
-            $this->db->where('b.data_fim IS NOT NULL', null, false);
-            $this->db->where('b.data_fim >=', $filtros['data_inicio']);
-            $this->db->group_end();
-            // OU bloqueios de dia (data_fim NULL) dentro do período
-            $this->db->or_group_start();
-            $this->db->where('b.data_fim IS NULL', null, false);
-            $this->db->where('b.data_inicio >=', $filtros['data_inicio']);
-            $this->db->group_end();
-            $this->db->group_end();
-        }
+        // Filtro de período unificado para suportar recorrência
+        if (!empty($filtros['data_inicio']) || !empty($filtros['data_fim'])) {
+            $filter_start = $filtros['data_inicio'] ?? '1000-01-01';
+            $filter_end = $filtros['data_fim'] ?? '9999-12-31';
 
-        if (!empty($filtros['data_fim'])) {
-            $this->db->where('b.data_inicio <=', $filtros['data_fim']);
+            $this->db->group_start();
+
+            // 1. Bloqueios Normais ou Recorrentes desativados
+            $this->db->group_start();
+            $this->db->where('b.recorrencia', 'nao');
+            // Lógica de sobreposição de períodos
+            // (StartA <= EndB) AND (EndA >= StartB)
+            $this->db->where('b.data_inicio <=', $filter_end);
+            $this->db->group_start();
+                $this->db->where('b.data_fim IS NULL', null, false); // Dia único
+                $this->db->or_where('b.data_fim >=', $filter_start); // Período
+            $this->db->group_end();
+            // Para dia único (data_fim NULL), data_inicio deve ser >= filter_start também?
+            // Se data_fim é NULL, intervalo é [data_inicio, data_inicio].
+            // Então data_inicio >= filter_start (já coberto por EndA >= StartB se EndA=StartA)
+            // Wait, se data_fim NULL:
+            // [data_inicio, data_inicio] overlaps [filter_start, filter_end]
+            // data_inicio <= filter_end AND data_inicio >= filter_start
+            // O código acima faz: data_inicio <= filter_end AND (TRUE OR ...)
+            // Faltou data_inicio >= filter_start especifíco para o caso NULL?
+            // Não, se data_fim >= filter_start cobre o caso periodo.
+            // Para dia único, data_fim é NULL. Então a condição OR segunda falha. A primeira passa.
+            // Mas precisamos garantir que data_inicio >= filter_start para dia único?
+            // Se eu tenho bloqueio 2024-01-01 (Null). Filter 2025.
+            // data_inicio (2024) <= filter_end (2025). OK.
+            // data_fim IS NULL. OK.
+            // Result: Retorna bloqueio de 2024. ERRADO.
+            // Preciso corrigir a lógica para dia único normal.
+
+            // CORREÇÃO Lógica de Dia Único:
+            $this->db->or_group_start();
+                $this->db->where('b.recorrencia', 'nao');
+                $this->db->where('b.data_fim IS NULL', null, false);
+                $this->db->where('b.data_inicio >=', $filter_start);
+                $this->db->where('b.data_inicio <=', $filter_end);
+            $this->db->group_end();
+            $this->db->group_end();
+
+            // 2. Bloqueios Recorrentes
+            $this->db->or_group_start();
+                $this->db->where('b.recorrencia !=', 'nao');
+                $this->db->where('b.data_inicio <=', $filter_end); // Deve ter iniciado antes do fim do filtro
+                $this->db->group_start();
+                    $this->db->where('b.data_limite IS NULL', null, false);
+                    $this->db->or_where('b.data_limite >=', $filter_start); // Limite deve ser depois do inicio do filtro
+                $this->db->group_end();
+            $this->db->group_end();
+
+            $this->db->group_end();
         }
 
         if (!empty($filtros['tipo'])) {
@@ -142,21 +178,57 @@ class Bloqueio_model extends CI_Model {
         // Verificar bloqueios que afetam esta data
         $this->db->group_start();
 
-        // Bloqueio de dia específico (data_fim é NULL ou igual a data_inicio)
+        // 1. Bloqueios Normais (sem recorrência) ou Recorrentes com data específica
         $this->db->group_start();
-        $this->db->where('data_inicio', $data);
-        $this->db->group_start();
-        $this->db->where('data_fim IS NULL', null, false);
-        $this->db->or_where('data_fim', $data);
-        $this->db->group_end();
-        $this->db->group_end();
 
-        // OU bloqueio de período (data está entre data_inicio e data_fim)
-        $this->db->or_group_start();
-        $this->db->where('data_inicio <=', $data);
-        $this->db->where('data_fim >=', $data);
-        $this->db->where('data_fim IS NOT NULL', null, false);
-        $this->db->group_end();
+            // Bloqueio de dia específico (data_fim é NULL ou igual a data_inicio)
+            $this->db->group_start();
+            $this->db->where('data_inicio', $data);
+            $this->db->where('recorrencia', 'nao'); // Apenas não recorrentes aqui
+            $this->db->group_start();
+            $this->db->where('data_fim IS NULL', null, false);
+            $this->db->or_where('data_fim', $data);
+            $this->db->group_end();
+            $this->db->group_end();
+
+            // OU bloqueio de período
+            $this->db->or_group_start();
+            $this->db->where('recorrencia', 'nao'); // Apenas não recorrentes
+            $this->db->where('data_inicio <=', $data);
+            $this->db->where('data_fim >=', $data);
+            $this->db->where('data_fim IS NOT NULL', null, false);
+            $this->db->group_end();
+
+            // OU Bloqueios Recorrentes
+            $this->db->or_group_start();
+                // Deve ter começado antes ou na data atual
+                $this->db->where('data_inicio <=', $data);
+
+                // Recorrência deve ser diferente de 'nao'
+                $this->db->where('recorrencia !=', 'nao');
+
+                // Não pode ter expirado (se tiver data limite)
+                $this->db->group_start();
+                $this->db->where('data_limite IS NULL', null, false);
+                $this->db->or_where('data_limite >=', $data);
+                $this->db->group_end();
+
+                // Verificar tipo de recorrência
+                $this->db->group_start();
+                    // Diário
+                    $this->db->where('recorrencia', 'diario');
+
+                    // OU Semanal (dia da semana coincide)
+                    $this->db->or_group_start();
+                    $this->db->where('recorrencia', 'semanal');
+                    // date('w') retorna 0 (dom) a 6 (sab), igual ao nosso BD
+                    $dia_semana_atual = date('w', strtotime($data));
+                    $this->db->where('dia_semana', $dia_semana_atual);
+                    $this->db->group_end();
+                $this->db->group_end();
+            $this->db->group_end();
+
+        $this->db->group_end(); // End main checks
 
         $this->db->group_end();
 

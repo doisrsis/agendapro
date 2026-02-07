@@ -1813,6 +1813,7 @@ class Webhook_waha extends CI_Controller {
      */
     private function obter_horarios_disponiveis($estabelecimento, $profissional_id, $data, $duracao_servico, $excluir_agendamento_id = null) {
         $this->load->model('Horario_estabelecimento_model');
+        $this->load->model('Bloqueio_model');
 
         log_message('info', "Bot FILTRO INICIO: data={$data}, profissional_id={$profissional_id}, duracao={$duracao_servico}, excluir_id=" . ($excluir_agendamento_id ?? 'NULL'));
 
@@ -1825,7 +1826,18 @@ class Webhook_waha extends CI_Controller {
         }
 
         $horarios = [];
-        $intervalo = $estabelecimento->intervalo_agendamento ?? 30;
+
+        // CORREÇÃO: Lógica Híbrida (Igual ao Agendamentos.php do Painel)
+        // Se usar_intervalo_fixo for true (1), usa o intervalo configurado.
+        // Se for false (0), usa a DURAÇÃO DO SERVIÇO como intervalo (Modo Dinâmico / Painel).
+        $usar_intervalo_fixo = $estabelecimento->usar_intervalo_fixo ?? 1;
+
+        if ($usar_intervalo_fixo) {
+            $intervalo = $estabelecimento->intervalo_agendamento ?? 30;
+        } else {
+            // No painel, se não é fixo, o intervalo é a própria duração do serviço
+            $intervalo = $duracao_servico;
+        }
 
         // Buscar agendamentos existentes
         $agendamentos_existentes = $this->Agendamento_model->get_by_profissional_data($profissional_id, $data);
@@ -1877,6 +1889,17 @@ class Webhook_waha extends CI_Controller {
                     $no_almoco = true;
                     log_message('debug', "Bot: horario={$hora_str} bloqueado por almoço (almoco: " . date('H:i', $almoco_inicio) . "-" . date('H:i', $almoco_fim) . ", servico_fim: " . date('H:i', $slot_fim_ts) . ")");
                 }
+            }
+
+            // Verificar se há bloqueios (feriados, folgas, etc)
+            // CORREÇÃO: Usar Bloqueio_model para verificar recorrência e bloqueios manuais
+            $hora_inicio_check = date('H:i:s', $slot_inicio_ts);
+            $hora_fim_check = date('H:i:s', $slot_fim_ts);
+
+            if ($this->Bloqueio_model->verificar_bloqueio($profissional_id, $data, $hora_inicio_check, $hora_fim_check)) {
+                log_message('debug', "Bot: horario={$hora_str} ignorado por BLOQUEIO MANUAL/RECORRENTE");
+                $hora_atual = strtotime("+{$intervalo} minutes", $hora_atual);
+                continue;
             }
 
             // Verificar se não conflita com agendamentos existentes

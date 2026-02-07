@@ -130,6 +130,22 @@
                                 </div>
                             </div>
 
+                            <div class="mb-3" id="campo-recorrencia-container">
+                                <label class="form-label">Repetição</label>
+                                <select class="form-select" name="recorrencia" id="recorrencia">
+                                    <option value="nao">Não repetir</option>
+                                    <option value="diario" <?= (isset($bloqueio) && $bloqueio->recorrencia == 'diario') ? 'selected' : '' ?>>Diariamente</option>
+                                    <option value="semanal" <?= (isset($bloqueio) && $bloqueio->recorrencia == 'semanal') ? 'selected' : '' ?>>Semanalmente</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3" id="campo-data-limite" style="display:none;">
+                                <label class="form-label">Data Limite da Repetição</label>
+                                <input type="date" class="form-control" name="data_limite"
+                                       value="<?= isset($bloqueio) ? $bloqueio->data_limite : '' ?>">
+                                <small class="text-muted">Até quando este bloqueio deve se repetir? (Deixe em branco para indefinido)</small>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Motivo</label>
                                 <textarea class="form-control" name="motivo" rows="3"
@@ -237,7 +253,35 @@ document.addEventListener('DOMContentLoaded', function() {
             campoDataFim.style.display = 'none';
             campoHorarios.style.display = 'none';
         }
+
+
+        // Controle de Recorrência
+        const campoRecorrencia = document.getElementById('campo-recorrencia-container');
+        const selectRecorrencia = document.getElementById('recorrencia');
+        const campoDataLimite = document.getElementById('campo-data-limite');
+
+        if (this.value === 'periodo') {
+            campoRecorrencia.style.display = 'none';
+            selectRecorrencia.value = 'nao';
+            campoDataLimite.style.display = 'none';
+        } else {
+            campoRecorrencia.style.display = 'block';
+            toggleDataLimite();
+        }
     });
+
+    const selectRecorrencia = document.getElementById('recorrencia');
+    const campoDataLimite = document.getElementById('campo-data-limite');
+
+    function toggleDataLimite() {
+        if (selectRecorrencia.value !== 'nao') {
+            campoDataLimite.style.display = 'block';
+        } else {
+            campoDataLimite.style.display = 'none';
+        }
+    }
+
+    selectRecorrencia.addEventListener('change', toggleDataLimite);
 
     // Inicializar estado correto ao carregar (para edição)
     <?php if (isset($bloqueio)): ?>
@@ -257,5 +301,12 @@ document.addEventListener('DOMContentLoaded', function() {
         campoHorarios.style.display = 'block';
     }
     <?php endif; ?>
+
+    // Inicializar estado da recorrência
+    const selectTipo = document.getElementById('tipo_bloqueio');
+    if (selectTipo.value === 'periodo') {
+        document.getElementById('campo-recorrencia-container').style.display = 'none';
+    }
+    toggleDataLimite();
 });
 </script>
