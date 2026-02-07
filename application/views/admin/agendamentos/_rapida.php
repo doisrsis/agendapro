@@ -108,11 +108,14 @@
                     <div class="mb-2">
                         <i class="ti ti-scissors text-muted me-2"></i>
                         <strong><?= $ag->servico_nome ?></strong>
-                        <span class="text-muted small">(<?= $ag->servico_duracao ?? 30 ?> min)</span>
+                        <?php
+                        $duracao_min = (strtotime($ag->hora_fim) - strtotime($ag->hora_inicio)) / 60;
+                        ?>
+                        <span class="text-muted small">(<?= number_format($duracao_min, 0) ?> min)</span>
                     </div>
 
                     <!-- Status -->
-                    <div class="mb-2">
+                    <div class="mb-2"><strong>Status:</strong>
                         <?php
                         $badge_class = 'bg-secondary';
                         $status_texto = $ag->status;
@@ -153,7 +156,7 @@
                     </div>
 
                     <!-- Pagamento -->
-                    <div>
+                    <div><strong>Pagamento:</strong>
                         <?php if (!empty($ag->forma_pagamento) && $ag->forma_pagamento != 'nao_definido'): ?>
                             <?php if ($ag->forma_pagamento == 'pix'): ?>
                                 <?php if ($ag->pagamento_status == 'pago'): ?>
