@@ -331,12 +331,13 @@ class Agendamentos extends Agenda_Controller {
         // ✅ LÓGICA HÍBRIDA: Determinar intervalo
         if ($usar_intervalo_fixo) {
             // Modo 1: Intervalo Fixo Configurável
-            $intervalo = $estabelecimento_config->intervalo_agendamento ?? 30;
+            // Alterado default de 30 para 15 para permitir encaixes melhores se não configurado
+            $intervalo = $estabelecimento_config->intervalo_agendamento ?? 15;
         } else {
             // Modo 2: Intervalo Dinâmico (Busca inteligente)
-            // Fix: Usar intervalo pequeno (30 min) para encontrar encaixes
+            // Fix: Usar intervalo pequeno (15 min) para encontrar encaixes
             // mesmo que a duração do serviço seja maior.
-            $intervalo = 30;
+            $intervalo = 15;
         }
 
         // Calcular horário mínimo permitido
