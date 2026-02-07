@@ -333,8 +333,10 @@ class Agendamentos extends Agenda_Controller {
             // Modo 1: Intervalo Fixo Configurável
             $intervalo = $estabelecimento_config->intervalo_agendamento ?? 30;
         } else {
-            // Modo 2: Intervalo Dinâmico (baseado na duração do serviço)
-            $intervalo = $servico->duracao;
+            // Modo 2: Intervalo Dinâmico (Busca inteligente)
+            // Fix: Usar intervalo pequeno (30 min) para encontrar encaixes
+            // mesmo que a duração do serviço seja maior.
+            $intervalo = 30;
         }
 
         // Calcular horário mínimo permitido
