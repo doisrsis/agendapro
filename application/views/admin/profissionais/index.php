@@ -96,7 +96,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    Profissionais Cadastrados: <span class="badge bg-blue ms-2"><?= count($profissionais) ?></span>
+                    Profissionais Cadastrados: <span class="badge bg-blue ms-2"><?= $total ?></span>
                 </h3>
             </div>
             <div class="table-responsive">
@@ -166,6 +166,12 @@
                     </tbody>
                 </table>
             </div>
+            <?php if (isset($pagination) || isset($total)): ?>
+            <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-muted">Exibindo <span><?= count($profissionais) ?></span> de <span><?= $total ?></span> registros</p>
+                <?= $pagination ?? '' ?>
+            </div>
+            <?php endif; ?>
         </div>
 
     </div>

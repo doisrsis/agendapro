@@ -57,10 +57,45 @@ class Agendamentos extends Painel_Controller {
             $filtros['busca'] = $this->input->get('busca');
         }
 
-        $data['agendamentos'] = $this->Agendamento_model->get_all($filtros);
-        $data['total'] = count($data['agendamentos']);
+        // Configuração da Paginação
+        $this->load->library('pagination');
+        $config['base_url'] = base_url('painel/agendamentos/index');
+        $config['total_rows'] = $this->Agendamento_model->count_all($filtros);
+        $config['per_page'] = 10;
+        $config['page_query_string'] = TRUE;
+        $config['query_string_segment'] = 'page';
+        $config['reuse_query_string'] = TRUE;
+
+        // Estilização do Bootstrap 5 / Tabler
+        $config['full_tag_open'] = '<ul class="pagination m-0 ms-auto">';
+        $config['full_tag_close'] = '</ul>';
+        $config['first_link'] = '<i class="ti ti-chevrons-left"></i>';
+        $config['first_tag_open'] = '<li class="page-item">';
+        $config['first_tag_close'] = '</li>';
+        $config['last_link'] = '<i class="ti ti-chevrons-right"></i>';
+        $config['last_tag_open'] = '<li class="page-item">';
+        $config['last_tag_close'] = '</li>';
+        $config['next_link'] = '<i class="ti ti-chevron-right"></i>';
+        $config['next_tag_open'] = '<li class="page-item">';
+        $config['next_tag_close'] = '</li>';
+        $config['prev_link'] = '<i class="ti ti-chevron-left"></i>';
+        $config['prev_tag_open'] = '<li class="page-item">';
+        $config['prev_tag_close'] = '</li>';
+        $config['cur_tag_open'] = '<li class="page-item active"><a class="page-link" href="#">';
+        $config['cur_tag_close'] = '</a></li>';
+        $config['num_tag_open'] = '<li class="page-item">';
+        $config['num_tag_close'] = '</li>';
+        $config['attributes'] = array('class' => 'page-link');
+
+        $page = $this->input->get('page') ? (int)$this->input->get('page') : 0;
+        $config['cur_page'] = $page;
+
+        $this->pagination->initialize($config);
+
+        $data['agendamentos'] = $this->Agendamento_model->get_all($filtros, $config['per_page'], $page);
+        $data['total'] = $config['total_rows'];
         $data['filtros'] = $filtros;
-        $data['pagination'] = '';
+        $data['pagination'] = $this->pagination->create_links();
         $data['profissionais'] = $this->Profissional_model->get_by_estabelecimento($this->estabelecimento_id);
         $data['estatisticas'] = $this->get_estatisticas();
 

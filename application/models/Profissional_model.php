@@ -16,10 +16,14 @@ class Profissional_model extends CI_Model {
     /**
      * Buscar todos os profissionais
      */
-    public function get_all($filtros = []) {
+    public function get_all($filtros = [], $limit = null, $offset = null) {
         $this->db->select('p.*, e.nome as estabelecimento_nome');
         $this->db->from($this->table . ' p');
         $this->db->join('estabelecimentos e', 'e.id = p.estabelecimento_id', 'left');
+
+        if (!empty($limit)) {
+            $this->db->limit($limit, $offset);
+        }
 
         // Filtros
         if (!empty($filtros['estabelecimento_id'])) {
@@ -42,6 +46,31 @@ class Profissional_model extends CI_Model {
 
         $query = $this->db->get();
         return $query->result();
+    }
+
+    /**
+     * Contar total de profissionais (para paginação)
+     */
+    public function count_all($filtros = []) {
+        $this->db->from($this->table . ' p');
+
+        if (!empty($filtros['estabelecimento_id'])) {
+            $this->db->where('p.estabelecimento_id', $filtros['estabelecimento_id']);
+        }
+
+        if (!empty($filtros['status'])) {
+            $this->db->where('p.status', $filtros['status']);
+        }
+
+        if (!empty($filtros['busca'])) {
+            $this->db->group_start();
+            $this->db->like('p.nome', $filtros['busca']);
+            $this->db->or_like('p.email', $filtros['busca']);
+            $this->db->or_like('p.whatsapp', $filtros['busca']);
+            $this->db->group_end();
+        }
+
+        return $this->db->count_all_results();
     }
 
     /**
@@ -225,8 +254,8 @@ class Profissional_model extends CI_Model {
      * @param int $estabelecimento_id
      * @return array
      */
-    public function get_by_estabelecimento($estabelecimento_id) {
-        return $this->get_all(['estabelecimento_id' => $estabelecimento_id]);
+    public function get_by_estabelecimento($estabelecimento_id, $limit = null, $offset = null) {
+        return $this->get_all(['estabelecimento_id' => $estabelecimento_id], $limit, $offset);
     }
 
     /**

@@ -64,6 +64,23 @@ class Dashboard extends CI_Controller {
 
         $data['agendamentos_mes'] = $this->Agendamento_model->count_mes_atual($this->estabelecimento_id);
 
+        // Faturamento
+        $data['faturamento_dia'] = $this->Agendamento_model->get_faturamento_dia($this->estabelecimento_id);
+        $data['faturamento_mes'] = $this->Agendamento_model->get_faturamento_mes($this->estabelecimento_id);
+
+        // Novos clientes no mês
+        // TODO: Implementar filtro por data de criação quando tabela tiver campo criado_em
+        // Por enquanto, mostra total geral ou implementa lógica se campo existir
+        $data['novos_clientes_mes'] = $this->Cliente_model->count([
+            'estabelecimento_id' => $this->estabelecimento_id,
+            // 'criado_em_mes' => date('m'), // Futura implementação
+            // 'criado_em_ano' => date('Y')
+        ]);
+
+        // Gráficos
+        $data['grafico_faturamento'] = $this->Agendamento_model->get_historico_faturamento($this->estabelecimento_id, 7);
+        $data['grafico_status'] = $this->Agendamento_model->get_distribuicao_status($this->estabelecimento_id);
+
         // Próximos agendamentos (hoje)
         $data['proximos_agendamentos'] = $this->Agendamento_model->get_all([
             'estabelecimento_id' => $this->estabelecimento_id,

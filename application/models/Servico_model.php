@@ -16,11 +16,14 @@ class Servico_model extends CI_Model {
     /**
      * Buscar todos os serviços
      */
-    public function get_all($filtros = []) {
+    public function get_all($filtros = [], $limit = null, $offset = null) {
         $this->db->select('s.*, e.nome as estabelecimento_nome');
         $this->db->from($this->table . ' s');
         $this->db->join('estabelecimentos e', 'e.id = s.estabelecimento_id', 'left');
 
+        if (!empty($limit)) {
+            $this->db->limit($limit, $offset);
+        }
         if (!empty($filtros['estabelecimento_id'])) {
             $this->db->where('s.estabelecimento_id', $filtros['estabelecimento_id']);
         }
@@ -37,6 +40,27 @@ class Servico_model extends CI_Model {
 
         $query = $this->db->get();
         return $query->result();
+    }
+
+    /**
+     * Contar total de serviços (para paginação)
+     */
+    public function count_all($filtros = []) {
+        $this->db->from($this->table . ' s');
+
+        if (!empty($filtros['estabelecimento_id'])) {
+            $this->db->where('s.estabelecimento_id', $filtros['estabelecimento_id']);
+        }
+
+        if (!empty($filtros['status'])) {
+            $this->db->where('s.status', $filtros['status']);
+        }
+
+        if (!empty($filtros['busca'])) {
+            $this->db->like('s.nome', $filtros['busca']);
+        }
+
+        return $this->db->count_all_results();
     }
 
     /**

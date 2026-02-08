@@ -16,9 +16,13 @@ class Estabelecimento_model extends CI_Model {
     /**
      * Buscar todos os estabelecimentos
      */
-    public function get_all($filtros = []) {
+    public function get_all($filtros = [], $limit = null, $offset = null) {
         $this->db->select('*');
         $this->db->from($this->table);
+
+        if (!empty($limit)) {
+            $this->db->limit($limit, $offset);
+        }
 
         // Filtros
         if (!empty($filtros['status'])) {
@@ -41,6 +45,31 @@ class Estabelecimento_model extends CI_Model {
 
         $query = $this->db->get();
         return $query->result();
+    }
+
+    /**
+     * Contar total de estabelecimentos
+     */
+    public function count_all($filtros = []) {
+        $this->db->from($this->table);
+
+        if (!empty($filtros['status'])) {
+            $this->db->where('status', $filtros['status']);
+        }
+
+        if (!empty($filtros['plano'])) {
+            $this->db->where('plano', $filtros['plano']);
+        }
+
+        if (!empty($filtros['busca'])) {
+            $this->db->group_start();
+            $this->db->like('nome', $filtros['busca']);
+            $this->db->or_like('cnpj_cpf', $filtros['busca']);
+            $this->db->or_like('email', $filtros['busca']);
+            $this->db->group_end();
+        }
+
+        return $this->db->count_all_results();
     }
 
     /**

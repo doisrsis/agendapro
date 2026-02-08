@@ -1,0 +1,23 @@
+# Lista de Cron Jobs para Produção
+# Domínio: https://gestor.zappagenda.com.br
+#
+# Copie e cole os comandos abaixo no gerenciador de Cron Jobs do seu painel de hospedagem (cPanel/Plesk/etc).
+# Certifique-se de remover os antigos apontamentos para iafila.doisr.com.br
+
+# 1. Verificar Pagamentos (A cada 2 minutos)
+*/2 * * * * curl -s "https://gestor.zappagenda.com.br/cron/verificar_pagamentos?token=b781f3e57f4e4c4ba3a67df819050e6e" > /dev/null
+
+# 2. Limpar Conversas Antigas do Bot (Diário às 03:00)
+0 3 * * * curl -s "https://gestor.zappagenda.com.br/cron/limpar_conversas_bot?token=b781f3e57f4e4c4ba3a67df819050e6e" > /dev/null 2>&1
+
+# 3. Enviar Confirmações de Agendamento (A cada 15 minutos)
+*/15 * * * * curl -s "https://gestor.zappagenda.com.br/cron/enviar_confirmacoes?token=b781f3e57f4e4c4ba3a67df819050e6e" > /dev/null 2>&1
+
+# 4. Enviar Lembretes de Agendamento (A cada 15 minutos)
+*/15 * * * * curl -s "https://gestor.zappagenda.com.br/cron/enviar_lembretes?token=b781f3e57f4e4c4ba3a67df819050e6e" > /dev/null 2>&1
+
+# 5. Cancelar Agendamentos Não Confirmados (A cada 30 minutos)
+*/30 * * * * curl -s "https://gestor.zappagenda.com.br/cron/cancelar_nao_confirmados?token=b781f3e57f4e4c4ba3a67df819050e6e" > /dev/null 2>&1
+
+# 6. Enviar Resumos Diários e Relatórios (A cada 15 minutos ou horário específico conforme configuração interna)
+*/15 * * * * curl -s "https://gestor.zappagenda.com.br/cron/enviar_resumos_diarios?token=b781f3e57f4e4c4ba3a67df819050e6e" > /dev/null 2>&1

@@ -88,7 +88,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    Serviços Cadastrados: <span class="badge bg-blue ms-2"><?= count($servicos) ?></span>
+                    Serviços Cadastrados: <span class="badge bg-blue ms-2"><?= $total ?></span>
                 </h3>
             </div>
             <div class="table-responsive">
@@ -117,19 +117,12 @@
                             <td>
                                 <div><?= $serv->nome ?></div>
                                 <?php if ($serv->descricao): ?>
-                                <div class="text-muted small"><?= substr($serv->descricao, 0, 50) ?><?= strlen($serv->descricao) > 50 ? '...' : '' ?></div>
+                                <div class="text-muted small"><?= substr($serv->descricao, 0, 50) . (strlen($serv->descricao) > 50 ? '...' : '') ?></div>
                                 <?php endif; ?>
                             </td>
                             <td><?= $serv->estabelecimento_nome ?></td>
-                            <td>
-                                <span class="badge bg-azure-lt">
-                                    <i class="ti ti-clock me-1"></i>
-                                    <?= $serv->duracao ?> min
-                                </span>
-                            </td>
-                            <td>
-                                <strong>R$ <?= number_format($serv->preco, 2, ',', '.') ?></strong>
-                            </td>
+                            <td><?= $serv->duracao ?> min</td>
+                            <td>R$ <?= number_format($serv->preco, 2, ',', '.') ?></td>
                             <td>
                                 <span class="badge <?= $serv->status == 'ativo' ? 'bg-success' : 'bg-secondary' ?>">
                                     <?= ucfirst($serv->status) ?>
@@ -156,6 +149,12 @@
                     </tbody>
                 </table>
             </div>
+            <?php if (isset($pagination) || isset($total)): ?>
+            <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-muted">Exibindo <span><?= count($servicos) ?></span> de <span><?= $total ?></span> registros</p>
+                <?= $pagination ?? '' ?>
+            </div>
+            <?php endif; ?>
         </div>
 
     </div>

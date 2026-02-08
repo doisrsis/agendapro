@@ -41,8 +41,45 @@ class Estabelecimentos extends Admin_Controller {
             $filtros['busca'] = $this->input->get('busca');
         }
 
-        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all($filtros);
+        // Configuração da Paginação
+        $this->load->library('pagination');
+        $config['base_url'] = base_url('admin/estabelecimentos/index');
+        $config['total_rows'] = $this->Estabelecimento_model->count_all($filtros);
+        $config['per_page'] = 10;
+        $config['page_query_string'] = TRUE;
+        $config['query_string_segment'] = 'page';
+        $config['reuse_query_string'] = TRUE;
+
+        // Estilização do Bootstrap 5 / Tabler
+        $config['full_tag_open'] = '<ul class="pagination m-0 ms-auto">';
+        $config['full_tag_close'] = '</ul>';
+        $config['first_link'] = '<i class="ti ti-chevrons-left"></i>';
+        $config['first_tag_open'] = '<li class="page-item">';
+        $config['first_tag_close'] = '</li>';
+        $config['last_link'] = '<i class="ti ti-chevrons-right"></i>';
+        $config['last_tag_open'] = '<li class="page-item">';
+        $config['last_tag_close'] = '</li>';
+        $config['next_link'] = '<i class="ti ti-chevron-right"></i>';
+        $config['next_tag_open'] = '<li class="page-item">';
+        $config['next_tag_close'] = '</li>';
+        $config['prev_link'] = '<i class="ti ti-chevron-left"></i>';
+        $config['prev_tag_open'] = '<li class="page-item">';
+        $config['prev_tag_close'] = '</li>';
+        $config['cur_tag_open'] = '<li class="page-item active"><a class="page-link" href="#">';
+        $config['cur_tag_close'] = '</a></li>';
+        $config['num_tag_open'] = '<li class="page-item">';
+        $config['num_tag_close'] = '</li>';
+        $config['attributes'] = array('class' => 'page-link');
+
+        $page = $this->input->get('page') ? (int)$this->input->get('page') : 0;
+        $config['cur_page'] = $page;
+
+        $this->pagination->initialize($config);
+
+        $data['estabelecimentos'] = $this->Estabelecimento_model->get_all($filtros, $config['per_page'], $page);
+        $data['total'] = $config['total_rows'];
         $data['filtros'] = $filtros;
+        $data['pagination'] = $this->pagination->create_links();
 
         $this->load->view('admin/layout/header', $data);
         $this->load->view('admin/estabelecimentos/index', $data);

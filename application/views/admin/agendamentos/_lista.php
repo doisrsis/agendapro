@@ -202,6 +202,12 @@
             </tbody>
         </table>
     </div>
+    <?php if (isset($pagination)): ?>
+    <div class="card-footer d-flex align-items-center">
+        <p class="m-0 text-muted">Exibindo <span><?= count($agendamentos) ?></span> de <span><?= $total ?></span> registros</p>
+        <?= $pagination ?>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script>

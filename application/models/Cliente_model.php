@@ -16,10 +16,14 @@ class Cliente_model extends CI_Model {
     /**
      * Buscar todos os clientes
      */
-    public function get_all($filtros = []) {
+    public function get_all($filtros = [], $limit = null, $offset = null) {
         $this->db->select('c.*, e.nome as estabelecimento_nome');
         $this->db->from($this->table . ' c');
         $this->db->join('estabelecimentos e', 'e.id = c.estabelecimento_id', 'left');
+
+        if (!empty($limit)) {
+            $this->db->limit($limit, $offset);
+        }
 
         if (!empty($filtros['estabelecimento_id'])) {
             $this->db->where('c.estabelecimento_id', $filtros['estabelecimento_id']);
@@ -43,6 +47,33 @@ class Cliente_model extends CI_Model {
 
         $query = $this->db->get();
         return $query->result();
+    }
+
+    /**
+     * Contar total de clientes (para paginação)
+     */
+    public function count_all($filtros = []) {
+        $this->db->from($this->table . ' c');
+
+        if (!empty($filtros['estabelecimento_id'])) {
+            $this->db->where('c.estabelecimento_id', $filtros['estabelecimento_id']);
+        }
+
+        if (!empty($filtros['tipo'])) {
+            $this->db->where('c.tipo', $filtros['tipo']);
+        }
+
+        if (!empty($filtros['busca'])) {
+            $this->db->group_start();
+            $this->db->like('c.nome', $filtros['busca']);
+            $this->db->or_like('c.cpf', $filtros['busca']);
+            $this->db->or_like('c.whatsapp', $filtros['busca']);
+            $this->db->or_like('c.telefone', $filtros['busca']);
+            $this->db->or_like('c.email', $filtros['busca']);
+            $this->db->group_end();
+        }
+
+        return $this->db->count_all_results();
     }
 
     /**

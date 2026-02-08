@@ -33,7 +33,7 @@
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
                     <a href="<?= base_url('painel/dashboard') ?>">
-                        <?= $estabelecimento->nome_fantasia ?? 'AgendaPro' ?>
+                        <?= exibir_logo('navbar-brand-image', 'height: 32px;') ?>
                     </a>
                 </h1>
                 <div class="navbar-nav flex-row order-md-last">
@@ -68,7 +68,7 @@
                 <div class="navbar navbar-light">
                     <div class="container-xl">
                         <ul class="navbar-nav">
-                            <li class="nav-item <?= $menu_ativo == 'dashboard' ? 'active' : '' ?>">
+                            <li class="nav-item <?= ($menu_ativo ?? '') == 'dashboard' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('painel/dashboard') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-home"></i>
@@ -76,7 +76,7 @@
                                     <span class="nav-link-title">Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item <?= ($menu_ativo ?? '') == 'clientes' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('painel/clientes') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-users"></i>
@@ -84,7 +84,7 @@
                                     <span class="nav-link-title">Clientes</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item <?= ($menu_ativo ?? '') == 'profissionais' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('painel/profissionais') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-user-check"></i>
@@ -92,7 +92,7 @@
                                     <span class="nav-link-title">Profissionais</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item <?= ($menu_ativo ?? '') == 'servicos' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('painel/servicos') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-briefcase"></i>
@@ -100,7 +100,7 @@
                                     <span class="nav-link-title">Serviços</span>
                                 </a>
                             </li>
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown <?= in_array(($menu_ativo ?? ''), ['agendamentos', 'bloqueios', 'feriados']) ? 'active' : '' ?>">
                                 <a class="nav-link dropdown-toggle" href="#navbar-agendamentos" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-calendar"></i>
@@ -122,7 +122,15 @@
                                     </a>
                                 </div>
                             </li>
-                            <li class="nav-item">
+                             <li class="nav-item <?= ($menu_ativo ?? '') == 'relatorios' ? 'active' : '' ?>">
+                                <a class="nav-link" href="<?= base_url('painel/relatorios') ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <i class="ti ti-chart-bar"></i>
+                                    </span>
+                                    <span class="nav-link-title">Relatórios</span>
+                                </a>
+                            </li>
+                            <li class="nav-item <?= ($menu_ativo ?? '') == 'configuracoes' ? 'active' : '' ?>">
                                 <a class="nav-link" href="<?= base_url('painel/configuracoes') ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <i class="ti ti-settings"></i>

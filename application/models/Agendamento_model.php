@@ -7,7 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Gerencia os agendamentos do sistema com validação de disponibilidade
  *
  * @author Rafael Dias - doisr.com.br
- * @date 05/12//2024
+ * @date 05/12/2024
  */
 class Agendamento_model extends CI_Model {
 
@@ -88,6 +88,56 @@ class Agendamento_model extends CI_Model {
 
         $query = $this->db->get();
         return $query->result();
+    }
+
+    /**
+     * Contar total de agendamentos (para paginação)
+     */
+    public function count_all($filtros = []) {
+        $this->db->from($this->table . ' a');
+        $this->db->join('clientes c', 'c.id = a.cliente_id', 'left');
+        $this->db->join('profissionais p', 'p.id = a.profissional_id', 'left');
+        $this->db->join('servicos s', 's.id = a.servico_id', 'left');
+        $this->db->join('estabelecimentos e', 'e.id = a.estabelecimento_id', 'left');
+
+        if (!empty($filtros['estabelecimento_id'])) {
+            $this->db->where('a.estabelecimento_id', $filtros['estabelecimento_id']);
+        }
+
+        if (!empty($filtros['profissional_id'])) {
+            $this->db->where('a.profissional_id', $filtros['profissional_id']);
+        }
+
+        if (!empty($filtros['cliente_id'])) {
+            $this->db->where('a.cliente_id', $filtros['cliente_id']);
+        }
+
+        if (!empty($filtros['status'])) {
+            $this->db->where('a.status', $filtros['status']);
+        }
+
+        if (!empty($filtros['status_in']) && is_array($filtros['status_in'])) {
+            $this->db->where_in('a.status', $filtros['status_in']);
+        }
+
+        if (!empty($filtros['data'])) {
+            $this->db->where('a.data', $filtros['data']);
+        }
+
+        if (!empty($filtros['data_inicio']) && !empty($filtros['data_fim'])) {
+            $this->db->where('a.data >=', $filtros['data_inicio']);
+            $this->db->where('a.data <=', $filtros['data_fim']);
+        }
+
+        if (!empty($filtros['busca'])) {
+            $this->db->group_start();
+            $this->db->like('c.nome', $filtros['busca']);
+            $this->db->or_like('c.whatsapp', $filtros['busca']);
+            $this->db->or_like('c.telefone', $filtros['busca']);
+            $this->db->group_end();
+        }
+
+        return $this->db->count_all_results();
     }
 
     /**
@@ -1354,5 +1404,79 @@ class Agendamento_model extends CI_Model {
         }
 
         return $result;
+    }
+    /**
+     * Calcular faturamento do dia
+     */
+    public function get_faturamento_dia($estabelecimento_id, $data = null) {
+        $data = $data ?? date('Y-m-d');
+
+        $this->db->select_sum('s.preco');
+        $this->db->from($this->table . ' a');
+        $this->db->join('servicos s', 's.id = a.servico_id', 'left');
+        $this->db->where('a.estabelecimento_id', $estabelecimento_id);
+        $this->db->where('a.data', $data);
+        $this->db->where_in('a.status', ['confirmado', 'concluido', 'em_atendimento']);
+
+        $query = $this->db->get();
+        return $query->row()->preco ?? 0;
+    }
+
+    /**
+     * Deletar agendamento
+     */
+    public function delete($id) {
+        $this->db->where('id', $id);
+        return $this->db->delete($this->table);
+    }
+
+    /**
+     * Calcular faturamento do mês
+     */
+    public function get_faturamento_mes($estabelecimento_id, $mes = null, $ano = null) {
+        $mes = $mes ?? date('m');
+        $ano = $ano ?? date('Y');
+
+        $this->db->select_sum('s.preco');
+        $this->db->from($this->table . ' a');
+        $this->db->join('servicos s', 's.id = a.servico_id', 'left');
+        $this->db->where('a.estabelecimento_id', $estabelecimento_id);
+        $this->db->where('MONTH(a.data)', $mes);
+        $this->db->where('YEAR(a.data)', $ano);
+        $this->db->where_in('a.status', ['confirmado', 'concluido', 'em_atendimento']);
+
+        $query = $this->db->get();
+        return $query->row()->preco ?? 0;
+    }
+
+    /**
+     * Obter histórico de faturamento (últimos X dias)
+     */
+    public function get_historico_faturamento($estabelecimento_id, $dias = 7) {
+        $this->db->select('a.data, SUM(s.preco) as total');
+        $this->db->from($this->table . ' a');
+        $this->db->join('servicos s', 's.id = a.servico_id', 'left');
+        $this->db->where('a.estabelecimento_id', $estabelecimento_id);
+        $this->db->where('a.data >=', date('Y-m-d', strtotime("-{$dias} days")));
+        $this->db->where('a.data <=', date('Y-m-d'));
+        $this->db->where_in('a.status', ['confirmado', 'concluido', 'em_atendimento']);
+        $this->db->group_by('a.data');
+        $this->db->order_by('a.data', 'ASC');
+
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    /**
+     * Obter distribuição de status dos agendamentos
+     */
+    public function get_distribuicao_status($estabelecimento_id) {
+        $this->db->select('status, COUNT(*) as total');
+        $this->db->from($this->table);
+        $this->db->where('estabelecimento_id', $estabelecimento_id);
+        $this->db->group_by('status');
+
+        $query = $this->db->get();
+        return $query->result();
     }
 }

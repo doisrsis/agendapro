@@ -33,7 +33,7 @@
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
                     <a href="<?= base_url('agenda/dashboard') ?>">
-                        Minha Agenda
+                         <?= exibir_logo('navbar-brand-image', 'height: 32px;') ?>
                     </a>
                 </h1>
                 <div class="navbar-nav flex-row order-md-last">
