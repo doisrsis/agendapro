@@ -39,15 +39,19 @@
                 <div class="navbar-nav flex-row order-md-last">
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown">
-                            <span class="avatar avatar-sm"><?= substr($this->session->userdata('usuario_nome'), 0, 2) ?></span>
+                            <?php if (!empty($estabelecimento->logo)): ?>
+                                <span class="avatar avatar-sm" style="background-image: url(<?= base_url('assets/uploads/' . $estabelecimento->logo) ?>)"></span>
+                            <?php else: ?>
+                                <span class="avatar avatar-sm"><?= substr($this->session->userdata('usuario_nome'), 0, 2) ?></span>
+                            <?php endif; ?>
                             <div class="d-none d-xl-block ps-2">
                                 <div><?= $this->session->userdata('usuario_nome') ?></div>
                                 <div class="mt-1 small text-muted">Estabelecimento</div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
-                            <a href="<?= base_url('painel/configuracoes') ?>" class="dropdown-item">
-                                <i class="ti ti-settings me-2"></i>Configurações
+                            <a href="<?= base_url('painel/perfil') ?>" class="dropdown-item">
+                                <i class="ti ti-user-circle me-2"></i>Perfil
                             </a>
                             <div class="dropdown-divider"></div>
                             <a href="<?= base_url('logout') ?>" class="dropdown-item">

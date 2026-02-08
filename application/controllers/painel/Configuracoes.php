@@ -38,15 +38,13 @@ class Configuracoes extends CI_Controller {
      * Página de configurações
      */
     public function index() {
-        $aba = $this->input->get('aba') ?? 'geral';
+        $aba = $this->input->get('aba') ?? 'agendamento';
 
         if ($this->input->method() === 'post') {
             $aba_post = $this->input->post('aba');
 
             switch ($aba_post) {
-                case 'geral':
-                    $this->salvar_dados_gerais();
-                    break;
+                // 'geral' removido - movido para Perfil.php
                 case 'agendamento':
                     $this->salvar_configuracoes_agendamento();
                     break;
@@ -74,69 +72,6 @@ class Configuracoes extends CI_Controller {
         $this->load->view('painel/layout/header', $data);
         $this->load->view('painel/configuracoes/index', $data);
         $this->load->view('painel/layout/footer');
-    }
-
-    /**
-     * Salvar dados gerais
-     */
-    private function salvar_dados_gerais() {
-        $this->form_validation->set_rules('nome', 'Nome', 'required|max_length[100]');
-        $this->form_validation->set_rules('cnpj_cpf', 'CNPJ/CPF', 'max_length[18]');
-        $this->form_validation->set_rules('whatsapp', 'WhatsApp', 'max_length[20]');
-        $this->form_validation->set_rules('email', 'E-mail', 'required|valid_email');
-
-        // Validação Inteligente de Slug REMOVIDA
-        // O slug agora é gerado automaticamente e não editável pelo usuário
-        // $this->form_validation->set_rules('slug', 'Link Personalizado', 'alpha_dash');
-
-        if ($this->form_validation->run()) {
-            $dados = [
-                'nome' => $this->input->post('nome'),
-                'cnpj_cpf' => $this->input->post('cnpj_cpf'),
-                'whatsapp' => $this->input->post('whatsapp'),
-                'email' => $this->input->post('email'),
-                'tema' => $this->input->post('tema'),
-                'endereco' => $this->input->post('endereco'),
-                'bairro' => $this->input->post('bairro'),
-                'cidade' => $this->input->post('cidade'),
-                'estado' => $this->input->post('estado'),
-                'cep' => $this->input->post('cep'),
-                // Slug não atualiza aqui, apenas no model se vazio (ou lógica customizada se precisar forçar regen)
-                // CORREÇÃO: Se o slug atual for vazio, forçamos a geração de um novo
-                'slug' => empty($this->estabelecimento->slug) ? url_title(convert_accented_characters($this->input->post('nome') . '-' . substr(md5(uniqid()), 0, 4)), '-', TRUE) : $this->estabelecimento->slug,
-                // Linktree / Redes Sociais
-                'instagram' => $this->input->post('instagram'),
-                'facebook' => $this->input->post('facebook'),
-                'website' => $this->input->post('website')
-            ];
-
-            // Upload de Logo
-            if (!empty($_FILES['logo']['name'])) {
-                $config['upload_path'] = './assets/uploads/';
-                $config['allowed_types'] = 'gif|jpg|png|jpeg|webp';
-                $config['max_size'] = 2048; // 2MB
-                $config['encrypt_name'] = TRUE;
-
-                $this->load->library('upload', $config);
-
-                if ($this->upload->do_upload('logo')) {
-                    $upload_data = $this->upload->data();
-                    $dados['logo'] = $upload_data['file_name'];
-                } else {
-                    $this->session->set_flashdata('erro', $this->upload->display_errors());
-                    redirect('painel/configuracoes?aba=geral');
-                    return;
-                }
-            }
-
-            if ($this->Estabelecimento_model->update($this->estabelecimento_id, $dados)) {
-                $this->session->set_flashdata('sucesso', 'Dados atualizados com sucesso!');
-            } else {
-                $this->session->set_flashdata('erro', 'Erro ao atualizar dados.');
-            }
-        }
-
-        redirect('painel/configuracoes?aba=geral');
     }
 
     /**
